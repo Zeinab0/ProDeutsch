@@ -38,6 +38,7 @@ fun SignUpScreen(onNavigateToLogin: () -> Unit) {
             modifier = Modifier
                 .width(screenWidth * 0.7f)
                 .height(screenHeight * 0.3f)
+                .weight(0.3f, fill = true) // ✅ این باعث می‌شود ۳۰٪ از فضای صفحه را بگیرد
         )
 
         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
@@ -45,7 +46,8 @@ fun SignUpScreen(onNavigateToLogin: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()
+                .weight(0.7f, fill = true) // ✅ کل فضای باقی‌مانده را اشغال می‌کند
+//                .fillMaxHeight()
                 .shadow(
                     elevation = 22.dp,
                     shape = RoundedCornerShape(40.dp, 40.dp, 0.dp, 0.dp),
@@ -61,7 +63,7 @@ fun SignUpScreen(onNavigateToLogin: () -> Unit) {
                 // **عنوان صفحه**
                 Text(
                     text = "ثبت نام",
-                    fontSize = (screenWidth * 0.07f).value.sp,
+                    fontSize = (screenWidth * 0.05f).value.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = iranSans,
                     color = Color.Black,
@@ -152,11 +154,11 @@ fun SignUpScreen(onNavigateToLogin: () -> Unit) {
 
                 ClickableRegisterText(onNavigateToLogin = onNavigateToLogin)
 
-                Spacer(modifier = Modifier.height(screenHeight * 0.028f))
+                Spacer(modifier = Modifier.height(screenHeight * 0.052f))
 
                 Text(
                     text = "ProDeutsch",
-                    fontSize = (screenWidth * 0.04f).value.sp,
+                    fontSize = (screenWidth * 0.035f).value.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4D869C)

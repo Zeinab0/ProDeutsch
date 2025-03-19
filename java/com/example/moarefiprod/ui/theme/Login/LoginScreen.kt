@@ -3,7 +3,7 @@ package com.example.moarefiprod.ui.theme.Login
 import ClickableRegisterTextL
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -24,32 +24,44 @@ import com.example.moarefiprod.ui.theme.signup.EmailValidationTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(onNavigateToRegister: () -> Unit) {
+fun LoginScreen(onNavigateToRegister: () -> Unit ,
+                onNavigateToRecovery: () -> Unit) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
     Column(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
-        Image(
-            painter = painterResource(id = R.drawable.munich),
-            contentDescription = "munich",
+        Box(
             modifier = Modifier
-                .width(screenWidth * 0.7f)
-                .height(screenHeight * 0.3f)
+                .fillMaxWidth()
+                    .weight(0.3f, fill = true),
+//                .background(Color(0xFF90CECE)), // ✅ این باعث می‌شود ۳۰٪ از فضای صفحه را بگیرد
+            contentAlignment = Alignment.TopCenter
 
-        )
+            ){
+            Image(
+                painter = painterResource(id = R.drawable.munich),
+                contentDescription = "munich",
+                modifier = Modifier
+                    .width(screenWidth * 0.7f)
+                    .height(screenHeight * 0.3f)
+//                    .weight(0.3f, fill = true) // ✅ این باعث می‌شود ۳۰٪ از فضای صفحه را بگیرد
+
+            )
+        }
+
 
 
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .fillMaxHeight()
+                .fillMaxWidth()
+                .weight(0.7f, fill = true) // ✅ کل فضای باقی‌مانده را اشغال می‌کند
+//                .height(screenHeight * 0.7f)
                 .shadow(
                     elevation = 22.dp,
                     shape = RoundedCornerShape(40.dp,40.dp,0.dp,0.dp),
@@ -57,14 +69,14 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
                     spotColor = Color.Black
                 )
                 .background(Color(0xFF90CECE), shape = RoundedCornerShape(50.dp, 50.dp,0.dp,0.dp)),
-            contentAlignment = Alignment.TopCenter
+//            contentAlignment = Alignment.TopEnd
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "ورود",
-                    fontSize = (screenWidth * 0.07f).value.sp,
+                    fontSize = (screenWidth * 0.05f).value.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = iranSans,
                     color = Color.Black,
@@ -107,6 +119,8 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
                     color = Color(0xFF4D869C),
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.align(Alignment.End).padding(end = screenWidth * 0.18f)
+                        .clickable { onNavigateToRecovery() } // ✅ اضافه کردن قابلیت کلیک
+
                 )
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.06f))
@@ -163,11 +177,11 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
 
                 ClickableRegisterTextL(onNavigateToRegister = onNavigateToRegister)
 
-                Spacer(modifier = Modifier.height(screenHeight * 0.076f))
+                Spacer(modifier = Modifier.height(screenHeight * 0.1f))
 
                 Text(
                     text = "ProDeutsch",
-                    fontSize = (screenWidth * 0.04f).value.sp,
+                    fontSize = (screenWidth * 0.035f).value.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4D869C)
