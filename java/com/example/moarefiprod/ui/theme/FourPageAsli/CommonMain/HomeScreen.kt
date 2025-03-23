@@ -1,4 +1,4 @@
-package com.example.moarefiprod.ui.theme.Home
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
@@ -9,10 +9,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.moarefiprod.ui.theme.courspage.courspage
-import com.example.moarefiprod.ui.theme.flashcardpage.flashcardpage
-import com.example.moarefiprod.ui.theme.mainpage.mainpage
-import com.example.moarefiprod.ui.theme.tamrinpage.tamrinpage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.courspage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.flashcardpage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.Homepage.mainpage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.tamrinpage
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.platform.LocalConfiguration
 
@@ -39,6 +39,8 @@ fun HomeScreen() {
             Spacer(modifier = Modifier.height(30.dp))
             HeaderSection()
             Spacer(modifier = Modifier.height(8.dp))
+            var searchText by remember { mutableStateOf("") }
+
             SearchBar()
 
             // اینجا صفحه‌ها تغییر می‌کنن:

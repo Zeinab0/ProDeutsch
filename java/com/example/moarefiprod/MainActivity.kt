@@ -1,25 +1,12 @@
 package com.example.moarefiprod
 
-import RecoverySuccess
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.moarefiprod.ui.SignUpScreen
-import com.example.moarefiprod.ui.theme.Home.HomeScreen
-import com.example.moarefiprod.ui.theme.Login.LoginScreen
-import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryC
-import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryChange
-import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryE
-import com.example.moarefiprod.ui.theme.logofirst.Advertisement
-import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
-import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
-import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 
 // ✅ تعریف فونت مستقیم در فایل
 val iranSans = FontFamily(

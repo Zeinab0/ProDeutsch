@@ -1,4 +1,4 @@
-package com.example.moarefiprod.ui.theme.flashcardpage
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,11 +10,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun flashcardpage(){
+fun courspage(){
     Box(
         modifier = Modifier
             .size(100.dp)
-            .background(Color(0xFFB78A1A))
+            .background(Color(0xFF811616))
 
     )
 }

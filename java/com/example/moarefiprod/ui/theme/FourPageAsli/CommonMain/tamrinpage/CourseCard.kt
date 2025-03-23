@@ -1,9 +1,11 @@
-package com.example.moarefiprod.ui.theme.Home
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -11,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -54,9 +55,51 @@ fun CourseCard(course: Course) {
 
             Column(
                 modifier = Modifier
-                    .padding(10.dp)
+                    .width(60.dp)
+                    .align(Alignment.Bottom)
+                    .padding(bottom = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+
+                Text(
+                    text = if (course.price == 0) "رایگان" else "هزار تومان ${course.price}",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (course.price == 0) Color(0xFF2E7D32) else Color(0xFF000000), // سبز برای رایگان
+                    textAlign = TextAlign.Right
+                )
+
+
+                Button(
+                    onClick = { /* TODO */ },
+                    contentPadding = PaddingValues(4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(28.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C))
+                ) {
+
+                    Text(
+                        text = "شروع دوره",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                        color = Color.White,
+                        fontSize = 8.sp,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .padding(0.dp,10.dp,10.dp,10.dp)
                     .fillMaxHeight()
-                    .fillMaxWidth(),
+                    .width(200.dp),
 //                    .background(Color(0xFF9B3131)),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.SpaceBetween
@@ -122,15 +165,6 @@ fun CourseCard(course: Course) {
                     },
                     fontSize = 6.sp,
                     color = Color.DarkGray,
-                    textAlign = TextAlign.Right
-                )
-
-                Text(
-//                    modifier = Modifier.fillMaxWidth(),
-                    text = "هزار تومان${course.price}",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4D869C),
                     textAlign = TextAlign.Right
                 )
 

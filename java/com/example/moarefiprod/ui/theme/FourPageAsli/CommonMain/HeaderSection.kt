@@ -1,4 +1,4 @@
-package com.example.moarefiprod.ui.theme.Home
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

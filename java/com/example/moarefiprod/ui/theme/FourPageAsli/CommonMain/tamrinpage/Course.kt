@@ -1,4 +1,4 @@
-package com.example.moarefiprod.ui.theme.Home
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage
 
 data class Course(
     val title: String,
