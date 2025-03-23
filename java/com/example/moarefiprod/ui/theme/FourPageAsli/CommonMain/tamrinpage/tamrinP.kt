@@ -3,6 +3,7 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage
 import FilterChips
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -42,9 +43,9 @@ fun tamrinpage(){
     val sampleCourses = listOf(
         Course("A1 آموزش آلمانی سطح", "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", "بدون پیش‌نیاز", "۱۰ ساعت و ۳۰ دقیقه", "۱۲ جلسه + ۲۴ آزمون", 120, R.drawable.cours1),
         Course("A2 آموزش آلمانی سطح", "ادامه مسیر یادگیری آلمانی با نکات بیشتر", "نیازمند A1", "۹ ساعت", "۱۰ جلسه + تمرین", 0, R.drawable.cours1),
-        Course("B1 آموزش آلمانی سطح", "آمادگی برای مکالمه‌های روزمره و آزمون‌ها", "نیازمند A2", "۱۱ ساعت", "۱۴ جلسه + پروژه", 200, R.drawable.cours1),
+        Course("B1 آموزش آلمانی سطح", "آمادگی برای مکالمه‌های روزمره و آزمون‌ها", "نیازمند A2", "۱۱ ساعت", "۱۴ جلسه + پروژه", 200, R.drawable.cours1 ,true),
         Course("B2 آموزش آلمانی سطح", "مکالمه روان و درک عمیق‌تر", "نیازمند B1", "۱۳ ساعت", "۱۵ جلسه + تمرین تعاملی", 250, R.drawable.cours1),
-        Course("B2 آموزش آلمانی سطح", "مکالمه روان و درک عمیق‌تر", "نیازمند B1", "۱۳ ساعت", "۱۵ جلسه + تمرین تعاملی", 250, R.drawable.cours1),
+        Course("B2 آموزش آلمانی سطح", "مکالمه روان و درک عمیق‌تر", "نیازمند B1", "۱۳ ساعت", "۱۵ جلسه + تمرین تعاملی", 250, R.drawable.cours1,true),
     )
 
     Column(
@@ -86,7 +87,7 @@ fun tamrinpage(){
         }
         val filteredCourses = when (selectedFilter) {
             "رایگان" -> sampleCourses.filter { it.price == 0 }
-            "جدید" -> sampleCourses.reversed() // فرض بر اینه که لیست از قدیمی به جدیده
+            "جدید" -> sampleCourses.filter { it.isNew }
             else -> sampleCourses
         }
 
@@ -99,8 +100,14 @@ fun tamrinpage(){
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             items(filteredCourses) { course ->
-                CourseCard(course = course)
+                Box {
+                    CourseCard(course = course)
+                    if (course.isNew) {
+                        NewLabel()
+                    }
+                }
             }
+
         }
 
     }

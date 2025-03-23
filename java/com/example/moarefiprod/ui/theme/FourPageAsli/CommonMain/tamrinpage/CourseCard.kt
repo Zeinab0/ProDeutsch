@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -173,3 +174,23 @@ fun CourseCard(course: Course) {
         }
     }
 }
+
+@Composable
+fun NewLabel() {
+    Box(
+        modifier = Modifier
+            .offset(x = (-10).dp, y = 6.dp) // محل قرارگیری بالا چپ
+            .rotate(-40f) // چرخش مورب
+            .background(Color.Red, shape = RoundedCornerShape(4.dp))
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = "جدید",
+            color = Color.White,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = iranSans
+        )
+    }
+}
+

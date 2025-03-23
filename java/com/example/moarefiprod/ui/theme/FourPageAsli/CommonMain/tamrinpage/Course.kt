@@ -8,5 +8,7 @@ data class Course(
     val teadad: String,
 
     val price: Int,
-    val image: Int
+    val image: Int,
+    val isNew: Boolean = false // 🔥 اضافه کن برای تشخیص جدید بودن
+
 )
