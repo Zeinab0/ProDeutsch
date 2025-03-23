@@ -1,4 +1,4 @@
-package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.iranSans
 
 @Composable
-fun CourseCard(course: Course) {
+fun flashCard(cards: Cards) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardHeight = screenWidth * 0.3f // ارتفاع متناسب با عرض صفحه
     val configuration = LocalConfiguration.current
@@ -45,7 +45,7 @@ fun CourseCard(course: Course) {
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = course.image),
+                painter = painterResource(id = cards.image),
                 contentDescription = "Course Image",
                 modifier = Modifier
                     .fillMaxHeight()
@@ -64,11 +64,11 @@ fun CourseCard(course: Course) {
             ) {
 
                 Text(
-                    text = if (course.price == 0) "رایگان" else "هزار تومان ${course.price}",
+                    text = if (cards.price == 0) "رایگان" else "هزار تومان ${cards.price}",
                     fontSize = 10.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
-                    color = if (course.price == 0) Color(0xFF2E7D32) else Color(0xFF000000), // سبز برای رایگان
+                    color = if (cards.price == 0) Color(0xFF2E7D32) else Color(0xFF000000), // سبز برای رایگان
                     textAlign = TextAlign.Right
                 )
 
@@ -108,9 +108,8 @@ fun CourseCard(course: Course) {
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = course.title,
+                    text = cards.title,
                     fontSize = 12.sp,
-                    fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     textAlign = TextAlign.Right
@@ -118,9 +117,8 @@ fun CourseCard(course: Course) {
 
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = course.description,
+                    text = cards.description,
                     fontSize = 10.sp,
-                    fontFamily = iranSans,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
                     textAlign = TextAlign.Right
@@ -131,30 +129,13 @@ fun CourseCard(course: Course) {
                     modifier = Modifier.fillMaxWidth(),
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = iranSans)) {
-                            append("سطح دوره: ")
-                        }
-                        withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.sath)
-                        }
-                    },
-                    fontSize = 6.sp,
-                    fontFamily = iranSans,
-                    color = Color.DarkGray,
-                    textAlign = TextAlign.Right
-                )
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = iranSans)) {
                             append("مدت زمان دوره: ")
                         }
                         withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.teadad)
+                            append(cards.teadad)
                         }
                     },
                     fontSize = 6.sp,
-                    fontFamily = iranSans,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Right
                 )
@@ -163,14 +144,13 @@ fun CourseCard(course: Course) {
                     modifier = Modifier.fillMaxWidth(),
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = iranSans)) {
-                            append("تعداد دروس: ")
+                            append("تعداد کلمات: ")
                         }
                         withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.teadad)
+                            append(cards.teadad)
                         }
                     },
                     fontSize = 6.sp,
-                    fontFamily = iranSans,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Right
                 )
