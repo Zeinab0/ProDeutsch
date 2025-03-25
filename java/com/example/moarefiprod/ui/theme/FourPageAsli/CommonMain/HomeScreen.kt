@@ -1,6 +1,9 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,6 +35,9 @@ fun HomeScreen() {
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
+    var isDrawerOpen by remember { mutableStateOf(false) }
+
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             bottomBar = {
@@ -46,7 +52,11 @@ fun HomeScreen() {
                     .padding(bottom = screenHeight * 0.1f)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
-                HeaderSection()
+
+                HeaderSection(
+                    onMenuClick = { isDrawerOpen = true } // ✅ باز کردن دراور از اینجا
+                )
+
                 Spacer(modifier = Modifier.height(8.dp))
                 SearchBar()
 
@@ -67,13 +77,38 @@ fun HomeScreen() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
+                    .background(Color.Black.copy(alpha = 0.4f))
                     .clickable(enabled = true, onClick = {}) // جلوگیری از کلیک زیر
                     .zIndex(1f),
                 contentAlignment = Alignment.Center
             ) {
                 UnavailableDialog(onDismiss = { showDialog = false })
             }
+        }
+
+        // ✅ لایه‌ی طوسی محو و بستن با کلیک
+        if (isDrawerOpen) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .clickable { isDrawerOpen = false }
+                    .zIndex(1f)
+            )
+        }
+
+        // ✅ Drawer از سمت راست با انیمیشن
+        AnimatedVisibility(
+            visible = isDrawerOpen,
+            enter = slideInHorizontally(initialOffsetX = { fullWidth -> fullWidth }),
+            exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }),
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(260.dp)
+                .align(Alignment.TopEnd)
+                .zIndex(2f)
+        ) {
+            DrawerContent(onClose = { isDrawerOpen = false })
         }
     }
 }

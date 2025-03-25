@@ -31,7 +31,7 @@ import com.example.moarefiprod.iranSans
 
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(onMenuClick: () -> Unit) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -87,7 +87,7 @@ fun HeaderSection() {
 
         // ✅ دکمه منو
         IconButton(
-            onClick = { /*TODO: باز کردن منو*/ },
+            onClick =  onMenuClick ,
             modifier = Modifier.size(screenWidth * 0.1f) // ✅ اندازه متناسب با صفحه
         ) {
             Icon(
