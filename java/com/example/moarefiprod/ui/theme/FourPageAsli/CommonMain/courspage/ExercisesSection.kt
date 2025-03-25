@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 
+// مدل داده تمرین
 data class ExerciseItem(val title: String, val icon: Int, val isSelected: Boolean = false)
 
 val exerciseList = listOf(
@@ -66,7 +67,9 @@ fun ExercisesSection(
                         ExerciseCard(
                             item = item,
                             index = rowIndex * 3 + index,
-                            onClick = onItemClick
+                            onClick = {
+                                onItemClick(item)
+                            }
                         )
                     }
                 }
@@ -79,7 +82,7 @@ fun ExercisesSection(
 fun ExerciseCard(
     item: ExerciseItem,
     index: Int,
-    onClick: (ExerciseItem) -> Unit
+    onClick: () -> Unit
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardWidth = screenWidth * 0.25f
@@ -92,10 +95,14 @@ fun ExerciseCard(
         modifier = Modifier
             .width(cardWidth)
             .aspectRatio(1f)
-            .shadow(elevation = 6.dp, shape = RoundedCornerShape(14.dp), ambientColor = Color(0xFF4D869C))
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(14.dp),
+                ambientColor = Color(0xFF4D869C)
+            )
             .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
-            .clickable { onClick(item) },
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -111,7 +118,7 @@ fun ExerciseCard(
                 modifier = Modifier
                     .size(screenWidth * 0.15f)
             )
-            Spacer(modifier = Modifier.height(1.dp)) // فاصله بیشتر بین آیکون و متن
+//            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = item.title,
                 fontSize = 14.sp,
