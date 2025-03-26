@@ -2,8 +2,11 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.m
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -192,32 +195,46 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
                 .padding(horizontal = 20.dp)
                 .fillMaxWidth()
                 .height(20.dp)
+                .clickable {
+                    navController.currentBackStackEntry?.savedStateHandle?.set("filter_statuses", selectedStatuses.toList())
+                    navController.navigate("word_list_page")
+                }
         ) {
-            Text(
-                text = "کارت‌ها",
-                fontSize = (screenWidth * 0.035f).value.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = iranSans,
-                color = Color.Black,
-                textAlign = TextAlign.Right,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.End)
-                    .padding(horizontal = 16.dp)
-            )
-            Text(
-                text = "${filteredWords.size} / $total",
-                fontSize = (screenWidth * 0.035f).value.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = iranSans,
-                color = Color.Black,
-                textAlign = TextAlign.Right,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.Start)
-                    .padding(horizontal = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // 👈 تعداد کارت‌ها + آیکون برگشت
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(R.drawable.backbtn),
+                        contentDescription = "Back",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "${filteredWords.size} / $total",
+                        fontSize = (screenWidth * 0.035f).value.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = iranSans,
+                        color = Color.Black
+                    )
+                }
+
+                // 👉 متن "کارت‌ها"
+                Text(
+                    text = "کارت‌ها",
+                    fontSize = (screenWidth * 0.035f).value.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = iranSans,
+                    color = Color.Black,
+                )
+            }
         }
+
+
 
         Spacer(modifier = Modifier.height(5.dp))
 

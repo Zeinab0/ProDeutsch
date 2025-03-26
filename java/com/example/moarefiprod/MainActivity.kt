@@ -3,6 +3,10 @@ package com.example.moarefiprod
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -13,6 +17,8 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordProgressPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
 
 // ✅ تعریف فونت مستقیم در فایل
 val iranSans = FontFamily(
@@ -42,7 +48,19 @@ class MainActivity : ComponentActivity() {
                 composable("progress") {
                     WordProgressPage(words = dummyWords, navController = navController)
                 }
+
+                composable("word_list_page") {
+                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
+
+                    WordListPage(
+                        words = dummyWords, // یا لیست اصلی
+                        selectedView = currentView,
+                        onViewChange = { currentView = it },
+                        navController = navController // ← اینو اضافه کن
+                    )
+                }
             }
+
             // ✅ نسخه جدید که `HomeScreen()` را نمایش می‌دهد
 //            HomeScreen()
 
