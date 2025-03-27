@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordProgressPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
@@ -44,22 +45,32 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
-            NavHost(navController = navController, startDestination = "progress") {
-                composable("progress") {
-                    WordProgressPage(words = dummyWords, navController = navController)
-                }
+            NavHost(navController = navController, startDestination = "my_flashcards") {
 
-                composable("word_list_page") {
-                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
-
-                    WordListPage(
-                        words = dummyWords, // یا لیست اصلی
-                        selectedView = currentView,
-                        onViewChange = { currentView = it },
-                        navController = navController // ← اینو اضافه کن
-                    )
+                composable("my_flashcards") {
+                    MyFlashCardScreen(navController = navController, words = dummyWords)
                 }
             }
+//            NavHost(navController = navController, startDestination = "progress") {
+
+//                composable("progress") {
+//                    WordProgressPage(words = dummyWords, navController = navController)
+//                }
+//
+//                composable("word_list_page") {
+//                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
+//
+//                    WordListPage(
+//                        words = dummyWords, // یا لیست اصلی
+//                        selectedView = currentView,
+//                        onViewChange = { currentView = it },
+//                        navController = navController // ← اینو اضافه کن
+//                    )
+//                }
+
+
+
+//            }
 
             // ✅ نسخه جدید که `HomeScreen()` را نمایش می‌دهد
 //            HomeScreen()

@@ -33,7 +33,7 @@ fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val icons = listOf(
         R.drawable.home,
         R.drawable.course,
-        R.drawable.group,
+        R.drawable.tamrin,
         R.drawable.flashcard
     )
 

@@ -64,7 +64,11 @@ fun flashCard(cards: Cards) {
             ) {
 
                 Text(
-                    text = if (cards.price == 0) "رایگان" else "هزار تومان ${cards.price}",
+                    text = when (cards.price) {
+                        -1 -> ""
+                        0 -> "رایگان"
+                        else -> "هزار تومان ${cards.price}"
+                    },
                     fontSize = 10.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
