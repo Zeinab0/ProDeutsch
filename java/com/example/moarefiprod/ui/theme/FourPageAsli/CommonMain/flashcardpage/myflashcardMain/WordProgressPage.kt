@@ -254,21 +254,34 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
         // 🔘 دکمه مرور
         Button(
             onClick = {
-                navController.currentBackStackEntry
-                    ?.savedStateHandle
-                    ?.set("review_words", filteredWords)
-                navController.navigate("review_page")
+                val reviewWords = if (selectedStatuses.isEmpty()) {
+                    allWords // وقتی هیچ ستونی انتخاب نشده، همه‌ی کلمات رو مرور کن
+                } else {
+                    allWords.filter { it.status in selectedStatuses }
+                }
+
+                if (reviewWords.isNotEmpty()) {
+                    navController.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("review_words", reviewWords)
+                    navController.navigate("review_page")
+                } else {
+                    // اگر هیچ کلمه‌ای برای مرور وجود نداشت (مثلاً فیلتر شده)، پیغام نشون بده
+                    // یا می‌تونی از Toast هم استفاده کنی
+                }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF90CECE)),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
-                .size(180.dp, 90.dp)
                 .align(Alignment.CenterHorizontally)
+                .size(180.dp, 90.dp)
                 .padding(10.dp)
         ) {
             Icon(painter = painterResource(id = R.drawable.review), contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text("مرور (${filteredWords.size} کلمه)", fontFamily = iranSans)
         }
+
+
     }
 }

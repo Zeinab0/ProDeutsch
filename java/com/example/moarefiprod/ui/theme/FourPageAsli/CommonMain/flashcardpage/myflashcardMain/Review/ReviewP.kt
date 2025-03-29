@@ -26,12 +26,14 @@ fun ReviewPage(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
 
+    var showExitDialog by remember { mutableStateOf(false) }
     var seconds by remember { mutableStateOf(0) }
     var isFlipped by remember { mutableStateOf(false) }
     var currentIndex by remember { mutableStateOf(0) }
     var tempWordList by remember { mutableStateOf(words.toMutableList()) }
-
     val updatedStatuses = remember { mutableStateMapOf<Word, WordStatus>() }
+
+    val currentWord = tempWordList.getOrNull(currentIndex)
 
     // ⏱ تایمر
     LaunchedEffect(Unit) {
@@ -41,8 +43,6 @@ fun ReviewPage(
         }
     }
 
-    val currentWord = tempWordList.getOrNull(currentIndex)
-
     // ✅ پایان مرور
     LaunchedEffect(currentWord) {
         if (currentWord == null && words.isNotEmpty()) {
@@ -50,7 +50,6 @@ fun ReviewPage(
                 updatedStatuses[word]?.let { word.copy(status = it) } ?: word
             }
 
-            // 💾 وضعیت جدید رو به کامپوننت بالا (MainActivity) برگردون
             onReviewFinished(finalWords)
             navController.popBackStack()
         }
@@ -58,103 +57,120 @@ fun ReviewPage(
 
     if (currentWord == null) return
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = formatTime(seconds),
-                fontSize = 16.sp,
-                color = Color.Gray,
-                fontFamily = iranSans
-            )
-            IconButton(onClick = {
-                navController.popBackStack()
-            }) {
-                Image(
-                    painter = painterResource(id = R.drawable.close),
-                    contentDescription = "close",
-                    modifier = Modifier.size(screenWidth * 0.08f)
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .padding(top = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = formatTime(seconds),
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    fontFamily = iranSans
                 )
+                IconButton(onClick = { showExitDialog = true }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.close),
+                        contentDescription = "close",
+                        modifier = Modifier.size(screenWidth * 0.08f)
+                    )
+                }
+            }
+
+            // Flashcard
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 300.dp, height = 400.dp)
+                            .background(Color(0xFFF2F2F2), RoundedCornerShape(12.dp))
+                            .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isFlipped) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(currentWord.german, fontSize = 20.sp, fontFamily = iranSans)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Divider(color = Color.Black, thickness = 1.dp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(currentWord.persian, fontSize = 20.sp, fontFamily = iranSans)
+                            }
+                        } else {
+                            Text(currentWord.german, fontSize = 20.sp, fontFamily = iranSans)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text("${currentIndex + 1}/${words.size}", fontSize = 16.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    if (isFlipped) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            ActionButton("نمیدانم", Color(0xFFF7A400)) {
+                                updatedStatuses[currentWord] = WordStatus.IDK
+                                isFlipped = false
+                                currentIndex++
+                            }
+                            ActionButton("غلط", Color(0xFFE53935)) {
+                                updatedStatuses[currentWord] = WordStatus.WRONG
+                                isFlipped = false
+                                currentIndex++
+                            }
+                            ActionButton("درست", Color(0xFF43A047)) {
+                                updatedStatuses[currentWord] = WordStatus.CORRECT
+                                isFlipped = false
+                                currentIndex++
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .width(330.dp)
+                                .height(53.dp)
+                                .border(1.dp, Color(0xFF4D869C), RoundedCornerShape(12.dp))
+                                .background(Color(0xFF8ACCCC), RoundedCornerShape(12.dp))
+                                .clickable { isFlipped = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("برگرداندن", fontSize = 14.sp, fontFamily = iranSans)
+                        }
+                    }
+                }
             }
         }
 
-        // Flashcard
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 300.dp, height = 400.dp)
-                        .background(Color(0xFFF2F2F2), RoundedCornerShape(12.dp))
-                        .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isFlipped) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(currentWord.german, fontSize = 20.sp, fontFamily = iranSans)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Divider(color = Color.Black, thickness = 1.dp)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(currentWord.persian, fontSize = 20.sp, fontFamily = iranSans)
-                        }
-                    } else {
-                        Text(currentWord.german, fontSize = 20.sp, fontFamily = iranSans)
+        // 🟢 دیالوگ خروج
+        if (showExitDialog) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                ExitReviewDialog(
+                    onDismiss = { showExitDialog = false },
+                    onConfirm = {
+                        showExitDialog = false
+                        navController.popBackStack()
                     }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-                Text("${currentIndex + 1}/${words.size}", fontSize = 16.sp, color = Color.Gray)
-                Spacer(modifier = Modifier.height(32.dp))
-
-                if (isFlipped) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        ActionButton("نمیدانم", Color(0xFFF7A400)) {
-                            updatedStatuses[currentWord] = WordStatus.IDK
-                            isFlipped = false
-                            currentIndex++
-                        }
-                        ActionButton("غلط", Color(0xFFE53935)) {
-                            updatedStatuses[currentWord] = WordStatus.WRONG
-                            isFlipped = false
-                            currentIndex++
-                        }
-                        ActionButton("درست", Color(0xFF43A047)) {
-                            updatedStatuses[currentWord] = WordStatus.CORRECT
-                            isFlipped = false
-                            currentIndex++
-                        }
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .width(330.dp)
-                            .height(53.dp)
-                            .border(1.dp, Color(0xFF4D869C), RoundedCornerShape(12.dp))
-                            .background(Color(0xFF8ACCCC), RoundedCornerShape(12.dp))
-                            .clickable { isFlipped = true },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("برگرداندن", fontSize = 14.sp, fontFamily = iranSans)
-                    }
-                }
+                )
             }
         }
     }
