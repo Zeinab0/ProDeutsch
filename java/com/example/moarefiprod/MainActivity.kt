@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         .savedStateHandle
                         .get<List<Word>>("review_words")
 
-                    if (reviewWords != null) {
+                    if (!reviewWords.isNullOrEmpty()) {
                         ReviewPage(
                             words = reviewWords,
                             navController = navController,
@@ -111,9 +111,13 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     } else {
-                        navController.popBackStack()
+                        // اگر لیست خالی یا null بود، برگرد عقب
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
                     }
                 }
+
             }
             }
 

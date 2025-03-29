@@ -66,8 +66,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
     val filteredWords = if (selectedStatuses.isEmpty()) allWords
     else allWords.filter { it.status in selectedStatuses }
 
-    val filteredPercentage =
-        if (total > 0) (filteredWords.size.toFloat() / total * 100).toInt() else 0
+    val correctPercentage = if (total > 0) (correctCount.toFloat() / total * 100).toInt() else 0
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -146,7 +145,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
                     .padding(horizontal = 16.dp)
             )
             Text(
-                text = "$filteredPercentage%",
+                text = "$correctPercentage%",
                 fontSize = (screenWidth * 0.035f).value.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = iranSans,
@@ -255,20 +254,16 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
         Button(
             onClick = {
                 val reviewWords = if (selectedStatuses.isEmpty()) {
-                    allWords // وقتی هیچ ستونی انتخاب نشده، همه‌ی کلمات رو مرور کن
+                    allWords // وقتی هیچ وضعیتی انتخاب نشده، همه کلمات رو بفرست
                 } else {
                     allWords.filter { it.status in selectedStatuses }
                 }
 
-                if (reviewWords.isNotEmpty()) {
-                    navController.currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("review_words", reviewWords)
-                    navController.navigate("review_page")
-                } else {
-                    // اگر هیچ کلمه‌ای برای مرور وجود نداشت (مثلاً فیلتر شده)، پیغام نشون بده
-                    // یا می‌تونی از Toast هم استفاده کنی
-                }
+                navController.currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("review_words", reviewWords.toList())
+
+                navController.navigate("review_page")
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF90CECE)),
             shape = RoundedCornerShape(12.dp),
@@ -281,6 +276,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
             Spacer(Modifier.width(8.dp))
             Text("مرور (${filteredWords.size} کلمه)", fontFamily = iranSans)
         }
+
 
 
     }
