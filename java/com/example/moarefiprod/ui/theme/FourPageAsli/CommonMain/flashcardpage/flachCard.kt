@@ -24,10 +24,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.moarefiprod.iranSans
 
 @Composable
-fun flashCard(cards: Cards) {
+fun flashCard(cards: Cards, navController: NavController) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardHeight = screenWidth * 0.3f // ارتفاع متناسب با عرض صفحه
     val configuration = LocalConfiguration.current
@@ -78,7 +79,7 @@ fun flashCard(cards: Cards) {
 
 
                 Button(
-                    onClick = { /* TODO */ },
+                    onClick = { navController.navigate("word_progress_page") },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
                         .fillMaxWidth()

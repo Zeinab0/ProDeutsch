@@ -45,35 +45,34 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
-            NavHost(navController = navController, startDestination = "my_flashcards") {
+            NavHost(navController = navController, startDestination = "home") {
+
+                composable("home") {
+                    HomeScreen(navController = navController)
+                }
 
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)
                 }
+                composable("word_progress_page") {
+                    WordProgressPage(words = dummyWords, navController = navController)
+                }
+                composable("word_list_page") {
+                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
+
+                    WordListPage(
+                        words = dummyWords,
+                        selectedView = currentView,
+                        onViewChange = { currentView = it },
+                        navController = navController
+                    )
+                }
+
             }
-//            NavHost(navController = navController, startDestination = "progress") {
 
-//                composable("progress") {
-//                    WordProgressPage(words = dummyWords, navController = navController)
-//                }
-//
-//                composable("word_list_page") {
-//                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
-//
-//                    WordListPage(
-//                        words = dummyWords, // یا لیست اصلی
-//                        selectedView = currentView,
-//                        onViewChange = { currentView = it },
-//                        navController = navController // ← اینو اضافه کن
-//                    )
-//                }
-
-
-
-//            }
 
             // ✅ نسخه جدید که `HomeScreen()` را نمایش می‌دهد
-//            HomeScreen()
+//            HomeScreen(navController: NavController)
 
             // ✅ نسخه قبلی که شامل سیستم ناوبری بود (کامنت شده)
 

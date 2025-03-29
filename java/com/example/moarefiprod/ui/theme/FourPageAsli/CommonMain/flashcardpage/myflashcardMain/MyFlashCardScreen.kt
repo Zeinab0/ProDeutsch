@@ -165,7 +165,7 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
         ) {
             items(purchasedCourses) { cards ->
                 Box {
-                    flashCard(cards)
+                    flashCard(cards = cards, navController = navController)
                     if (cards.isNew) {
                         NewLabel()
                     }

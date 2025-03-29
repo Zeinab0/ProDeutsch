@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Cards
@@ -21,7 +22,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.Cours
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.CourseCard
 
 @Composable
-fun courspage(onShowDialog: () -> Unit) {
+fun courspage(onShowDialog: () -> Unit, navController: NavController){
     var showDialog by remember { mutableStateOf(false) }
 
     val allCourses = listOf(
@@ -82,12 +83,13 @@ fun courspage(onShowDialog: () -> Unit) {
 
                 items(newCards) { card ->
                     Box {
-                        flashCard(cards = card)
+                        flashCard(cards = card, navController = navController)
                         if (card.isNew) {
                             NewLabel()
                         }
                     }
                 }
+
             }
         }
 

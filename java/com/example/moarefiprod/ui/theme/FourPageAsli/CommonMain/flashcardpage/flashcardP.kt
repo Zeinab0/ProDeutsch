@@ -3,6 +3,7 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage
 import FilterChips
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.Course
@@ -47,7 +49,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.Cours
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.NewLabel
 
 @Composable
-fun flashcardpage(){
+fun flashcardpage(navController: NavController){
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -79,7 +81,7 @@ fun flashcardpage(){
         Text(
             text = ":کلمات من",
             fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             modifier = Modifier
                 .fillMaxWidth()
@@ -100,6 +102,19 @@ fun flashcardpage(){
                 WordCard(course)
             }
         }
+        Text(
+            text = "...موارد بیشتر",
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = iranSans,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, top = 6.dp)
+                .wrapContentWidth(align = Alignment.Start)
+                .clickable {
+                    navController.navigate("my_flashcards")
+                }
+        )
 
         // ✅ متن راست‌چین
         Text(
@@ -144,7 +159,7 @@ fun flashcardpage(){
         ) {
             items(filteredCards) { cards ->
                 Box {
-                    flashCard(cards)
+                    flashCard(cards = cards, navController = navController)
                     if (cards.isNew) {
                         NewLabel()
                     }

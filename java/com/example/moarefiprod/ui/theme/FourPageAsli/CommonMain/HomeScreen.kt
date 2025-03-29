@@ -23,11 +23,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.UnavailableDialog
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
     var selectedIndex by remember { mutableStateOf(0) }
     var showDialog by remember { mutableStateOf(false) } // ✅ اینجا کنترل پاپ‌آپ
 
@@ -65,9 +66,10 @@ fun HomeScreen() {
                     0 -> mainpage()
                     1 -> tamrinpage()
                     2 -> courspage(
-                        onShowDialog = { showDialog = true } // پاپ‌آپ از داخل courspage فعال شه
+                        onShowDialog = { showDialog = true },
+                        navController = navController
                     )
-                    3 -> flashcardpage()
+                    3 -> flashcardpage(navController = navController)
                 }
             }
         }
