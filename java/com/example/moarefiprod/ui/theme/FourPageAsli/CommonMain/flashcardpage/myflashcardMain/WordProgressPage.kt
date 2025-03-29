@@ -38,22 +38,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.viewmodel.FlashcardViewModel
 
 @Composable
 fun WordProgressPage(words: List<Word>, navController: NavController) {
     var selectedStatuses by remember { mutableStateOf(setOf<WordStatus>()) }
+    val viewModel: FlashcardViewModel = viewModel()
 
-    val total = words.size
-    val correctCount = words.count { it.status == WordStatus.CORRECT }
-    val wrongCount = words.count { it.status == WordStatus.WRONG }
-    val idkCount = words.count { it.status == WordStatus.IDK }
-    val newCount = words.count { it.status == WordStatus.NEW }
+    // ✅ لیست جدید از review_page (اگه باشه) یا لیست اصلی
+    val updatedWords = navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.get<List<Word>>("updated_words")
 
-    val filteredWords = if (selectedStatuses.isEmpty()) words
-    else words.filter { it.status in selectedStatuses }
+    val allWords = updatedWords ?: words
+
+
+    val total = allWords.size
+    val correctCount = allWords.count { it.status == WordStatus.CORRECT }
+    val wrongCount = allWords.count { it.status == WordStatus.WRONG }
+    val idkCount = allWords.count { it.status == WordStatus.IDK }
+    val newCount = allWords.count { it.status == WordStatus.NEW }
+
+    val filteredWords = if (selectedStatuses.isEmpty()) allWords
+    else allWords.filter { it.status in selectedStatuses }
 
     val filteredPercentage =
         if (total > 0) (filteredWords.size.toFloat() / total * 100).toInt() else 0
@@ -196,7 +207,9 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
                 .fillMaxWidth()
                 .height(20.dp)
                 .clickable {
-                    navController.currentBackStackEntry?.savedStateHandle?.set("filter_statuses", selectedStatuses.toList())
+                    navController.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("filter_statuses", selectedStatuses.toList())
                     navController.navigate("word_list_page")
                 }
         ) {
@@ -205,7 +218,6 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // 👈 تعداد کارت‌ها + آیکون برگشت
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painter = painterResource(R.drawable.backbtn),
@@ -223,7 +235,6 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
                     )
                 }
 
-                // 👉 متن "کارت‌ها"
                 Text(
                     text = "کارت‌ها",
                     fontSize = (screenWidth * 0.035f).value.sp,
@@ -234,8 +245,6 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
             }
         }
 
-
-
         Spacer(modifier = Modifier.height(5.dp))
 
         WordCards(filteredWords)
@@ -244,7 +253,12 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
 
         // 🔘 دکمه مرور
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                navController.currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("review_words", filteredWords)
+                navController.navigate("review_page")
+            },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF90CECE)),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
