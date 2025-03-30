@@ -80,7 +80,7 @@ fun RecoveryChange(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
-                PasswordValidationTextField()
+//                PasswordValidationTextField()
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.3f))
 

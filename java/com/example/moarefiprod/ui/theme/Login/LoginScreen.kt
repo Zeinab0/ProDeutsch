@@ -95,7 +95,7 @@ fun LoginScreen(onNavigateToRegister: () -> Unit ,
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.0f))
 
-                EmailValidationTextField()
+//                EmailValidationTextField()
 
                 Spacer(modifier = Modifier.height(screenHeight * 0f))
 

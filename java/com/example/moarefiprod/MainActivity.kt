@@ -1,5 +1,6 @@
 package com.example.moarefiprod
 
+import RecoverySuccess
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.moarefiprod.ui.SignUpScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.ReviewPage
@@ -28,14 +30,20 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
+import com.example.moarefiprod.ui.theme.Login.LoginScreen
+import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryC
+import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryChange
+import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryE
+import com.example.moarefiprod.ui.theme.logofirst.Advertisement
+import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
+import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
+import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 
-// ✅ تعریف فونت مستقیم در فایل
 val iranSans = FontFamily(
     Font(R.font.iransans_bold, FontWeight.Bold),
     Font(R.font.iransans_light, FontWeight.Light),
     Font(R.font.iransans_medium, FontWeight.Medium)
 )
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,16 +63,61 @@ class MainActivity : ComponentActivity() {
                     Word("خدا", "Tschüss", WordStatus.NEW),
                 )
             }
-            NavHost(navController = navController, startDestination = "home") {
 
+            NavHost(navController = navController, startDestination = "firstLogo") {
+                composable("firstLogo") {
+                    Firstlogopage(
+                        onNavigateToLogin = { navController.navigate("advertisement1") }
+                    )
+                }
+                composable("advertisement1") {
+                    Advertisement(
+                        onNext = { navController.navigate("advertisement2") },
+                        onSkip = { navController.navigate("login") }
+                    )
+                }
+                composable("advertisement2") {
+                    Advertisement2(
+                        onNext = { navController.navigate("advertisement3") },
+                        onSkip = { navController.navigate("login") }
+                    )
+                }
+                composable("advertisement3") {
+                    Advertisement3(
+                        onNext = { navController.navigate("login") },
+                        onSkip = { navController.navigate("login") }
+                    )
+                }
+                composable("login") {
+                    LoginScreen(
+                        onNavigateToRegister = { navController.navigate("register") },
+                        onNavigateToRecovery = { navController.navigate("recovery") }
+                    )
+                }
+                composable("register") {
+                    SignUpScreen(
+                        onNavigateToLogin = { navController.navigate("login") },
+                        onSignUpSuccess = { navController.navigate("home") }
+                    )
+                }
+                composable("recovery") {
+                    RecoveryE(navController = navController)
+                }
+                composable("codeScreen") {
+                    RecoveryC(navController = navController)
+                }
+                composable("changeScreen") {
+                    RecoveryChange(navController = navController)
+                }
+                composable("changepassecsess") {
+                    RecoverySuccess(navController = navController)
+                }
                 composable("home") {
                     HomeScreen(navController = navController)
                 }
-
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)
                 }
-
                 composable("word_progress_page") {
                     val updatedWords = navController.previousBackStackEntry
                         ?.savedStateHandle
@@ -75,7 +128,6 @@ class MainActivity : ComponentActivity() {
                         navController = navController
                     )
                 }
-
                 composable("word_list_page") {
                     var currentView by remember { mutableStateOf(WordViewType.CARD) }
 
@@ -86,7 +138,6 @@ class MainActivity : ComponentActivity() {
                         navController = navController
                     )
                 }
-
                 composable("review_page") { entry ->
                     val parentEntry = remember(entry) {
                         navController.getBackStackEntry("word_progress_page")
@@ -101,7 +152,6 @@ class MainActivity : ComponentActivity() {
                             words = reviewWords,
                             navController = navController,
                             onReviewFinished = { updatedWords ->
-                                // 🔁 به‌روزرسانی کلمات اصلی با وضعیت جدید
                                 for (updated in updatedWords) {
                                     val index = dummyWords.indexOfFirst { it.german == updated.german }
                                     if (index != -1) {
@@ -111,74 +161,12 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     } else {
-                        // اگر لیست خالی یا null بود، برگرد عقب
                         LaunchedEffect(Unit) {
                             navController.popBackStack()
                         }
                     }
                 }
-
             }
-            }
-
-
-
-
-            // ✅ نسخه جدید که `HomeScreen()` را نمایش می‌دهد
-//            HomeScreen(navController: NavController)
-
-            // ✅ نسخه قبلی که شامل سیستم ناوبری بود (کامنت شده)
-
-//            val navController = rememberNavController()
-//
-//            NavHost(navController = navController, startDestination = "firstLogo") {
-//                composable("firstLogo") {
-//                    Firstlogopage(
-//                        onNavigateToLogin = { navController.navigate("advertisement1") }
-//                    )
-//                }
-//                composable("advertisement1") {
-//                    Advertisement(
-//                        onNext = { navController.navigate("advertisement2") },
-//                        onSkip = { navController.navigate("login") }
-//                    )
-//                }
-//                composable("advertisement2") {
-//                    Advertisement2(
-//                        onNext = { navController.navigate("advertisement3") },
-//                        onSkip = { navController.navigate("login") }
-//                    )
-//                }
-//                composable("advertisement3") {
-//                    Advertisement3(
-//                        onNext = { navController.navigate("login") },
-//                        onSkip = { navController.navigate("login") }
-//                    )
-//                }
-//                composable("login") {
-//                    LoginScreen(
-//                        onNavigateToRegister = { navController.navigate("register") },
-//                        onNavigateToRecovery = { navController.navigate("recovery") } // ✅ اضافه کردن مسیر بازیابی
-//                    )
-//                }
-//                composable("register") {
-//                    SignUpScreen(
-//                        onNavigateToLogin = { navController.navigate("login") }
-//                    )
-//                }
-//                composable("recovery") {
-//                    RecoveryE(navController = navController) // ✅ ارسال navController به صفحه بازیابی
-//                }
-//                composable("codeScreen") {
-//                    RecoveryC(navController = navController) // ✅ صفحه جدید برای کد
-//                }
-//                composable("changeScreen") {
-//                    RecoveryChange(navController = navController) // ✅ صفحه جدید برای کد
-//                }
-//                composable("changepassecsess") {
-//                    RecoverySuccess(navController = navController) // ✅ صفحه جدید برای کد
-//                }
-//            }
         }
     }
-
+}

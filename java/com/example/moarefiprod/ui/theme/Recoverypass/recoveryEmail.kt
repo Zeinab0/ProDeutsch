@@ -85,7 +85,7 @@ fun RecoveryE(navController: androidx.navigation.NavController){
                     modifier = Modifier.align(Alignment.Start).padding(start = screenWidth * 0.75f)
                 )
 
-                EmailValidationTextField()
+//                EmailValidationTextField()
                 Text(
                     text = "حساب کاربری وجود ندارد",
                     color = Color(0xBCFF0000),

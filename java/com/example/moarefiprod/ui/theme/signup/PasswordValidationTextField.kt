@@ -24,13 +24,16 @@ import java.util.regex.Pattern
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PasswordValidationTextField() {
+fun PasswordValidationTextField(
+    password: String,
+    confirmPassword: String,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit
+){
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var isPasswordValid by remember { mutableStateOf(true) }
     var doPasswordsMatch by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -48,9 +51,8 @@ fun PasswordValidationTextField() {
         OutlinedTextField(
             value = password,
             onValueChange = {
-                password = it
+                onPasswordChange(it)
                 isPasswordValid = it.isEmpty() || passwordPattern.matcher(it).matches()
-                doPasswordsMatch = confirmPassword.isEmpty() || confirmPassword == it // بررسی مطابقت رمزها
             },
             placeholder = {
                 Text(
@@ -118,8 +120,8 @@ fun PasswordValidationTextField() {
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = {
-                confirmPassword = it
-                doPasswordsMatch = it.isEmpty() || it == password // بررسی تطابق رمزها
+                onConfirmPasswordChange(it)
+                doPasswordsMatch = it.isEmpty() || it == password
             },
             placeholder = {
                 Text(

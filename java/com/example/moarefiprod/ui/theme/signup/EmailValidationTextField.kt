@@ -22,12 +22,13 @@ import java.util.regex.Pattern
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmailValidationTextField() {
+fun EmailValidationTextField(email: String,
+                             onEmailChange: (String) -> Unit)
+{
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    var email by remember { mutableStateOf("") }
     var isEmailValid by remember { mutableStateOf(true) }
 
     val emailPattern = Pattern.compile(
@@ -42,7 +43,7 @@ fun EmailValidationTextField() {
         OutlinedTextField(
             value = email,
             onValueChange = {
-                email = it
+                onEmailChange(it)
                 isEmailValid = it.isEmpty() || emailPattern.matcher(it).matches()
             },
             placeholder = {
