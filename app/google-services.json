@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "267742003782",
+    "project_id": "prodeutsch-572be",
+    "storage_bucket": "prodeutsch-572be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:267742003782:android:cc96fdc693889013098047",
+        "android_client_info": {
+          "package_name": "com.example.moarefiprod"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoKlEHZ0p-5FxFSczGNEBkYW0Xh6jcCV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
