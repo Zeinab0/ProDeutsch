@@ -1,1 +1,32 @@
+# Android Studio
+.idea/
+*.iml
+
+# Gradle
+.gradle/
+build/
+**/build/
+*.lock
+
+# Local configuration file (contains sensitive data)
 local.properties
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+
+# Caches
+.cxx/
+.externalNativeBuild/
+.caches/
+captures/
+
+# Generated files
+gen/
+out/
+
+# Misc
+*.apk
+*.ap_
