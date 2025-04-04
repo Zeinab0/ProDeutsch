@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.nativeCanvas
 
-// TEST COMMIT
 @Composable
 fun GrammarPage(navController: NavController) {
     val configuration = LocalConfiguration.current
