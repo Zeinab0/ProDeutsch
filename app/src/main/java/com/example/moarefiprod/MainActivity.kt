@@ -4,17 +4,12 @@ import RecoverySuccess
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +25,8 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.GrammarPage
 import com.example.moarefiprod.ui.theme.Login.LoginScreen
 import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryC
@@ -180,6 +177,15 @@ class MainActivity : ComponentActivity() {
                             navController.popBackStack()
                         }
                     }
+                }
+
+               // composable("profile") {
+                  //  ProfileScreen(onBackPress = { navController.popBackStack() })
+              //  }
+
+                // ✅ مسیر جدید برای صفحه تغییر رمز عبور
+                composable("change_password") {
+                    ChangePasswordScreen(navController = navController)
                 }
             }
         }

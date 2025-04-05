@@ -110,7 +110,10 @@ fun HomeScreen(navController: NavController) {
                 .align(Alignment.TopEnd)
                 .zIndex(2f)
         ) {
-            DrawerContent(onClose = { isDrawerOpen = false })
+            DrawerContent(
+                navController = navController,
+                onClose = { isDrawerOpen = false }
+            )
         }
     }
 }
