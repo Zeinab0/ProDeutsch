@@ -28,6 +28,8 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 //import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.GrammarPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.HörenLevelDetailPage
 import com.example.moarefiprod.ui.theme.Login.LoginScreen
 import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryC
 import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryChange
@@ -127,6 +129,15 @@ class MainActivity : ComponentActivity() {
                 composable("grammar_page") {
                     GrammarPage(navController = navController)
                 }
+                composable("hören_page") {
+                    HörenPage(navController = navController)
+                }
+                composable("hören_level/{level}") { backStackEntry ->
+                    val level = backStackEntry.arguments?.getString("level") ?: "A1"
+                    HörenLevelDetailPage(navController = navController, level = level)
+                }
+
+
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)
                 }

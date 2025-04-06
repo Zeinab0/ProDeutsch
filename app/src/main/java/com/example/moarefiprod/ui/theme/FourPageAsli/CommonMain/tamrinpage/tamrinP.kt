@@ -48,7 +48,9 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController){
                 onItemClick = { selected ->
                     when (selected.title) {
                         "پادکست" -> onShowDialog()
-                        "گرامر" -> navController.navigate("grammar_page") // 👈 اضافه شد
+                        "گرامر" -> navController.navigate("grammar_page")
+                        "مهارت شنیداری" -> navController.navigate("hören_page") // 👈 اضافه شد
+
                     }
                 }
             )
