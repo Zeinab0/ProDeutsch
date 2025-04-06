@@ -1,6 +1,7 @@
 package com.example.moarefiprod
 
 import RecoverySuccess
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,8 +26,12 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 //import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
+// ادامه‌ی سایر importها به همان شکل قبل
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.GrammarPage
 import com.example.moarefiprod.ui.theme.Login.LoginScreen
 import com.example.moarefiprod.ui.theme.Recoverypass.RecoveryC
@@ -37,6 +42,8 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.google.firebase.auth.FirebaseAuth
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+
 
 val iranSans = FontFamily(
     Font(R.font.iransans_bold, FontWeight.Bold),
@@ -45,6 +52,7 @@ val iranSans = FontFamily(
 )
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("ComposableDestinationInComposeScope")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
@@ -187,7 +195,14 @@ class MainActivity : ComponentActivity() {
                 composable("change_password") {
                     ChangePasswordScreen(navController = navController)
                 }
+
+// داخل NavHost
+                composable("about_us") {
+                    AboutUsScreen(navController = navController)
+                }
+
             }
+
         }
     }
 }
