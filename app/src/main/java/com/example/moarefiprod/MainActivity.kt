@@ -45,6 +45,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.google.firebase.auth.FirebaseAuth
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioTestScreen
 
 
 val iranSans = FontFamily(
@@ -144,7 +145,9 @@ class MainActivity : ComponentActivity() {
                     val level = backStackEntry.arguments?.getString("level") ?: "A1"
                     HörenLevelDetailPage(navController = navController, level = level)
                 }
-
+                composable("audio_test") {
+                    AudioTestScreen(navController)
+                }
 
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)

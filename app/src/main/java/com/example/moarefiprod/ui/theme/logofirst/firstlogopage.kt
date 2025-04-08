@@ -19,7 +19,7 @@ fun Firstlogopage(
     onNavigate: (String) -> Unit
 ) {
     LaunchedEffect(Unit) {
-        delay(3000L)
+        delay(100L)
         if (isLoggedIn) {
             onNavigate("home")
         } else {

@@ -49,6 +49,9 @@ import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Surface
+import androidx.compose.ui.text.style.TextAlign
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.evenShadow
 
 
 @Composable
@@ -60,15 +63,22 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
 
     var selectedFilter by remember { mutableStateOf("همه") }
 
+    var showDialog by remember { mutableStateOf(false) }
+
     val exercises = listOf(
         HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 45),
+        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 50),
         HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 0),
         HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 60),
         HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 100),
         HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 85),
         HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
         HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
+        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 60),
+        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 100),
+        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 85),
+        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
+        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 45),
     )
 
     val filteredExercises = when (selectedFilter) {
@@ -175,14 +185,6 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                                     modifier = Modifier.align(Alignment.End)
                                 )
 
-                                Text(
-                                    text = if (item.score != null) "مطالعه شده" else "مطالعه نشده",
-                                    fontSize = 10.sp,
-                                    color = Color(0xFF828282),
-                                    fontFamily = iranSans,
-                                    fontWeight = FontWeight.Light,
-                                    modifier = Modifier.align(Alignment.End)
-                                )
 
                                 val (statusText, statusColor) = when {
                                     item.score == null -> "شروع" to Color(0xFF7AB2B2)
@@ -195,32 +197,56 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(bottom = 6.dp)
-                                            .height(38.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(statusColor)
-                                            .padding(horizontal = 8.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = statusText,
-                                            color = Color.White,
-                                            fontSize = 10.sp,
-                                            fontFamily = iranSans,
-                                            maxLines = 1
-                                        )
+                                    // ستون اول: دکمه وضعیت
+                                    Column {
+                                        Box(
+                                            modifier = Modifier
+                                                .padding(bottom = 6.dp, top = 6.dp)
+                                                .height(20.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(statusColor)
+                                                .padding(horizontal = 6.dp)
+                                                .clickable {
+                                                    showDialog = true
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = statusText,
+                                                color = Color.White,
+                                                fontSize = 10.sp,
+                                                fontFamily = iranSans,
+                                                maxLines = 1
+                                            )
+                                        }
                                     }
 
-                                    Text(
-                                        text = if (item.score != null) "نمره شما: ${item.score}/100" else "نمره ندارد",
-                                        fontSize = 10.sp,
-                                        color = Color.Black,
-                                        fontFamily = iranSans,
-                                        fontWeight = FontWeight.Light
-                                    )
+                                    // ستون دوم: نمره و وضعیت مطالعه
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(bottom = 6.dp),
+                                        horizontalAlignment = Alignment.End,
+                                        verticalArrangement = Arrangement.spacedBy(0.dp)
+
+                                    ) {
+                                        Text(
+                                            text = if (item.score != null) "مطالعه شده" else "مطالعه نشده",
+                                            fontSize = 10.sp,
+                                            color = Color(0xFF828282),
+                                            fontFamily = iranSans,
+                                            fontWeight = FontWeight.Light
+                                        )
+
+                                        Text(
+                                            text = if (item.score != null) "نمره شما: ${item.score}/100" else "نمره ندارد",
+                                            fontSize = 10.sp,
+                                            color = Color.Black,
+                                            fontFamily = iranSans,
+                                            fontWeight = FontWeight.Light
+                                        )
+                                    }
                                 }
+
                             }
                         }
                     }
@@ -273,6 +299,96 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
         }
 
     }
+    if (showDialog) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = true, onClick = {}), // ✅ جلوگیری از کلیک روی عناصر پشت
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .width(300.dp)
+                    .wrapContentHeight()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "شروع کنیم؟",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = iranSans,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End) // ✅ راست‌چین
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "هر آزمون شنیداری شامل یک صدا می باشد که شما میتوانید فقط سه دفعه آن را بشنوید\n" +
+                                "سپس با توجه به آن باید به سوالات پاسخ دهید",
+                        fontSize = 12.sp,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.ExtraLight,
+                        textAlign = TextAlign.Right,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
+                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.White)
+                                .height(45.dp)
+                                .clickable { showDialog = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("خروج", color = Color.Red, fontFamily = iranSans)
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
+                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.White)
+                                .height(45.dp)
+                                .background(Color(0xFF7AB2B2))
+                                .clickable {
+                                    showDialog = false
+                                    navController.navigate("audio_test")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("شروع", color = Color.White, fontFamily = iranSans)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 data class HörExercise(
@@ -280,4 +396,29 @@ data class HörExercise(
     val imageRes: Int,
     val isRead: Int,
     val score: Int?
+)
+fun Modifier.evenShadow(
+    color: Color = Color.Black,
+    radius: Float = 20f,
+    cornerRadius: Float = 20f
+): Modifier = this.then(
+    Modifier.drawBehind {
+        val shadowColor = color.copy(alpha = 0.3f).toArgb()
+        val paint = Paint().asFrameworkPaint().apply {
+            isAntiAlias = true
+            this.color = android.graphics.Color.TRANSPARENT
+            setShadowLayer(radius, 0f, 0f, shadowColor)
+        }
+        drawIntoCanvas {
+            it.nativeCanvas.drawRoundRect(
+                0f,
+                0f,
+                size.width,
+                size.height,
+                cornerRadius,
+                cornerRadius,
+                paint
+            )
+        }
+    }
 )
