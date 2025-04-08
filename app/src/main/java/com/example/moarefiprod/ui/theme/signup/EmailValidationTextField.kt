@@ -20,7 +20,6 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import java.util.regex.Pattern
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailValidationTextField(email: String,
                              onEmailChange: (String) -> Unit)
@@ -34,6 +33,17 @@ fun EmailValidationTextField(email: String,
     val emailPattern = Pattern.compile(
         "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-zA-Z]{2,}$"
     )
+    val focusedBorder = when {
+        email.isEmpty() -> Color(0xFF4D869C)
+        isEmailValid -> Color(0xFF4D869C)
+        else -> Color.Red
+    }
+
+    val unfocusedBorder = when {
+        email.isEmpty() -> Color(0xBCBCBCBC)
+        isEmailValid -> Color(0xBCBCBCBC)
+        else -> Color.Red
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -58,17 +68,10 @@ fun EmailValidationTextField(email: String,
                 )
             },
             shape = RoundedCornerShape(screenWidth * 0.03f),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = when {
-                    email.isEmpty() -> Color(0xFF4D869C)
-                    isEmailValid -> Color(0xFF4D869C)
-                    else -> Color.Red
-                },
-                unfocusedBorderColor = when {
-                    email.isEmpty() -> Color(0xBCBCBCBC)
-                    isEmailValid -> Color(0xBCBCBCBC)
-                    else -> Color.Red
-                },
+
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = focusedBorder,
+                unfocusedBorderColor = unfocusedBorder,
                 cursorColor = Color(0xFF4D869C)
             ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),

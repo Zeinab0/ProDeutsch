@@ -105,7 +105,7 @@ fun ReviewPage(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(currentWord.german, fontSize = 20.sp, fontFamily = iranSans)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Divider(color = Color.Black, thickness = 1.dp)
+                                HorizontalDivider( color = Color.Black,  thickness = 1.dp)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(currentWord.persian, fontSize = 20.sp, fontFamily = iranSans)
                             }

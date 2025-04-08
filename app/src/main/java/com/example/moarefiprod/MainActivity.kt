@@ -44,7 +44,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.google.firebase.auth.FirebaseAuth
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ContactUsScreen
 
 
 val iranSans = FontFamily(
@@ -206,14 +206,14 @@ class MainActivity : ComponentActivity() {
                 composable("change_password") {
                     ChangePasswordScreen(navController = navController)
                 }
-
 // داخل NavHost
                 composable("about_us") {
                     AboutUsScreen(navController = navController)
                 }
-
+                composable("contact_us") {
+                    ContactUsScreen(navController = navController)
+                }
             }
-
         }
     }
 }

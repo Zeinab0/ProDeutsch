@@ -22,7 +22,6 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import java.util.regex.Pattern
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordValidationTextField(
     password: String,
@@ -38,6 +37,8 @@ fun PasswordValidationTextField(
     var doPasswordsMatch by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    val focusedBorderColor = if (doPasswordsMatch) Color(0xFF4D869C) else Color.Red
+    val unfocusedBorderColor = if (doPasswordsMatch) Color(0xBCBCBCBC) else Color.Red
 
     // ✅ الگوی بررسی رمز عبور: حداقل ۶ کاراکتر، شامل حداقل یک حرف و یک عدد
     val passwordPattern = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#\$%^&+=!]{6,}$")
@@ -66,19 +67,12 @@ fun PasswordValidationTextField(
                 )
             },
             shape = RoundedCornerShape(screenWidth * 0.03f),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = when {
-                    password.isEmpty() -> Color(0xFF4D869C)
-                    isPasswordValid -> Color(0xFF4D869C)
-                    else -> Color.Red
-                },
-                unfocusedBorderColor = when {
-                    password.isEmpty() -> Color(0xBCBCBCBC)
-                    isPasswordValid -> Color(0xBCBCBCBC)
-                    else -> Color.Red
-                },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = focusedBorderColor,
+                unfocusedBorderColor = unfocusedBorderColor,
                 cursorColor = Color(0xFF4D869C)
-            ),
+            )
+            ,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
@@ -135,11 +129,12 @@ fun PasswordValidationTextField(
                 )
             },
             shape = RoundedCornerShape(screenWidth * 0.03f),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = if (doPasswordsMatch) Color(0xFF4D869C) else Color.Red,
-                unfocusedBorderColor = if (doPasswordsMatch) Color(0xBCBCBCBC) else Color.Red,
-                cursorColor = Color(0xFF4D869C)
-            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4D869C),
+                unfocusedBorderColor = Color(0xFF90CECE),
+                cursorColor = Color(0xFF4D869C),
+            )
+            ,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {

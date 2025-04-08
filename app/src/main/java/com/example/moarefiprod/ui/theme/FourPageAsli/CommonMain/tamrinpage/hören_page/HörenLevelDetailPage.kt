@@ -35,10 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -48,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import androidx.compose.foundation.layout.*
 
 
 @Composable

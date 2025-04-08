@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordFieldLogin(
     password: String,
@@ -46,11 +45,12 @@ fun PasswordFieldLogin(
             )
         },
         shape = RoundedCornerShape(screenWidth * 0.03f),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = Color(0xFF4D869C),
-            unfocusedBorderColor = Color(0xBCBCBCBC),
-            cursorColor = Color(0xFF4D869C)
-        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color(0xFF4D869C), // ✅ رنگ آبی در حالت فوکوس
+            unfocusedBorderColor = Color(0xFF90CECE), // ✅ رنگ خاکستری در حالت غیرفعال
+            cursorColor = Color(0xFF4D869C), // ✅ تغییر رنگ نشانگر تایپ
+        )
+        ,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         trailingIcon = {

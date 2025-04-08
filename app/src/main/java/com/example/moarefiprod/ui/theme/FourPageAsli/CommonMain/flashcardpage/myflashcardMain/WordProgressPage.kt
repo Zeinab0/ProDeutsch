@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -161,7 +161,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            Divider(
+            HorizontalDivider(
                 color = Color(0xFFABB7C2),
                 thickness = 1.dp,
                 modifier = Modifier

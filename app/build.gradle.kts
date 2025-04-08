@@ -41,8 +41,9 @@ android {
 }
 
 dependencies {
+
     implementation("com.google.accompanist:accompanist-pager:0.32.0")
-    implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.34.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -59,13 +60,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
-   //implementation ("androidx.datastore:datastore-preferences:1.1.4")
-   // implementation ("androidx.navigation:navigation-compose:2.5.3")
     implementation("androidx.compose.material3:material3:<نسخه>")
-    implementation("androidx.compose.material3:material3:1.1.2")
-
-
-}
+    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.compose.foundation:foundation:1.5.0")
+}//implementation ("androidx.datastore:datastore-preferences:1.1.4")
+// implementation ("androidx.navigation:navigation-compose:2.5.3")

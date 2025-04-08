@@ -1,24 +1,33 @@
 package com.example.moarefiprod.ui.theme.Login
 
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Text
 import com.example.moarefiprod.iranSans
 
 @Composable
 fun ForgotPasswordText(onForgotPasswordClick: () -> Unit) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
     val annotatedString = buildAnnotatedString {
         pushStringAnnotation(tag = "FORGOT_PASSWORD", annotation = "forgot_password")
         withStyle(
             style = SpanStyle(
-                color = Color.Blue, // ✅ رنگ آبی برای لینک
+                fontSize = (screenWidth * 0.035f).value.sp,
+                fontFamily = iranSans,
                 fontWeight = FontWeight.Bold,
-                textDecoration = TextDecoration.Underline // ✅ اضافه کردن زیرخط
+                color = Color(0xFF4D869C),
+                textDecoration = TextDecoration.Underline
             )
         ) {
             append("فراموشی رمز عبور؟")
@@ -26,19 +35,17 @@ fun ForgotPasswordText(onForgotPasswordClick: () -> Unit) {
         pop()
     }
 
-    ClickableText(
+    Text(
         text = annotatedString,
+        modifier = Modifier.clickable {
+            onForgotPasswordClick()
+        },
         style = TextStyle(
-            fontSize = 14.sp,
+            fontSize = (screenWidth * 0.035f).value.sp,
             fontFamily = iranSans,
             fontWeight = FontWeight.ExtraLight,
-            color = Color(0xFF78746D)
-        ),
-        onClick = { offset ->
-            annotatedString.getStringAnnotations(tag = "FORGOT_PASSWORD", start = offset, end = offset)
-                .firstOrNull()?.let {
-                    onForgotPasswordClick() // ✅ اجرای عملیات بازنشانی رمز عبور
-                }
-        }
+            color = Color(0xFF78746D),
+            textAlign = TextAlign.Start
+        )
     )
 }
