@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -35,6 +36,7 @@ fun AudioTestScreen(navController: NavController) {
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
     var showDialog by remember { mutableStateOf(false) }
+    var showResult by remember { mutableStateOf(false) } // 👈 این خط اضافه بشه
 
     var remainingPlays by remember { mutableStateOf(3) }
     var isPlaying by remember { mutableStateOf(false) }
@@ -58,13 +60,21 @@ fun AudioTestScreen(navController: NavController) {
 
 
 
-    val questions = listOf(
+    val originalQuestions = listOf(
         Question(0, listOf("Ich trinke gerne Kaffee", "Ich esse eine Banane", "Ich gehe heute ins Kino", "Ich habe ein rotes Auto"), 0),
         Question(1, listOf("Ich spiele Fußball", "Ich fahre Rad", "Ich lese ein Buch", "Ich koche Pasta"), 2),
         Question(2, listOf("Er läuft schnell", "Sie tanzt gern", "Wir schwimmen oft", "Du malst schön"), 1),
         Question(3, listOf("Ich lerne Deutsch", "Ich liebe Schokolade", "Ich mag Katzen", "Ich wohne in Berlin"), 0),
         Question(4, listOf("Ich habe Hunger", "Ich bin müde", "Ich gehe schlafen", "Ich esse Pizza"), 3)
     )
+
+    val questions = remember {
+        originalQuestions.map { q ->
+            val shuffled = q.options.shuffled()
+            val newCorrectIndex = shuffled.indexOf(q.options[q.correctIndex])
+            q.copy(options = shuffled, correctIndex = newCorrectIndex)
+        }
+    }
 
     var currentQuestionIndex by remember { mutableStateOf(0) }
     val currentQuestion = questions[currentQuestionIndex]
@@ -244,11 +254,79 @@ fun AudioTestScreen(navController: NavController) {
                 .padding(vertical = 24.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color(0xFF7AB2B2))
-                .clickable { navController.popBackStack() }
+                .clickable {
+                    showResult = true // 👈 اینجا نتیجه نمایش داده بشه
+                }
                 .padding(horizontal = 24.dp, vertical = 12.dp)
         ) {
             Text("پایان آزمون", color = Color.White, fontFamily = iranSans)
         }
+
+
+        if (showResult) {
+            val correctCount = selectedAnswers.indices.count {
+                selectedAnswers[it] == questions[it].correctIndex
+            }
+
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showResult = false },
+                confirmButton = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = Color(0xFFFFFFFF)),
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .width(110.dp)
+                                .height(53.dp)
+                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
+                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF4D869C))
+                                .height(45.dp)
+                                .clickable {
+                                    showDialog = false
+                                    navController.popBackStack() // 👈 اینجا خروج واقعی اتفاق میفته
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("خروج", color = Color.White, fontFamily = iranSans)
+                        }
+                    }
+                },
+                modifier = Modifier.width(280.dp), // 📌 عرض دیالوگ محدود شد
+                title = {
+                    Text(
+                        "نتیجه آزمون",
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End),
+                        textAlign = TextAlign.Right
+                    )
+                },
+                text = {
+                    Text(
+                        "تعداد پاسخ صحیح: $correctCount از ${questions.size}",
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End),
+                        textAlign = TextAlign.Right
+                    )
+                }
+            )
+
+        }
+
+
     }
     if (showDialog) {
         Box(
