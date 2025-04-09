@@ -31,7 +31,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.evenShadow
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 
 
 @Composable

@@ -51,7 +51,6 @@ import com.example.moarefiprod.iranSans
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
 import androidx.compose.ui.text.style.TextAlign
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.evenShadow
 
 
 @Composable

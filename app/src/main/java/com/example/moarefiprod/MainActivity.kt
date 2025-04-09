@@ -32,7 +32,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
 // ادامه‌ی سایر importها به همان شکل قبل
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.GrammarPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.HörenLevelDetailPage
 import com.example.moarefiprod.ui.theme.Login.LoginScreen
@@ -44,7 +44,6 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.google.firebase.auth.FirebaseAuth
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioTestScreen
 
 
