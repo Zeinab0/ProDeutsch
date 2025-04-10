@@ -26,12 +26,9 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
 // ادامه‌ی سایر importها به همان شکل قبل
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.GrammarPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.HörenLevelDetailPage
@@ -45,6 +42,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.google.firebase.auth.FirebaseAuth
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ContactUsScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
 
 
 val iranSans = FontFamily(
@@ -198,10 +196,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-               // composable("profile") {
-                  //  ProfileScreen(onBackPress = { navController.popBackStack() })
-              //  }
-
+                composable("profile") {
+                    ProfileScreen(navController = navController)
+                }
                 // ✅ مسیر جدید برای صفحه تغییر رمز عبور
                 composable("change_password") {
                     ChangePasswordScreen(navController = navController)
