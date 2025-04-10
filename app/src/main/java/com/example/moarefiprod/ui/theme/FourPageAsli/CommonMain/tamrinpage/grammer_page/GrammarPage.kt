@@ -1,13 +1,17 @@
-package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -15,25 +19,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.nativeCanvas
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 
 @Composable
 fun GrammarPage(navController: NavController) {
@@ -41,45 +31,22 @@ fun GrammarPage(navController: NavController) {
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    var showDialog by remember { mutableStateOf(false) }
+    val viewModel: GrammarViewModel = viewModel()
+    val grammarTopics by viewModel.topics.collectAsState()
 
-    val grammarTopics = listOf(
-        "آرتیکل (der, die, das)",
-        "صرف فعل",
-        "صرف صفت",
-        "ضمائر شخصی",
-        "ضمائر ملکی",
-        "افعال دو بخشی",
-        "آکوزاتیو",
-        "داتیو",
-        "گنتیو",
-        "افعال modal",
-        "جملات دستوری",
-        "افعال دو بخشی",
-        "آکوزاتیو",
-        "داتیو",
-        "گنتیو",
-        "افعال modal",
-        "جملات دستوری"
-    )
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedTopic by remember { mutableStateOf<GrammarTopic?>(null) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             IconButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
-                    .padding(
-                        start = screenWidth * 0.03f,
-                        top = screenHeight * 0.05f
-                    )
+                    .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
                     .align(Alignment.TopStart)
             ) {
                 Icon(
@@ -105,7 +72,6 @@ fun GrammarPage(navController: NavController) {
                 .padding(top = 10.dp)
         )
 
-        // سوال و آیکن
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -121,7 +87,6 @@ fun GrammarPage(navController: NavController) {
                 color = Color.Black,
             )
             Spacer(modifier = Modifier.width(10.dp))
-
             Icon(
                 painter = painterResource(id = R.drawable.grammer),
                 contentDescription = "Grammer",
@@ -130,59 +95,57 @@ fun GrammarPage(navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(0.dp))
 
-        // لیست مباحث گرامری
-        LazyColumn(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
         ) {
-            item {
-                Spacer(modifier = Modifier.height(1.dp)) // مقدار پیشنهادی برای دیدن سایه بالا
-            }
-            items(grammarTopics) { topic ->
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.White, // 👈 باکس سفید
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(53.dp) // 👈 ارتفاع ثابت
-                        .shadow(
-                            elevation = 12.dp,
-                            shape = RoundedCornerShape(12.dp),
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(vertical = 24.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(1.dp)) }
 
-                            ambientColor = Color(0xFF00FFFF), // رنگ سایه
-                            spotColor = Color(0xFF00A4A4)     // برای Android 12+
+                items(grammarTopics) { topic ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(53.dp)
+                            .shadow(12.dp, RoundedCornerShape(12.dp))
+                            .clickable {
+                                selectedTopic = topic
+                                showDialog = true
+                            }
+                    ) {
+                        Text(
+                            text = topic.title,
+                            fontSize = 16.sp,
+                            fontFamily = iranSans,
+                            color = Color(0xFF4D869C),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 18.dp, top = 15.dp),
+                            textAlign = TextAlign.Right
                         )
-                        .clip(RoundedCornerShape(12.dp)) // برای گوشه گرد بعد از سایه
-                        .clickable {
-                            showDialog = true
-                        }
-                ) {
-                    Text(
-                        text = topic,
-                        fontSize = 16.sp,
-                        fontFamily = iranSans,
-                        color = Color(0xFF4D869C),
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(end = 18.dp, top = 15.dp),
-                        textAlign = TextAlign.Right
-                    )
+                    }
                 }
-
-
             }
         }
+
     }
-    // ✅ پاپ‌آپ
-    if (showDialog) {
+
+    if (showDialog && selectedTopic != null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(enabled = true, onClick = {}), // ✅ جلوگیری از کلیک روی عناصر پشت
+                .clickable(enabled = true, onClick = {}),
             contentAlignment = Alignment.Center
         ) {
             Surface(
@@ -194,8 +157,7 @@ fun GrammarPage(navController: NavController) {
                     .padding(16.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(20.dp),
+                    modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -206,7 +168,7 @@ fun GrammarPage(navController: NavController) {
                         textAlign = TextAlign.Right,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End) // ✅ راست‌چین
+                            .wrapContentWidth(Alignment.End)
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -220,7 +182,7 @@ fun GrammarPage(navController: NavController) {
                         color = Color.Gray,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End) // ✅ راست‌چین
+                            .wrapContentWidth(Alignment.End)
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -232,8 +194,8 @@ fun GrammarPage(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
-                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color.White)
                                 .height(45.dp)
@@ -246,13 +208,15 @@ fun GrammarPage(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
-                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color.White)
-                                .height(45.dp)
                                 .background(Color(0xFF7AB2B2))
-                                .clickable { showDialog = false },
+                                .height(45.dp)
+                                .clickable {
+                                    // TODO: رفتن به صفحه بازی با topicId → selectedTopic?.id
+                                    showDialog = false
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Text("شروع", color = Color.White, fontFamily = iranSans)
@@ -263,29 +227,3 @@ fun GrammarPage(navController: NavController) {
         }
     }
 }
-
-fun Modifier.evenShadow(
-    color: Color = Color.Black,
-    radius: Float = 20f,
-    cornerRadius: Float = 20f
-): Modifier = this.then(
-    Modifier.drawBehind {
-        val shadowColor = color.copy(alpha = 0.3f).toArgb()
-        val paint = Paint().asFrameworkPaint().apply {
-            isAntiAlias = true
-            this.color = android.graphics.Color.TRANSPARENT
-            setShadowLayer(radius, 0f, 0f, shadowColor)
-        }
-        drawIntoCanvas {
-            it.nativeCanvas.drawRoundRect(
-                0f,
-                0f,
-                size.width,
-                size.height,
-                cornerRadius,
-                cornerRadius,
-                paint
-            )
-        }
-    }
-)
