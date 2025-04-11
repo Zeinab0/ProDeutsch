@@ -1,35 +1,15 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören
 
 import FilterChips
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,60 +23,52 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Surface
-import androidx.compose.ui.text.style.TextAlign
-
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörExercise
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörExerciseWithId
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenViewModel
 
 @Composable
 fun HörenLevelDetailPage(navController: NavController, level: String) {
-
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
     var selectedFilter by remember { mutableStateOf("همه") }
-
     var showDialog by remember { mutableStateOf(false) }
+    var selectedExerciseByClick by remember { mutableStateOf<HörExerciseWithId?>(null) }
+    var selectedExerciseRandom by remember { mutableStateOf<HörExerciseWithId?>(null) }
+    var dialogSource by remember { mutableStateOf("click") } // or "random"
 
-    val exercises = listOf(
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 50),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 0),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 60),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 100),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 85),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 60),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 100),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 85),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, null),
-        HörExercise("مصاحبه در فرودگاه", R.drawable.baner, 1, 45),
-    )
+    val viewModel: HörenViewModel = viewModel()
+    val exercises by viewModel.exercises.collectAsState()
 
-    val filteredExercises = when (selectedFilter) {
-        "مطالعه شده ها" -> exercises.filter { it.score != null }
-        "مطالعه نشده ها" -> exercises.filter { it.score == null }
-        else -> exercises
+    LaunchedEffect(Unit) {
+        viewModel.loadExercises(level)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    val filteredExercises = when (selectedFilter) {
+        "مطالعه شده ها" -> exercises.filter { it.exercise.score != null }
+        "مطالعه نشده ها" -> exercises.filter { it.exercise.score == null }
+        else -> exercises
+    }
+    val exerciseToShow = if (dialogSource == "random") selectedExerciseRandom else selectedExerciseByClick
 
-        // ⬇️ محتوای اصلی
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(horizontal = screenWidth * 0.05f)
         ) {
-
-            // Header
             Box(modifier = Modifier.fillMaxWidth()) {
                 IconButton(
                     onClick = { navController.popBackStack() },
@@ -158,9 +130,8 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                             .clickable { }
                     ) {
                         Column(modifier = Modifier.fillMaxSize()) {
-
-                            Image(
-                                painter = painterResource(id = item.imageRes),
+                            AsyncImage(
+                                model = item.exercise.imageUrl,
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
@@ -177,17 +148,16 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                                 verticalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = item.title,
+                                    text = item.exercise.title,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
                                     fontFamily = iranSans,
                                     modifier = Modifier.align(Alignment.End)
                                 )
 
-
                                 val (statusText, statusColor) = when {
-                                    item.score == null -> "شروع" to Color(0xFF7AB2B2)
-                                    item.score < 60 -> "دوباره امتحان کن" to Color(0xFFFFA26D)
+                                    item.exercise.score == null -> "شروع" to Color(0xFF7AB2B2)
+                                    item.exercise.score < 60 -> "دوباره امتحان کن" to Color(0xFFFFA26D)
                                     else -> "تکرار مجدد" to Color(0xFF00BD10)
                                 }
 
@@ -196,7 +166,6 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // ستون اول: دکمه وضعیت
                                     Column {
                                         Box(
                                             modifier = Modifier
@@ -206,6 +175,8 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                                                 .background(statusColor)
                                                 .padding(horizontal = 6.dp)
                                                 .clickable {
+                                                    selectedExerciseByClick = item
+                                                    dialogSource = "click"
                                                     showDialog = true
                                                 },
                                             contentAlignment = Alignment.Center
@@ -220,24 +191,20 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                                         }
                                     }
 
-                                    // ستون دوم: نمره و وضعیت مطالعه
                                     Column(
-                                        modifier = Modifier
-                                            .padding(bottom = 6.dp),
+                                        modifier = Modifier.padding(bottom = 6.dp),
                                         horizontalAlignment = Alignment.End,
                                         verticalArrangement = Arrangement.spacedBy(0.dp)
-
                                     ) {
                                         Text(
-                                            text = if (item.score != null) "مطالعه شده" else "مطالعه نشده",
+                                            text = if (item.exercise.score != null) "مطالعه شده" else "مطالعه نشده",
                                             fontSize = 10.sp,
                                             color = Color(0xFF828282),
                                             fontFamily = iranSans,
                                             fontWeight = FontWeight.Light
                                         )
-
                                         Text(
-                                            text = if (item.score != null) "نمره شما: ${item.score}/100" else "نمره ندارد",
+                                            text = if (item.exercise.score != null) "نمره شما: ${item.exercise.score}/100" else "نمره ندارد",
                                             fontSize = 10.sp,
                                             color = Color.Black,
                                             fontFamily = iranSans,
@@ -245,7 +212,6 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                                         )
                                     }
                                 }
-
                             }
                         }
                     }
@@ -253,7 +219,6 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
             }
         }
 
-        // ✅ دکمه شناور فقط یکبار، روی کل صفحه، پایین سمت راست
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -263,21 +228,11 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                     drawIntoCanvas { canvas ->
                         val frameworkPaint = android.graphics.Paint().apply {
                             color = android.graphics.Color.TRANSPARENT
-                            setShadowLayer(
-                                20f,  // بلور
-                                0f, 0f,  // افست
-                                android.graphics.Color.BLACK  // رنگ سایه
-                            )
+                            setShadowLayer(20f, 0f, 0f, android.graphics.Color.BLACK)
                         }
-
                         this.drawContext.canvas.nativeCanvas.apply {
                             save()
-                            drawCircle(
-                                size.width / 2,
-                                size.height / 2,
-                                size.width / 2.2f,
-                                frameworkPaint
-                            )
+                            drawCircle(size.width / 2, size.height / 2, size.width / 2.2f, frameworkPaint)
                             restore()
                         }
                     }
@@ -285,25 +240,33 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                 .clip(RoundedCornerShape(50))
                 .background(Color(0xFF90CECE))
                 .clickable {
-                    // عملکرد دکمه
+                    if (filteredExercises.isNotEmpty()) {
+                        selectedExerciseRandom = filteredExercises.random()
+                        dialogSource = "random"
+                        showDialog = true
+                    }
                 },
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.random),
-                contentDescription = "افزودن",
+                contentDescription = "رندم",
                 tint = Color(0xFF4D869C),
                 modifier = Modifier.size(24.dp)
             )
         }
-
     }
-    if (showDialog) {
+
+// فایل کامل با دیالوگ تفکیک شده برای رندم و کلیک جدا
+// دیالوگ برای تمرین کلیک‌شده و دیالوگ برای تمرین تصادفی جداگانه نوشته شده‌اند
+
+// دیالوگ برای تمرین رندم:
+    if (showDialog && dialogSource == "random" && selectedExerciseRandom != null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(enabled = true, onClick = {}), // ✅ جلوگیری از کلیک روی عناصر پشت
+                .clickable(enabled = true, onClick = {}),
             contentAlignment = Alignment.Center
         ) {
             Surface(
@@ -315,26 +278,25 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                     .padding(16.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(20.dp),
+                    modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "شروع کنیم؟",
+                        text = "تمرین انتخابی: ${selectedExerciseRandom?.exercise?.title}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = iranSans,
                         textAlign = TextAlign.Right,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End) // ✅ راست‌چین
+                            .wrapContentWidth(Alignment.End)
                     )
+
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "هر آزمون شنیداری شامل یک صدا می باشد که شما میتوانید فقط سه دفعه آن را بشنوید\n" +
-                                "سپس با توجه به آن باید به سوالات پاسخ دهید",
+                        text = "می‌خوای همین تمرین رو شروع کنی؟",
                         fontSize = 12.sp,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.ExtraLight,
@@ -354,8 +316,8 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
-                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color.White)
                                 .height(45.dp)
@@ -368,15 +330,14 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
-                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color.White)
-                                .height(45.dp)
                                 .background(Color(0xFF7AB2B2))
+                                .height(45.dp)
                                 .clickable {
                                     showDialog = false
-                                    navController.navigate("audio_test")
+                                    navController.navigate("audio_test/$level/${selectedExerciseRandom?.id}")
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -388,14 +349,97 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
         }
     }
 
+// دیالوگ برای تمرین کلیک‌شده:
+    if (showDialog && dialogSource == "click" && selectedExerciseByClick != null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = true, onClick = {}),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .width(300.dp)
+                    .wrapContentHeight()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "شروع کنیم؟",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = iranSans,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "هر آزمون شنیداری شامل یک صدا می باشد که شما میتوانید فقط سه دفعه آن را بشنوید\nسپس با توجه به آن باید به سوالات پاسخ دهید",
+                        fontSize = 12.sp,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.ExtraLight,
+                        textAlign = TextAlign.Right,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.White)
+                                .height(45.dp)
+                                .clickable { showDialog = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("خروج", color = Color.Red, fontFamily = iranSans)
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF7AB2B2))
+                                .height(45.dp)
+                                .clickable {
+                                    showDialog = false
+                                    navController.navigate("audio_test/$level/${selectedExerciseByClick?.id}")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("شروع", color = Color.White, fontFamily = iranSans)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
-data class HörExercise(
-    val title: String,
-    val imageRes: Int,
-    val isRead: Int,
-    val score: Int?
-)
+
+
 fun Modifier.evenShadow(
     color: Color = Color.Black,
     radius: Float = 20f,

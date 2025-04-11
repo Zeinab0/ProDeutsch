@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page
 
+import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,75 +16,55 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun AudioTestScreen(navController: NavController) {
+fun AudioTestScreen(navController: NavController, level: String, exerciseId: String) {
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    var showDialog by remember { mutableStateOf(false) }
-    var showResult by remember { mutableStateOf(false) } // 👈 این خط اضافه بشه
-
+    val viewModel: AudioTestViewModel = viewModel()
+    val questions by viewModel.questions.collectAsState()
     var remainingPlays by remember { mutableStateOf(3) }
     var isPlaying by remember { mutableStateOf(false) }
-    var shouldPlay by remember { mutableStateOf(false) } // ✅ منتقل‌شده به بالا
-
-    var startPlaybackRequest by remember { mutableStateOf(false) }
-
-    LaunchedEffect(startPlaybackRequest) {
-        if (startPlaybackRequest && !isPlaying && remainingPlays > 0) {
-            startPlaybackRequest = false  // بلافاصله ریست بشه
-
-            isPlaying = true
-            delay(10_000)
-            isPlaying = false
-
-            // ❗ بعد از اتمام پخش، مقدار باقی‌مانده کم بشه
-            remainingPlays--
-        }
-    }
-
-
-
-
-    val originalQuestions = listOf(
-        Question(0, listOf("Ich trinke gerne Kaffee", "Ich esse eine Banane", "Ich gehe heute ins Kino", "Ich habe ein rotes Auto"), 0),
-        Question(1, listOf("Ich spiele Fußball", "Ich fahre Rad", "Ich lese ein Buch", "Ich koche Pasta"), 2),
-        Question(2, listOf("Er läuft schnell", "Sie tanzt gern", "Wir schwimmen oft", "Du malst schön"), 1),
-        Question(3, listOf("Ich lerne Deutsch", "Ich liebe Schokolade", "Ich mag Katzen", "Ich wohne in Berlin"), 0),
-        Question(4, listOf("Ich habe Hunger", "Ich bin müde", "Ich gehe schlafen", "Ich esse Pizza"), 3)
-    )
-
-    val questions = remember {
-        originalQuestions.map { q ->
-            val shuffled = q.options.shuffled()
-            val newCorrectIndex = shuffled.indexOf(q.options[q.correctIndex])
-            q.copy(options = shuffled, correctIndex = newCorrectIndex)
-        }
-    }
-
     var currentQuestionIndex by remember { mutableStateOf(0) }
-    val currentQuestion = questions[currentQuestionIndex]
-
     val selectedAnswers = remember { mutableStateListOf<Int>() }
+    val currentQuestion = questions[currentQuestionIndex]
+    val scope = rememberCoroutineScope()
+    var showExitDialog by remember { mutableStateOf(false) }
+    var showFinishDialog by remember { mutableStateOf(false) }
+    var showResultDialog by remember { mutableStateOf(false) }
 
-    // مقداردهی اولیه (فقط یک بار)
     LaunchedEffect(Unit) {
+        viewModel.loadQuestions(level, exerciseId)
+    }
+
+    LaunchedEffect(questions) {
         selectedAnswers.clear()
         selectedAnswers.addAll(List(questions.size) { -1 })
+    }
+
+    if (questions.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("در حال بارگذاری سوالات...", fontFamily = iranSans)
+        }
+        return
     }
 
     Column(
@@ -94,9 +75,10 @@ fun AudioTestScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
+
             IconButton(
                 onClick = {
-                    showDialog = true // 👈 به جای navController.popBackStack()
+                    showExitDialog = true
                 },
                 modifier = Modifier
                     .padding(top = screenHeight * 0.05f)
@@ -111,9 +93,9 @@ fun AudioTestScreen(navController: NavController) {
             }
         }
 
+
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
             questions.forEachIndexed { index, _ ->
@@ -121,7 +103,7 @@ fun AudioTestScreen(navController: NavController) {
                 val isAnswered = selectedAnswers.getOrNull(index)?.let { it != -1 } == true
 
                 val bgColor = when {
-                    isCurrent ->  Color(0xFFCDE8E5)
+                    isCurrent -> Color(0xFFCDE8E5)
                     isAnswered -> Color(0xFF4D869C)
                     else -> Color(0xFFCDE8E5)
                 }
@@ -134,11 +116,10 @@ fun AudioTestScreen(navController: NavController) {
                         .width(65.dp)
                         .padding(horizontal = 2.dp)
                         .background(bgColor, RoundedCornerShape(8.dp))
-                        .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(8.dp))
+                        .border(1.dp, borderColor, RoundedCornerShape(8.dp))
                 )
             }
         }
-
 
         Spacer(modifier = Modifier.height(45.dp))
 
@@ -153,8 +134,6 @@ fun AudioTestScreen(navController: NavController) {
             Text("تکرار مجاز: $remainingPlays", fontSize = 12.sp, fontFamily = iranSans)
         }
 
-        val scope = rememberCoroutineScope()
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -162,6 +141,9 @@ fun AudioTestScreen(navController: NavController) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val context = LocalContext.current
+            val mediaPlayer = remember { MediaPlayer() }
+            val audioUrl by viewModel.audioUrl.collectAsState() // فرض بر این است که audioUrl از viewModel لود می‌شود
 
             Icon(
                 painter = painterResource(id = R.drawable.volume),
@@ -169,22 +151,26 @@ fun AudioTestScreen(navController: NavController) {
                 tint = if (remainingPlays == 0) Color.Gray else Color(0xFF4D869C),
                 modifier = Modifier
                     .size(40.dp)
-                    .clickable(enabled = !isPlaying && remainingPlays > 0) {
+                    .clickable(enabled = !isPlaying && remainingPlays > 0 && audioUrl != null) {
                         scope.launch {
-                            isPlaying = true
-                            delay(10_000)
-                            isPlaying = false
-                            remainingPlays-- // ✅ بعد از اتمام پخش کم بشه
+                            try {
+                                mediaPlayer.reset()
+                                mediaPlayer.setDataSource(audioUrl)
+                                mediaPlayer.prepare()
+                                mediaPlayer.start()
+                                isPlaying = true
+
+                                delay(mediaPlayer.duration.toLong())
+
+                                isPlaying = false
+                                remainingPlays--
+                            } catch (e: Exception) {
+                                isPlaying = false
+                            }
                         }
                     }
             )
-
-            AudioProgressVisualizer(
-                isPlaying = isPlaying,
-                isDisabled = remainingPlays == 0
-            )
         }
-
 
         Spacer(modifier = Modifier.height(85.dp))
 
@@ -225,12 +211,9 @@ fun AudioTestScreen(navController: NavController) {
                             }
                             .padding(12.dp)
                     ) {
-                        Text(
-                            text = "${index + 1}. $text",
-                            fontFamily = iranSans,
-                            color = textColor
-                        )
+                        Text("${index + 1}. $text", fontFamily = iranSans, color = textColor)
                     }
+
                 }
             }
 
@@ -254,85 +237,36 @@ fun AudioTestScreen(navController: NavController) {
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color(0xFF7AB2B2))
                 .clickable {
-                    showResult = true // 👈 اینجا نتیجه نمایش داده بشه
+                    // ✅ محاسبه نمره
+                    val correctCount = questions.zip(selectedAnswers).count { (q, ans) ->
+                        ans != -1 && q.correctIndex == ans
+                    }
+                    val score = ((correctCount.toDouble() / questions.size) * 100).toInt()
+
+                    // ✅ ذخیره در Firestore
+                    FirebaseFirestore.getInstance()
+                        .collection("hör_levels")
+                        .document(level)
+                        .collection("exercises")
+                        .document(exerciseId)
+                        .update("score", score)
+                        .addOnSuccessListener {
+//                            navController.popBackStack()
+                            showFinishDialog = true
+
+                        }
                 }
                 .padding(horizontal = 24.dp, vertical = 12.dp)
         ) {
             Text("پایان آزمون", color = Color.White, fontFamily = iranSans)
         }
-
-
-        if (showResult) {
-            val correctCount = selectedAnswers.indices.count {
-                selectedAnswers[it] == questions[it].correctIndex
-            }
-
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { showResult = false },
-                confirmButton = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color = Color(0xFFFFFFFF)),
-                        contentAlignment = Alignment.Center
-                    ) {
-
-                        Box(
-                            modifier = Modifier
-                                .width(110.dp)
-                                .height(53.dp)
-                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
-                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF4D869C))
-                                .height(45.dp)
-                                .clickable {
-                                    showDialog = false
-                                    navController.popBackStack() // 👈 اینجا خروج واقعی اتفاق میفته
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("خروج", color = Color.White, fontFamily = iranSans)
-                        }
-                    }
-                },
-                modifier = Modifier.width(280.dp), // 📌 عرض دیالوگ محدود شد
-                title = {
-                    Text(
-                        "نتیجه آزمون",
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End),
-                        textAlign = TextAlign.Right
-                    )
-                },
-                text = {
-                    Text(
-                        "تعداد پاسخ صحیح: $correctCount از ${questions.size}",
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End),
-                        textAlign = TextAlign.Right
-                    )
-                }
-            )
-
-        }
-
-
     }
-    if (showDialog) {
+    if (showExitDialog) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(enabled = true, onClick = {}), // ✅ جلوگیری از کلیک روی عناصر پشت
+                .clickable(enabled = true, onClick = {}),
             contentAlignment = Alignment.Center
         ) {
             Surface(
@@ -344,25 +278,25 @@ fun AudioTestScreen(navController: NavController) {
                     .padding(16.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(20.dp),
+                    modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "مطمئنی میخوای خارج شی؟",
+                        text = "آیا مطمئنی می\u200Cخوای آزمون رو ترک کنی؟",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = iranSans,
                         textAlign = TextAlign.Right,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End) // ✅ راست‌چین
+                            .wrapContentWidth(Alignment.End)
                     )
+
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "اگر بری باید از اول شروع کنی!",
+                        text = "با خروج از آزمون، پیشرفت شما ذخیره نخواهد شد.",
                         fontSize = 12.sp,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.ExtraLight,
@@ -370,7 +304,7 @@ fun AudioTestScreen(navController: NavController) {
                         color = Color.Gray,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End) // ✅ راست‌چین
+                            .wrapContentWidth(Alignment.End)
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -382,14 +316,13 @@ fun AudioTestScreen(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
-                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color.White)
                                 .height(45.dp)
-                                .clickable {
-                                    showDialog = false
-                                    navController.popBackStack() // 👈 اینجا خروج واقعی اتفاق میفته
+                                .clickable { showExitDialog = false
+                                    navController.popBackStack()
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -399,13 +332,14 @@ fun AudioTestScreen(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(4.dp) // ✅ فضای بیرونی برای نمایش سایه
-                                .evenShadow(radius = 25f, cornerRadius = 20f) // ✅ سایه نرم و متقارن
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color.White)
-                                .height(45.dp)
                                 .background(Color(0xFF7AB2B2))
-                                .clickable { showDialog = false },
+                                .height(45.dp)
+                                .clickable {
+                                    showExitDialog = false
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Text("انصراف", color = Color.White, fontFamily = iranSans)
@@ -415,16 +349,187 @@ fun AudioTestScreen(navController: NavController) {
             }
         }
     }
-}
 
-data class Question(
-    val id: Int,
-    val options: List<String>,
-    val correctIndex: Int
-)
+    if (showFinishDialog) {
+        val unansweredCount = selectedAnswers.count { it == -1 }
+        val allAnswered = unansweredCount == 0
+        val message = if (allAnswered) {
+            "به همه سوالات پاسخ دادی. تموم کنیم آزمونو؟"
+        } else {
+            "به $unansweredCount سوال پاسخ ندادی. مطمئنی می‌خوای خارج شی؟"
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = true, onClick = {}),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .width(300.dp)
+                    .wrapContentHeight()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "پایان آزمون",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = iranSans,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = message,
+                        fontSize = 12.sp,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.ExtraLight,
+                        textAlign = TextAlign.Right,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.White)
+                                .height(45.dp)
+                                .clickable {
+                                    showFinishDialog = false
+                                    showResultDialog = true
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("اتمام ازمون", color = Color.Red, fontFamily = iranSans)
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF7AB2B2))
+                                .height(45.dp)
+                                .clickable {
+                                    showFinishDialog = false
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("ادامه", color = Color.White, fontFamily = iranSans)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showResultDialog) {
+        val total = questions.size
+        val correct = questions.zip(selectedAnswers).count { (q, a) -> a == q.correctIndex }
+        val unanswered = selectedAnswers.count { it == -1 }
+        val wrong = total - correct - unanswered
+        val score = ((correct.toDouble() / total) * 100).toInt()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = true, onClick = {}),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .width(300.dp)
+                    .wrapContentHeight()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "پایان آزمون",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = iranSans,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("تعداد کل سوالات: $total", fontSize = 12.sp, fontFamily = iranSans, color = Color.Black)
+                    Text("تعداد پاسخ صحیح: $correct", fontSize = 12.sp, fontFamily = iranSans, color = Color.Black)
+                    Text("تعداد پاسخ غلط: $wrong", fontSize = 12.sp, fontFamily = iranSans, color = Color.Black)
+                    Text("پاسخ داده نشده: $unanswered", fontSize = 12.sp, fontFamily = iranSans, color = Color.Black)
+                    Text("نمره شما: $score از 100", fontSize = 12.sp, fontFamily = iranSans, fontWeight = FontWeight.SemiBold, color = Color(0xFF4D869C))
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp)
+                                .evenShadow(radius = 25f, cornerRadius = 20f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF7AB2B2))
+                                .height(45.dp)
+                                .clickable {
+                                    showResultDialog = false
+                                    FirebaseFirestore.getInstance()
+                                        .collection("hör_levels")
+                                        .document(level)
+                                        .collection("exercises")
+                                        .document(exerciseId)
+                                        .update("score", score)
+                                        .addOnSuccessListener {
+                                            navController.popBackStack()
+                                        }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("تایید و خروج", color = Color.White, fontFamily = iranSans)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AudioTestScreenPreview() {
-    AudioTestScreen(navController = rememberNavController())
+    AudioTestScreen(navController = rememberNavController(), level = "A1", exerciseId = "exercise_1")
 }

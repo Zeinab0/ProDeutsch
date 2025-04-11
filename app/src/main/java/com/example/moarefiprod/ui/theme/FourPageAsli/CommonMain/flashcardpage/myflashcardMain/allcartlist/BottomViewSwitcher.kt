@@ -3,12 +3,14 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.m
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +21,7 @@ import com.example.moarefiprod.R
 
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun BottomViewSwitcher(current: WordViewType, onSelect: (WordViewType) -> Unit) {

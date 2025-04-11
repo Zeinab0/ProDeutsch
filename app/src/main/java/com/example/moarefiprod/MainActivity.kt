@@ -14,9 +14,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.moarefiprod.ui.SignUpScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
@@ -26,10 +28,13 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
 // ادامه‌ی سایر importها به همان شکل قبل
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.GrammarPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.HörenLevelDetailPage
 import com.example.moarefiprod.ui.theme.Login.LoginScreen
@@ -41,8 +46,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.google.firebase.auth.FirebaseAuth
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ContactUsScreen
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioTestScreen
 
 
 val iranSans = FontFamily(
@@ -143,6 +147,19 @@ class MainActivity : ComponentActivity() {
                     HörenLevelDetailPage(navController = navController, level = level)
                 }
 
+                composable(
+                    "audio_test/{level}/{exerciseId}",
+                    arguments = listOf(
+                        navArgument("level") { type = NavType.StringType },
+                        navArgument("exerciseId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val level = backStackEntry.arguments?.getString("level") ?: ""
+                    val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
+
+                    AudioTestScreen(navController, level = level, exerciseId = exerciseId)
+                }
+
 
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)
@@ -196,21 +213,22 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                composable("profile") {
-                    ProfileScreen(navController = navController)
-                }
+               // composable("profile") {
+                  //  ProfileScreen(onBackPress = { navController.popBackStack() })
+              //  }
+
                 // ✅ مسیر جدید برای صفحه تغییر رمز عبور
                 composable("change_password") {
                     ChangePasswordScreen(navController = navController)
                 }
+
 // داخل NavHost
                 composable("about_us") {
                     AboutUsScreen(navController = navController)
                 }
-                composable("contact_us") {
-                    ContactUsScreen(navController = navController)
-                }
+
             }
+
         }
     }
 }

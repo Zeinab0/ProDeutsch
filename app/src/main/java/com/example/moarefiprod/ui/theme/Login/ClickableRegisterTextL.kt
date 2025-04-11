@@ -1,11 +1,7 @@
-package com.example.moarefiprod.ui.theme.Login
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -21,14 +17,27 @@ fun ClickableRegisterTextL(onNavigateToRegister: () -> Unit) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
 
-    val annotatedString: AnnotatedString = buildAnnotatedString {
-        append("حساب کاربری ندارید؟ ")
+    val annotatedString = buildAnnotatedString {
+        withStyle(
+            style = SpanStyle(
+                fontSize = (screenWidth * 0.035f).value.sp, // ✅ اندازه فونت بر اساس عرض صفحه
+                fontFamily = iranSans,
+                fontWeight = FontWeight.ExtraLight,
+                color = Color(0xFF78746D) // ✅ رنگ کلی متن
+            )
+        ) {
+            append("حساب کاربری ندارید؟ ")
+        }
+
+        // ✅ ایجاد بخش قابل کلیک
         pushStringAnnotation(tag = "REGISTER", annotation = "register")
         withStyle(
             style = SpanStyle(
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF4D869C),
-                textDecoration = TextDecoration.Underline
+                fontSize = (screenWidth * 0.035f).value.sp, // ✅ اندازه فونت پویا
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold, // ✅ ضخامت بیشتر برای بخش کلیک‌پذیر
+                color = Color(0xFF4D869C), // ✅ رنگ لینک
+                textDecoration = TextDecoration.Underline // ✅ خط زیر متن
             )
         ) {
             append("اینجا ثبت نام کنید")
@@ -36,14 +45,19 @@ fun ClickableRegisterTextL(onNavigateToRegister: () -> Unit) {
         pop()
     }
 
-    Text(
+    ClickableText(
         text = annotatedString,
-        modifier = Modifier.clickable { onNavigateToRegister() },
         style = TextStyle(
-            fontSize = (screenWidth * 0.035f).value.sp,
+            fontSize = (screenWidth * 0.035f).value.sp, // ✅ اندازه فونت بر اساس عرض صفحه
             fontFamily = iranSans,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.ExtraLight,
             color = Color(0xFF78746D)
-        )
+        ),
+        onClick = { offset ->
+            annotatedString.getStringAnnotations(tag = "REGISTER", start = offset, end = offset)
+                .firstOrNull()?.let {
+                    onNavigateToRegister() // ✅ مقدار صحیح فراخوانی شد
+                }
+        }
     )
 }
