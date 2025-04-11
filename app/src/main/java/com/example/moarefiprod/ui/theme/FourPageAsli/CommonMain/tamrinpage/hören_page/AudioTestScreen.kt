@@ -45,8 +45,8 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
     var isPlaying by remember { mutableStateOf(false) }
     var currentQuestionIndex by remember { mutableStateOf(0) }
     val selectedAnswers = remember { mutableStateListOf<Int>() }
-    val currentQuestion = questions[currentQuestionIndex]
     val scope = rememberCoroutineScope()
+
     var showExitDialog by remember { mutableStateOf(false) }
     var showFinishDialog by remember { mutableStateOf(false) }
     var showResultDialog by remember { mutableStateOf(false) }
@@ -66,6 +66,7 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
         }
         return
     }
+    val currentQuestion = questions[currentQuestionIndex]
 
     Column(
         modifier = Modifier
