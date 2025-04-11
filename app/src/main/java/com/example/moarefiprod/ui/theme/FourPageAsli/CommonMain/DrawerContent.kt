@@ -94,7 +94,8 @@ fun DrawerContent(
             onClose()
         }
         DrawerItem("خروج از حساب کاربری") { /* TODO */ }
-        DrawerItem("ارتباط با ما") { /* TODO */ }
+        DrawerItem("ارتباط با ما") { navController.navigate("contact_us")
+            onClose()}
         DrawerItem("درباره ما") {
             navController.navigate("about_us")
             onClose()

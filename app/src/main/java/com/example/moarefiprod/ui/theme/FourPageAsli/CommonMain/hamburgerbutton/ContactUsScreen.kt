@@ -1,4 +1,5 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 //import com.google.android.play.integrity.internal.y
+
 @Composable
 fun ContactUsScreen(navController: NavController, contentOffset: Dp = 60.dp) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -118,7 +120,7 @@ fun ContactUsScreen(navController: NavController, contentOffset: Dp = 60.dp) {
                     imageRes = R.drawable.mrsahmadi,
                     name = "زینب احمدی",
                     role = "توسعه‌گر اپلیکیشن",
-                    email = "zeinabahmadi19@gmail.com",
+                    email = "zeinabahmadi499@gmail.com",
                     imageSize = 110.dp,
                     imageTextSpacing = (-55).dp
                 )
