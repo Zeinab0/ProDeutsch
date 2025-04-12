@@ -35,6 +35,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.
 // ادامه‌ی سایر importها به همان شکل قبل
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ContactUsScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.LogoutScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
@@ -223,15 +224,16 @@ class MainActivity : ComponentActivity() {
                 composable("change_password") {
                     ChangePasswordScreen(navController = navController)
                 }
-
-// داخل NavHost
-                composable("about_us") {
-                    AboutUsScreen(navController = navController)
+                composable("logout_screen") {
+                    LogoutScreen(navController = navController)
                 }
+// داخل NavHost
                 composable("contact_us") {
                     ContactUsScreen(navController = navController)
                 }
-
+                composable("about_us") {
+                    AboutUsScreen(navController = navController)
+                }
             }
 
         }

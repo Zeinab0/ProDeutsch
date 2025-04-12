@@ -17,9 +17,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 
@@ -149,4 +151,11 @@ fun AboutUsScreen(navController: NavController) {
             )
         }
     }
+}
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun AboutUsScreenPreview() {
+    AboutUsScreen(navController = rememberNavController())
 }

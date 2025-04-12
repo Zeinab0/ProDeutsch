@@ -93,7 +93,10 @@ fun DrawerContent(
             navController.navigate("change_password")
             onClose()
         }
-        DrawerItem("خروج از حساب کاربری") { /* TODO */ }
+        DrawerItem("خروج از حساب کاربری") {
+            navController.navigate("logout_screen")
+            onClose()
+        }
         DrawerItem("ارتباط با ما") { navController.navigate("contact_us")
             onClose()}
         DrawerItem("درباره ما") {
