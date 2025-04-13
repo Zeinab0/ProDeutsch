@@ -35,6 +35,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.
 // ادامه‌ی سایر importها به همان شکل قبل
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ContactUsScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.DeleteAccountScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.LogoutScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarPage
@@ -234,6 +235,10 @@ class MainActivity : ComponentActivity() {
                 composable("about_us") {
                     AboutUsScreen(navController = navController)
                 }
+                composable("delete_account_screen") {
+                    DeleteAccountScreen(navController)
+                }
+
             }
 
         }

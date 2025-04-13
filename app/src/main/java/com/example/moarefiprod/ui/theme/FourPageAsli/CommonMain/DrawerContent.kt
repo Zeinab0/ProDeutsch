@@ -121,7 +121,7 @@ fun DrawerContent(
                 .align(Alignment.End)
                 .padding(8.dp)
                 .padding(bottom = 20.dp)
-                .clickable { /* TODO: اقدام حذف */ }
+                .clickable { navController.navigate("delete_account_screen") }
         )
     }
 }
