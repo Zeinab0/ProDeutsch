@@ -21,6 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.moarefiprod.ui.SignUpScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.MyCoursesScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.ReviewPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Word
@@ -238,9 +239,10 @@ class MainActivity : ComponentActivity() {
                 composable("delete_account_screen") {
                     DeleteAccountScreen(navController)
                 }
-
+                composable("my_courses_screen") {
+                    MyCoursesScreen(navController = navController)
+                }
             }
-
         }
     }
 }

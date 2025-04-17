@@ -6,15 +6,15 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+//import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,7 +33,7 @@ fun DrawerContent(
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.dp
+    //val screenHeight = configuration.screenHeightDp.dp
 
     Column(
         modifier = Modifier
@@ -87,7 +87,10 @@ fun DrawerContent(
             onClose() // تا منو بسته بشه
         }
 
-        DrawerItem("دوره‌های من") { /* TODO */ }
+        DrawerItem("دوره‌های من") {
+            navController.navigate("my_courses_screen")
+            onClose() // تا منو بسته بشه}
+            }
         DrawerItem("اعلان‌ها", hasSwitch = true)
         DrawerItem("تغییر رمز عبور") {
             navController.navigate("change_password")

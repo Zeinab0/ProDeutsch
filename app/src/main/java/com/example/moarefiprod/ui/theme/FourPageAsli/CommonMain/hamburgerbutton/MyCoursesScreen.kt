@@ -18,36 +18,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 
 @Composable
-fun MyCoursesPage(onBackClick: () -> Unit = {}) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+fun MyCoursesScreen(
+    navController: NavController,
+    onBackClick: () -> Unit = { navController.popBackStack() }
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = screenWidth * 0.04f, vertical = screenHeight * 0.02f)
     ) {
         // 🔙 دکمه برگشت
         Icon(
-            painter = painterResource(id = R.drawable.backbtn), // آیکن دلخواهت
+            painter = painterResource(id = R.drawable.backbtn),
             contentDescription = "Back",
             tint = Color.Black,
             modifier = Modifier
-                .size(28.dp)
+                .size(screenWidth * 0.08f)
                 .clickable { onBackClick() }
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
-        // 🔎 سرچ‌بار
+        // 🔎 سرچ‌بار (اگر پیاده‌سازی نشده، حذف یا جایگزین کن)
         SearchBar()
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
         // 📌 تیتر
         Text(
@@ -57,28 +63,32 @@ fun MyCoursesPage(onBackClick: () -> Unit = {}) {
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             textAlign = TextAlign.Right,
-            modifier = Modifier.fillMaxWidth()
-                .offset(x=(-5).dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(x = (-5).dp)
         )
 
-
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
         // 🧩 کارت دوره
         CourseCardCustom()
     }
 }
 
+
 @Composable
 fun CourseCardCustom() {
-    val boxWidth = 348.dp
-    val boxHeight = 110.dp
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
+    val cardWidth = screenWidth * 0.92f
+    val imageSize = screenWidth * 0.25f
+    val buttonWidth = screenWidth * 0.22f
 
     Box(
         modifier = Modifier
-            .width(boxWidth)
-            .height(boxHeight)
+            .width(cardWidth)
+            .height(110.dp)
             .background(Color.White, RoundedCornerShape(12.dp))
             .border(
                 width = 1.dp,
@@ -91,57 +101,55 @@ fun CourseCardCustom() {
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 🖼 تصویر دوره (سمت چپ)
+            // 🖼 تصویر دوره
             Image(
                 painter = painterResource(id = R.drawable.cours1),
                 contentDescription = "Course Image",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(90.dp)
+                modifier = Modifier.size(imageSize)
             )
 
             Spacer(modifier = Modifier.width(6.dp))
 
             // 💰 قیمت و دکمه
             Column(
-                verticalArrangement = Arrangement.SpaceBetween, // از اینجا استفاده می‌کنیم تا فاصله‌ها تنظیم بشه
+                verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .height(90.dp)
                     .fillMaxHeight()
-                    .padding(vertical = 6.dp) // فاصله‌های عمودی کم شده
-                    .offset(x=6.dp,y=4.dp)
+                    .padding(vertical = 6.dp)
+                    .offset(x = 6.dp, y = 4.dp)
             ) {
-                Spacer(modifier = Modifier.height(30.dp)) // فاصله بیشتر برای پایین آوردن قیمت
+                Spacer(modifier = Modifier.height(30.dp))
 
                 Text(
-                    text = " 120 تومان",
+                    text = "120 تومان",
                     fontSize = 12.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
 
-                Spacer(modifier = Modifier.height(3.dp)) // فاصله بیشتر بین قیمت و دکمه
+                Spacer(modifier = Modifier.height(3.dp))
 
                 Box(
                     modifier = Modifier
-                        .width(66.dp)  // تنظیم عرض دکمه
-                        .background(Color(0xFF90CECE), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .clickable { /* انجام عملیاتی مثل شروع دوره */ }
+                        .background(Color(0xFF90CECE), RoundedCornerShape(8.dp)) // رنگ جدید برای دکمه
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center // ✅ این اضافه شه
                 ) {
                     Text(
                         text = "شروع دوره",
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontFamily = iranSans,
-                        color = Color.White,
-                        modifier = Modifier.align(Alignment.Center)  // وسط چین کردن متن
+                        color = Color.White
                     )
                 }
-            }
 
-            // 📝 متن‌ها سمت راست با راست‌چین شدن
+
+            }
+            // 📝 متن سمت راست
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -162,9 +170,7 @@ fun CourseCardCustom() {
                     fontFamily = iranSans,
                     color = Color.Black
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
                     text = "سطح دوره: بدون پیش‌نیاز",
                     fontSize = 10.sp,
@@ -191,10 +197,9 @@ fun CourseCardCustom() {
     }
 }
 
-
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MyCoursesPagePreview() {
-    MyCoursesPage()
+fun MyCoursesScreenPreview() {
+    val fakeNavController = rememberNavController()
+    MyCoursesScreen(navController = fakeNavController)
 }
