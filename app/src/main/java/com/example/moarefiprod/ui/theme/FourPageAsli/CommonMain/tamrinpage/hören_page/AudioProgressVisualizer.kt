@@ -27,28 +27,16 @@ import kotlinx.coroutines.delay
 @Composable
 fun AudioProgressVisualizer(
     isPlaying: Boolean,
-    isDisabled: Boolean, // ✅ پارامتر جدید برای حالت اتمام تکرار
-    durationMs: Int = 10000,
+    isDisabled: Boolean,
+    progress: Float, // ⬅️ مقدار بین 0.0 تا 1.0
     barCount: Int = 30,
     barColor: Color = Color(0xFFB7E5E4),
     barActiveColor: Color = Color(0xFF4DA3A3),
-    barDisabledColor: Color = Color.Gray // ✅ رنگ جدید برای غیرفعال
+    barDisabledColor: Color = Color.Gray
 ) {
-    var activeBars by remember { mutableStateOf(0) }
-    val stepDelay = durationMs / barCount
     val heights = remember { List(barCount) { (16..48).random().dp } }
 
-    LaunchedEffect(isPlaying) {
-        if (isPlaying && !isDisabled) {
-            activeBars = 0
-            repeat(barCount) {
-                delay(stepDelay.toLong())
-                activeBars++
-            }
-        } else {
-            activeBars = 0
-        }
-    }
+    val activeBars = (progress * barCount).toInt().coerceIn(0, barCount)
 
     Row(
         modifier = Modifier
@@ -61,9 +49,9 @@ fun AudioProgressVisualizer(
         for (i in 0 until barCount) {
             val animatedColor by animateColorAsState(
                 targetValue = when {
-                    isDisabled -> barDisabledColor         // ❗ حالت غیرفعال
-                    i < activeBars -> barActiveColor       // فعال در حال پخش
-                    else -> barColor                       // غیرفعال پیش‌فرض
+                    isDisabled -> barDisabledColor
+                    i < activeBars -> barActiveColor
+                    else -> barColor
                 },
                 animationSpec = tween(durationMillis = 500)
             )

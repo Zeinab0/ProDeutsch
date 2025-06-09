@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -30,6 +31,7 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -114,7 +116,7 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
                 Box(
                     modifier = Modifier
                         .height(6.dp)
-                        .width(65.dp)
+                        .weight(1f) // ← مهم‌ترین بخش!
                         .padding(horizontal = 2.dp)
                         .background(bgColor, RoundedCornerShape(8.dp))
                         .border(1.dp, borderColor, RoundedCornerShape(8.dp))
@@ -134,7 +136,6 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
         ) {
             Text("تکرار مجاز: $remainingPlays", fontSize = 12.sp, fontFamily = iranSans)
         }
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -144,7 +145,10 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
         ) {
             val context = LocalContext.current
             val mediaPlayer = remember { MediaPlayer() }
-            val audioUrl by viewModel.audioUrl.collectAsState() // فرض بر این است که audioUrl از viewModel لود می‌شود
+            val audioUrl by viewModel.audioUrl.collectAsState()
+
+            var audioDuration by remember { mutableStateOf(10000) } // پیش‌فرض 10 ثانیه
+            var progress by remember { mutableStateOf(0f) }
 
             Icon(
                 painter = painterResource(id = R.drawable.volume),
@@ -152,26 +156,123 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
                 tint = if (remainingPlays == 0) Color.Gray else Color(0xFF4D869C),
                 modifier = Modifier
                     .size(40.dp)
-                    .clickable(enabled = !isPlaying && remainingPlays > 0 && audioUrl != null) {
+                    .clickable(enabled = !isPlaying && remainingPlays > 0 && !audioUrl.isNullOrEmpty()) {
                         scope.launch {
                             try {
+                                isPlaying = true
                                 mediaPlayer.reset()
                                 mediaPlayer.setDataSource(audioUrl)
-                                mediaPlayer.prepare()
-                                mediaPlayer.start()
-                                isPlaying = true
-
-                                delay(mediaPlayer.duration.toLong())
-
-                                isPlaying = false
-                                remainingPlays--
+                                mediaPlayer.setOnPreparedListener {
+                                    audioDuration = it.duration
+                                    it.start()
+                                    isPlaying = true  // ⬅️ بعد از start()
+                                    println("✅ صدا پخش شد")
+                                }
+                                mediaPlayer.setOnCompletionListener {
+                                    println("✅ پخش تمام شد")
+                                    isPlaying = false
+                                    remainingPlays--
+                                }
+                                mediaPlayer.setOnErrorListener { _, what, extra ->
+                                    println("❌ خطا در پخش صدا: what=$what, extra=$extra")
+                                    isPlaying = false
+                                    true
+                                }
+                                mediaPlayer.prepareAsync()
                             } catch (e: Exception) {
+                                println("❌ خطای کلی در پخش: ${e.message}")
                                 isPlaying = false
                             }
                         }
                     }
             )
+            LaunchedEffect(isPlaying) {
+                while (isPlaying) {
+                    if (mediaPlayer.isPlaying && mediaPlayer.duration > 0) {
+                        progress = mediaPlayer.currentPosition.toFloat() / mediaPlayer.duration
+                    }
+                    delay(100L)
+                }
+                progress = 0f
+            }
+
+            // این ویژوالایزر برای نشان دادن حالت در حال پخش
+            AudioProgressVisualizer(
+                isPlaying = isPlaying,
+                isDisabled = remainingPlays == 0,
+                progress = progress
+            )
+
+
         }
+
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(start = 18.dp, top = 4.dp),
+//            horizontalArrangement = Arrangement.Center,
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//
+//            Icon(
+//                painter = painterResource(id = R.drawable.volume),
+//                contentDescription = "Voice",
+//                tint = if (remainingPlays == 0) Color.Gray else Color(0xFF4D869C),
+//                modifier = Modifier
+//                    .size(40.dp)
+//                    .clickable(enabled = !isPlaying && remainingPlays > 0) {
+//                        scope.launch {
+//                            isPlaying = true
+//                            delay(10_000)
+//                            isPlaying = false
+//                            remainingPlays-- // ✅ بعد از اتمام پخش کم بشه
+//                        }
+//                    }
+//            )
+//
+//            AudioProgressVisualizer(
+//                isPlaying = isPlaying,
+//                isDisabled = remainingPlays == 0
+//            )
+//        }
+//
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(start = 18.dp, top = 4.dp),
+//            horizontalArrangement = Arrangement.Center,
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            val context = LocalContext.current
+//            val mediaPlayer = remember { MediaPlayer() }
+//            val audioUrl by viewModel.audioUrl.collectAsState() // فرض بر این است که audioUrl از viewModel لود می‌شود
+//
+//            Icon(
+//                painter = painterResource(id = R.drawable.volume),
+//                contentDescription = "Voice",
+//                tint = if (remainingPlays == 0) Color.Gray else Color(0xFF4D869C),
+//                modifier = Modifier
+//                    .size(40.dp)
+//                    .clickable(enabled = !isPlaying && remainingPlays > 0 && audioUrl != null) {
+//                        scope.launch {
+//                            try {
+//                                mediaPlayer.reset()
+//                                mediaPlayer.setDataSource(audioUrl)
+//                                mediaPlayer.prepare()
+//                                mediaPlayer.start()
+//                                isPlaying = true
+//
+//                                delay(mediaPlayer.duration.toLong())
+//
+//                                isPlaying = false
+//                                remainingPlays--
+//                            } catch (e: Exception) {
+//                                isPlaying = false
+//                            }
+//                        }
+//                    }
+//            )
+//        }
 
         Spacer(modifier = Modifier.height(85.dp))
 

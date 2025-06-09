@@ -30,3 +30,6 @@ out/
 # Misc
 *.apk
 *.ap_
+*.jks
+app/release/
+.idea/deploymentTargetSelector.xml

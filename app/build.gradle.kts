@@ -1,9 +1,11 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.gms.google-services")
 }
+
+
 
 android {
     namespace = "com.example.moarefiprod"  // ✅ مقدار درست را اینجا تنظیم کنید
@@ -60,14 +62,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
+    implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation ("com.google.android.gms:play-services-auth:21.1.0")
+    implementation ("com.google.android.gms:play-services-base:18.4.0")
+    // استفاده از BOM برای هماهنگی نسخه‌ها
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
-   //implementation ("androidx.datastore:datastore-preferences:1.1.4")
-   // implementation ("androidx.navigation:navigation-compose:2.5.3")
-    implementation("androidx.compose.material3:material3:<نسخه>")
-    implementation("androidx.compose.material3:material3:1.1.2")
-    implementation("io.coil-kt:coil-compose:2.2.2")
-
+    implementation("com.google.firebase:firebase-firestore")
 
 }

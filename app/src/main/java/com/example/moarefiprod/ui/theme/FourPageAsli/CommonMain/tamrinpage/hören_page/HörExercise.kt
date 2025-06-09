@@ -85,9 +85,9 @@ class HörenViewModel : ViewModel() {
 }
 
 
-// در صورت نیاز به مدل سوالات:
 data class Question(
-    val text: String = "",
+    val text: String = "", // اگر در آینده بهش نیاز داشتی
     val options: List<String> = emptyList(),
-    val correctIndex: Int = 0
+    val correctIndex: Int = 0,
+    val id: Int? = null // فقط برای جلوگیری از خطای Firestore، استفاده‌ش نکن
 )
