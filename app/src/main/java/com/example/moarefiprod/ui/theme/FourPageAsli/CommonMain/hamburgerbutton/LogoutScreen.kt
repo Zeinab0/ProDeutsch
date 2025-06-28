@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -25,7 +27,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+
 @Composable
+
 fun LogoutScreen(navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -35,134 +41,156 @@ fun LogoutScreen(navController: NavController) {
     var showError by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
-    val correctPassword = "123456"
+
+    val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = screenWidth * 0.05f, vertical = screenHeight * 0.02f)
     ) {
-        Column(
+        // دکمه برگشت بالا
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // دکمه برگشت
-            Image(
-                painter = painterResource(id = R.drawable.backbtn),
-                contentDescription = "Back",
-                modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.Start)
-                    .clickable {
-                        // برگشت به صفحه منو زمانی که روی دکمه برگشت کلیک می‌شود
-                        navController.navigate("menu_screen") {
-                            popUpTo("logout_screen") { inclusive = true }
-                        }
-                    }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // تیتر
-            Text(
-                text = "خروج از حساب کاربری",
-                fontSize = 20.sp,
-                color = Color.Black,
-                fontFamily = iranSans,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 15.dp),
-                textAlign = TextAlign.Right
-            )
-
-            Spacer(modifier = Modifier.height(45.dp))
-
-            // فیلد رمز عبور با placeholder
-            OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    showError = false
-                },
-                singleLine = true,
-                modifier = Modifier
-                    .width(280.dp)
-                    .height(53.dp),
-                textStyle = TextStyle(
-                    fontFamily = iranSans,
-                    fontSize = 14.sp
+                .fillMaxWidth()
+                .padding(
+                    start = screenWidth * 0.03f,
+                    top = screenHeight * 0.05f
                 ),
-                visualTransformation = PasswordVisualTransformation(),
-                isError = showError,
-                keyboardOptions = KeyboardOptions.Default,
-                shape = RoundedCornerShape(12.dp),
-                placeholder = {
-                    Text(
-                        text = "رمز عبور خود را وارد کنید",
+            contentAlignment = Alignment.TopStart
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.backbtn),
+                    contentDescription = "Back",
+                    tint = Color.Black,
+                    modifier = Modifier.size(screenWidth * 0.09f)
+                )
+            }
+        }
+
+        // بخش وسط صفحه
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier.wrapContentSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "خروج از حساب کاربری",
+                    fontSize = (screenWidth.value * 0.05).sp,
+                    color = Color.Black,
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.04f))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        showError = false
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .width(screenWidth * 0.75f)
+                        .height(screenHeight * 0.065f),
+                    textStyle = TextStyle(
                         fontFamily = iranSans,
-                        fontSize = 11.sp,
-                        color = Color.Gray,
+                        fontSize = (screenWidth.value * 0.035).sp
+                    ),
+                    visualTransformation = PasswordVisualTransformation(),
+                    isError = showError,
+                    keyboardOptions = KeyboardOptions.Default,
+                    shape = RoundedCornerShape(12.dp),
+                    placeholder = {
+                        Text(
+                            text = "رمز عبور خود را وارد کنید",
+                            fontFamily = iranSans,
+                            fontSize = (screenWidth.value * 0.03).sp,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (showError) Color.Red else Color(0xFF4D869C),
+                        unfocusedBorderColor = if (showError) Color.Red else Color(0xFF4D869C),
+                        cursorColor = Color(0xFF4D869C)
+                    )
+                )
+
+                if (showError) {
+                    Spacer(modifier = Modifier.height(screenHeight * 0.005f))
+                    Text(
+                        "رمز عبور را اشتباه وارد کردید.",
+                        color = Color.Red,
+                        fontSize = (screenWidth.value * 0.03).sp,
+                        fontFamily = iranSans,
                         textAlign = TextAlign.Right,
                         modifier = Modifier.fillMaxWidth()
                     )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (showError) Color.Red else Color(0xFF4D869C),
-                    unfocusedBorderColor = if (showError) Color.Red else Color(0xFF4D869C),
-                    cursorColor = Color(0xFF4D869C)
-                )
-            )
+                }
 
-            if (showError) {
-                Text(
-                    "رمز عبور را اشتباه وارد کردید.",
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    fontFamily = iranSans,
-                    modifier = Modifier
-                        .padding(top = 4.dp, end = 8.dp)
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Right
-                )
-            }
+                Spacer(modifier = Modifier.height(screenHeight * 0.08f))
 
-            Spacer(modifier = Modifier.height(80.dp))
-
-            // دکمه تایید
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 50.dp), // فاصله از پایین صفحه
-                contentAlignment = Alignment.Center
-            ) {
                 Button(
                     onClick = {
-                        if (password == correctPassword) {
-                            showSuccessDialog = true
+                        isLoading = true
+                        val auth = FirebaseAuth.getInstance()
+                        val user = auth.currentUser
+
+                        if (user != null && user.email != null) {
+                            val credential = EmailAuthProvider.getCredential(user.email!!, password)
+
+                            user.reauthenticate(credential).addOnCompleteListener { task ->
+                                isLoading = false
+                                if (task.isSuccessful) {
+                                    auth.signOut()
+                                    Toast.makeText(context, "با موفقیت خارج شدید ✅", Toast.LENGTH_SHORT).show()
+                                    navController.navigate("login") {
+                                        popUpTo("logout_screen") { inclusive = true }
+                                    }
+                                } else {
+                                    Toast.makeText(context, "رمز عبور اشتباه است ❌", Toast.LENGTH_LONG).show()
+                                }
+                            }
                         } else {
-                            showError = true
+                            isLoading = false
+                            Toast.makeText(context, "کاربر یافت نشد ❌", Toast.LENGTH_LONG).show()
                         }
                     },
                     modifier = Modifier
-                        .width(129.dp)
-                        .height(53.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C))
+                        .width(screenWidth * 0.5f)
+                        .height(screenHeight * 0.07f),
+                    colors = ButtonDefaults.buttonColors(Color(0xFF4D869C)),
+                    shape = RoundedCornerShape(screenWidth * 0.03f),
+                    enabled = !isLoading
                 ) {
-                    Text(
-                        "تأیید",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(screenHeight * 0.035f)
+                        )
+                    } else {
+                        Text(
+                            text = "تأیید خروج",
+                            color = Color.White,
+                            fontSize = (screenWidth * 0.045f).value.sp,
+                            fontFamily = iranSans,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
+
             }
         }
 
@@ -172,8 +200,7 @@ fun LogoutScreen(navController: NavController) {
             contentDescription = "Logo",
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .size(100.dp)
-                .padding(bottom = 8.dp)
+                .size(screenWidth * 0.25f, screenHeight * 0.05f)
         )
 
         // دیالوگ موفقیت
@@ -186,6 +213,7 @@ fun LogoutScreen(navController: NavController) {
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
+                        fontSize = (screenWidth.value * 0.045).sp,
                         modifier = Modifier.fillMaxWidth()
                     )
                 },
@@ -194,6 +222,7 @@ fun LogoutScreen(navController: NavController) {
                         "شما با موفقیت از حساب خود خارج شدید.",
                         fontFamily = iranSans,
                         textAlign = TextAlign.Center,
+                        fontSize = (screenWidth.value * 0.035).sp,
                         modifier = Modifier.fillMaxWidth()
                     )
                 },
@@ -211,19 +240,19 @@ fun LogoutScreen(navController: NavController) {
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C)),
                             modifier = Modifier
-                                .width(120.dp)
-                                .height(50.dp)
+                                .width(screenWidth * 0.4f)
+                                .height(screenHeight * 0.065f)
                         ) {
                             Text(
                                 "تایید",
                                 fontFamily = iranSans,
+                                fontSize = (screenWidth.value * 0.035).sp,
                                 color = Color.White,
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
-                }
-                ,
+                },
                 containerColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
             )
