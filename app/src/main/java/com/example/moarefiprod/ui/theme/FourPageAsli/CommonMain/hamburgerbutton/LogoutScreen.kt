@@ -3,7 +3,6 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,7 +25,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 
@@ -39,7 +37,6 @@ fun LogoutScreen(navController: NavController) {
 
     var password by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
-    var showSuccessDialog by remember { mutableStateOf(false) }
 
 
     val context = LocalContext.current
@@ -83,11 +80,13 @@ fun LogoutScreen(navController: NavController) {
             ) {
                 Text(
                     text = "خروج از حساب کاربری",
-                    fontSize = (screenWidth.value * 0.05).sp,
+                    fontSize = (screenWidth.value * 0.04).sp,
                     color = Color.Black,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(horizontal = 30.dp)
                 )
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.04f))
@@ -143,6 +142,11 @@ fun LogoutScreen(navController: NavController) {
 
                 Button(
                     onClick = {
+                        if (password.isBlank()) {
+                            Toast.makeText(context, "لطفاً رمز عبور را وارد کنید ⚠️", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
                         isLoading = true
                         val auth = FirebaseAuth.getInstance()
                         val user = auth.currentUser
@@ -178,18 +182,19 @@ fun LogoutScreen(navController: NavController) {
                         CircularProgressIndicator(
                             color = Color.White,
                             strokeWidth = 2.dp,
-                            modifier = Modifier.size(screenHeight * 0.035f)
+                            modifier = Modifier.size(24.dp)
                         )
                     } else {
                         Text(
-                            text = "تأیید خروج",
+                            text = "خروج",
                             color = Color.White,
-                            fontSize = (screenWidth * 0.045f).value.sp,
+                            fontSize = (screenWidth.value * 0.036f).sp,
                             fontFamily = iranSans,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
+
 
             }
         }
@@ -203,60 +208,6 @@ fun LogoutScreen(navController: NavController) {
                 .size(screenWidth * 0.25f, screenHeight * 0.05f)
         )
 
-        // دیالوگ موفقیت
-        if (showSuccessDialog) {
-            AlertDialog(
-                onDismissRequest = { showSuccessDialog = false },
-                title = {
-                    Text(
-                        "موفقیت‌آمیز",
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        fontSize = (screenWidth.value * 0.045).sp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                text = {
-                    Text(
-                        "شما با موفقیت از حساب خود خارج شدید.",
-                        fontFamily = iranSans,
-                        textAlign = TextAlign.Center,
-                        fontSize = (screenWidth.value * 0.035).sp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                confirmButton = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                showSuccessDialog = false
-                                navController.navigate("login") {
-                                    popUpTo("logout_screen") { inclusive = true }
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C)),
-                            modifier = Modifier
-                                .width(screenWidth * 0.4f)
-                                .height(screenHeight * 0.065f)
-                        ) {
-                            Text(
-                                "تایید",
-                                fontFamily = iranSans,
-                                fontSize = (screenWidth.value * 0.035).sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                },
-                containerColor = Color.White,
-                shape = RoundedCornerShape(16.dp)
-            )
-        }
     }
 }
 
