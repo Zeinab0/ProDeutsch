@@ -40,116 +40,110 @@ fun AboutUsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 130.dp)
         ) {
-            Box(
+            // 🔹 دکمه برگشت
+            IconButton(
+                onClick = { navController.popBackStack() },
                 modifier = Modifier
-                    .fillMaxWidth()
                     .padding(
                         start = screenWidth * 0.03f,
                         top = screenHeight * 0.05f
-                    ),
-                contentAlignment = Alignment.TopStart
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.backbtn),
-                        contentDescription = "Back",
-                        tint = Color.Black,
-                        modifier = Modifier.size(screenWidth * 0.09f)
                     )
-                }
+                    .size(screenWidth * 0.09f)
+                    .align(Alignment.Start)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.backbtn),
+                    contentDescription = "Back",
+                    tint = Color.Black,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
-
+            // 🔹 بخش بالایی: تصویر و تیتر
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    .height(screenHeight * 0.3f)
             ) {
-                // هاله
                 Image(
                     painter = painterResource(id = R.drawable.hale),
                     contentDescription = "Top Halo Image",
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier
-                        .width(500.dp)
-                        .height(350.dp)
+                        .width(screenWidth * 1.2f)
+                        .height(screenHeight * 0.45f)
                         .align(Alignment.Center)
-                        .offset(y = (-100).dp)
+                        .offset(y = screenHeight * -0.05f)
                 )
 
-                // تصویر کاراکتر و متن درباره ما
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(start = 20.dp, end = 20.dp)
-                        .offset(y = (-40).dp), // ← این رو تغییر بده برای بالا پایین بردن
+                        .padding(horizontal = screenWidth * 0.05f)
+                        .offset(y = screenHeight * -0.05f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.charactersaboutus),
-                        contentDescription = "Overlay Image",
+                        contentDescription = "Characters",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
-                            .size(155.dp)
-                            .offset(y = (-50).dp)
+                            .size(screenWidth * 0.35f)
+                            .offset(y = screenHeight * -0.01f)
                     )
 
-                    Spacer(modifier = Modifier.width(77.dp)) // ← فاصله رو کمتر کردم
+                    Spacer(modifier = Modifier.width(screenWidth * 0.1f))
 
                     Text(
                         text = "درباره ما",
-                        fontSize = 18.sp,
-                        lineHeight = 30.sp,
+                        fontSize = (screenWidth.value * 0.045f).sp,
+                        lineHeight = (screenWidth.value * 0.07f).sp,
                         textAlign = TextAlign.Right,
                         color = Color.DarkGray,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.offset(y = (-47).dp) // ← اینجا متن رو ببر بالا یا پایین
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(screenHeight * 0.05f))
 
-            // متن اصلی
+            // 🔹 متن اصلی
             Text(
                 text = """
-ما یک تیم کوچک با تخصص‌های متنوع هستیم که هدفمان تلفیق دانش آموزشی و فناوری برای ارائه خدمات برتر است.
-آقای محمدصادق احمدی، معلم با تجربه در زمینه آموزش زبان آلمانی، سابقه‌ای برجسته در تدریس دارد.
-ایشان به مدت ۹ سال در سوییس زندگی و کار کرده و پیش از آن در افغانستان به عنوان معلم فعالیت داشته‌اند.
-در حال حاضر، در سوییس به عنوان مربی کودکان درحال فعالیت هستند همچنین کلاس‌های حضوری زبان آلمانی برگزار می‌کنند.
-علاوه بر این، آقای احمدی دارای مدرک زبان C1 بوده و به زبان انگلیسی کاملاً مسلط هستند؛ همچنین در حال یادگیری زبان فرانسوی می‌باشند.
-در کنار ایشان، زینب احمدی و فرشته جعفری، توسعه‌دهندگان اپلیکیشن و طراحان برنامه و دانشجویان مهندسی کامپیوتر دانشگاه اصفهان،
-به بخش فناوری تیم ما رونق می‌بخشند. ترکیب این تخصص‌ها زمینه‌ساز ایجاد رویکردهای نوآورانه در حوزه‌های آموزش و فناوری شده است.
-ما باور داریم با بهره‌گیری از روش‌های نوین آموزشی و آخرین دستاوردهای فنی، می‌توانیم تجربه‌ای منحصربه‌فرد و مفید
-برای کاربران و دانشجویان فراهم آوریم. از شما دعوت می‌کنیم تا در این مسیر همراه ما باشید و از خدمات و تجربیات ما بهره‌مند شوید.
-""".trimIndent(),
-                fontSize = 12.sp,
-                lineHeight = 30.sp,
+                    ما یک تیم کوچک با تخصص‌های متنوع هستیم که هدفمان تلفیق دانش آموزشی و فناوری برای ارائه خدمات برتر است.
+                    آقای محمدصادق احمدی، معلم با تجربه در زمینه آموزش زبان آلمانی، سابقه‌ای برجسته در تدریس دارد.
+                    ایشان به مدت ۹ سال در سوییس زندگی و کار کرده و پیش از آن در افغانستان به عنوان معلم فعالیت داشته‌اند.
+                    در حال حاضر، در سوییس به عنوان مربی کودکان درحال فعالیت هستند همچنین کلاس‌های حضوری زبان آلمانی برگزار می‌کنند.
+                    علاوه بر این، آقای احمدی دارای مدرک زبان C1 بوده و به زبان انگلیسی کاملاً مسلط هستند؛ همچنین در حال یادگیری زبان فرانسوی می‌باشند.
+                    در کنار ایشان، زینب احمدی و فرشته جعفری، توسعه‌دهندگان اپلیکیشن و طراحان برنامه و دانشجویان مهندسی کامپیوتر دانشگاه اصفهان،
+                    به بخش فناوری تیم ما رونق می‌بخشند. ترکیب این تخصص‌ها زمینه‌ساز ایجاد رویکردهای نوآورانه در حوزه‌های آموزش و فناوری شده است.
+                    ما باور داریم با بهره‌گیری از روش‌های نوین آموزشی و آخرین دستاوردهای فنی، می‌توانیم تجربه‌ای منحصربه‌فرد و مفید
+                    برای کاربران و دانشجویان فراهم آوریم. از شما دعوت می‌کنیم تا در این مسیر همراه ما باشید و از خدمات و تجربیات ما بهره‌مند شوید.
+                """.trimIndent(),
+                fontSize = (screenWidth.value * 0.033f).sp,
+                lineHeight = (screenWidth.value * 0.06f).sp,
                 textAlign = TextAlign.Right,
                 color = Color.DarkGray,
                 fontFamily = iranSans,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.offset(y = (-105).dp)
+                modifier = Modifier
+                    .offset(y = screenHeight * -0.12f)
                     .fillMaxWidth()
-                    .padding(horizontal = 25.dp)
+                    .padding(horizontal = screenWidth * 0.06f)
             )
         }
 
-        // لوگو پایین صفحه
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.prodeutsch),
-                contentDescription = "Logo",
-                modifier = Modifier
-                    .size(110.dp)
-                    .offset(y = 8.dp)
-            )
-        }
+        // 🔹 لوگو پایین
+        Image(
+            painter = painterResource(id = R.drawable.prodeutsch),
+            contentDescription = "Logo",
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .size(screenWidth * 0.25f, screenHeight * 0.05f)
+                .padding(bottom = screenHeight * 0.015f)
+        )
     }
 }
 
