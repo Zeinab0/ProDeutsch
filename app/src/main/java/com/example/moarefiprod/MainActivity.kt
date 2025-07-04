@@ -36,9 +36,10 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.
 // ادامه‌ی سایر importها به همان شکل قبل
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ContactUsScreen
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.DeleteAccountScreen
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.DeleteAccountScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.LogoutScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.memorygames.WordMatchPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.HörenLevelDetailPage
@@ -67,6 +68,10 @@ class MainActivity : ComponentActivity() {
         val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
 
         setContent {
+            //زینب خانم، خانمم خواستی بازی اولی رو ببینی فقط همین یه خط رو فعال کن بقیه رو غیر فعال
+           //  WordMatchPage(navController = rememberNavController())
+
+            //اینا رو غیر فعال کن تا بسته شدن پرانتز ست کانتنت
             val navController = rememberNavController()
             val dummyWords = remember {
                 mutableStateListOf(
@@ -236,13 +241,14 @@ class MainActivity : ComponentActivity() {
                 composable("about_us") {
                     AboutUsScreen(navController = navController)
                 }
-                composable("delete_account_screen") {
-                    DeleteAccountScreen(navController)
-                }
+//                composable("delete_account_screen") {
+//                    DeleteAccountScreen(navController)
+//                }
                 composable("my_courses_screen") {
                     MyCoursesScreen(navController = navController)
                 }
             }
+            // تا اینجا
         }
-    }
+   }
 }
