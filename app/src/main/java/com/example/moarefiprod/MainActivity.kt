@@ -39,6 +39,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.
 //import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.DeleteAccountScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.LogoutScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceBuilder.SentenceBuilderPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.memorygames.WordMatchPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
@@ -69,7 +70,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             //زینب خانم، خانمم خواستی بازی اولی رو ببینی فقط همین یه خط رو فعال کن بقیه رو غیر فعال
-           //  WordMatchPage(navController = rememberNavController())
+            // WordMatchPage(navController = rememberNavController())
+
+          //  SentenceBuilderPage(navController = rememberNavController())
 
             //اینا رو غیر فعال کن تا بسته شدن پرانتز ست کانتنت
             val navController = rememberNavController()
@@ -250,5 +253,5 @@ class MainActivity : ComponentActivity() {
             }
             // تا اینجا
         }
-   }
+    }
 }
