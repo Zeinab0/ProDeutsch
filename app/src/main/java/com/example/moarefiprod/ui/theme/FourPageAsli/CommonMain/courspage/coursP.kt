@@ -1,3 +1,4 @@
+// com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage/tamrinpage.kt
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage
 
 import FilterChips
@@ -28,11 +29,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
+import com.example.moarefiprod.data.allAppCourses // ⬅️ **این خط جدید اضافه شده است**
 
 @Composable
-fun tamrinpage(){
+fun tamrinpage(navController: NavController){
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -40,13 +43,8 @@ fun tamrinpage(){
 
     var selectedFilter by remember { mutableStateOf("همه") } // ✅ مقدار اولیه
 
-    val sampleCourses = listOf(
-        Course("A1 آموزش آلمانی سطح", "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", "بدون پیش‌نیاز", "۱۰ ساعت و ۳۰ دقیقه", "۱۲ جلسه + ۲۴ آزمون", 120, R.drawable.cours1),
-        Course("A2 آموزش آلمانی سطح", "ادامه مسیر یادگیری آلمانی با نکات بیشتر", "نیازمند A1", "۹ ساعت", "۱۰ جلسه + تمرین", 0, R.drawable.cours1),
-        Course("B1 آموزش آلمانی سطح", "آمادگی برای مکالمه‌های روزمره و آزمون‌ها", "نیازمند A2", "۱۱ ساعت", "۱۴ جلسه + پروژه", 200, R.drawable.cours1 ,true),
-        Course("B2 آموزش آلمانی سطح", "مکالمه روان و درک عمیق‌تر", "نیازمند B1", "۱۳ ساعت", "۱۵ جلسه + تمرین تعاملی", 250, R.drawable.cours1),
-        Course("B2 آموزش آلمانی سطح", "مکالمه روان و درک عمیق‌تر", "نیازمند B1", "۱۳ ساعت", "۱۵ جلسه + تمرین تعاملی", 250, R.drawable.cours1,true),
-    )
+    // 🔴 **این خط جایگزین لیست sampleCourses قبلی شما شده است**
+    val coursesToDisplay = allAppCourses // حالا از لیست جامع و کامل استفاده می‌کنیم
 
     Column(
         modifier = Modifier
@@ -86,9 +84,9 @@ fun tamrinpage(){
             }
         }
         val filteredCourses = when (selectedFilter) {
-            "رایگان" -> sampleCourses.filter { it.price == 0 }
-            "جدید" -> sampleCourses.filter { it.isNew }
-            else -> sampleCourses
+            "رایگان" -> coursesToDisplay.filter { it.price == 0 } // استفاده از coursesToDisplay
+            "جدید" -> coursesToDisplay.filter { it.isNew }     // استفاده از coursesToDisplay
+            else -> coursesToDisplay                           // استفاده از coursesToDisplay
         }
 
         // ✅ فقط لیست دوره‌ها اسکرول میشه
@@ -101,14 +99,12 @@ fun tamrinpage(){
         ) {
             items(filteredCourses) { course ->
                 Box {
-                    CourseCard(course = course)
+                    CourseCard(course = course, navController = navController)
                     if (course.isNew) {
                         NewLabel()
                     }
                 }
             }
-
         }
-
     }
 }
