@@ -19,12 +19,16 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.fl
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.Homepage.mainpage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.tamrinpage
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.UnavailableDialog
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -37,6 +41,20 @@ fun HomeScreen(navController: NavController) {
     val screenHeight = configuration.screenHeightDp.dp
 
     var isDrawerOpen by remember { mutableStateOf(false) }
+
+    val showCompleteProfileDialog = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.let {
+            val db = FirebaseFirestore.getInstance().collection("users")
+            val docs = db.whereEqualTo("email", it.email).get().await()
+
+            if (docs.isEmpty) {
+                showCompleteProfileDialog.value = true
+            }
+        }
+    }
 
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -115,5 +133,13 @@ fun HomeScreen(navController: NavController) {
                 onClose = { isDrawerOpen = false }
             )
         }
+
+        if (showCompleteProfileDialog.value) {
+            CompleteProfileDialog(
+                onDismiss = { showCompleteProfileDialog.value = false }
+            )
+        }
+
+
     }
 }
