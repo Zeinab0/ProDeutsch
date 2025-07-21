@@ -1,0 +1,261 @@
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.details
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController // Import this for preview
+import com.example.moarefiprod.R
+import com.example.moarefiprod.iranSans
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseItem
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseItemType
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseLesson
+
+
+@Composable
+fun DarsDetails(lesson: CourseLesson, navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val imageSectionHeight = screenHeight * 0.32f
+    val overlapAmount = 50.dp
+
+    Scaffold { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = paddingValues.calculateBottomPadding())
+                .background(Color.White)
+        )
+        {
+            Image(
+                painter = painterResource(id = R.drawable.dars_pic),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(imageSectionHeight)
+                    .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            IconButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.backbtn),
+                    contentDescription = "Back",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(screenWidth * 0.07f)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = imageSectionHeight - overlapAmount)
+                    // You commented this out, ensure it's intentional, otherwise it might lead to unbounded height
+                    // .height(screenHeight - (imageSectionHeight - overlapAmount) - paddingValues.calculateBottomPadding())
+                    .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+                    .shadow(22.dp, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+                    .background(Color.White)
+                    .padding(horizontal = screenWidth * 0.07f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = screenHeight * 0.03f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = lesson.title,
+                            fontSize = (screenWidth * 0.04f).value.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontFamily = iranSans,
+                            color = Color.Black,
+                            textAlign = TextAlign.End,
+                        )
+                        Text(
+                            text = "${lesson.duration} دقیقه",
+                            fontSize = (screenWidth * 0.03f).value.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = iranSans,
+                            color = Color.Gray,
+                            textAlign = TextAlign.End,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Image(
+                        painter = painterResource(
+                            id = when (lesson.id) {
+                                "01" -> R.drawable.num_01
+                                "02" -> R.drawable.num_02
+                                "03" -> R.drawable.num_03
+                                "04" -> R.drawable.num_04
+                                "05" -> R.drawable.num_05
+                                "06" -> R.drawable.num_06
+                                "07" -> R.drawable.num_07
+                                else -> R.drawable.num_01
+                            }
+                        ),
+                        contentDescription = "Lesson Number",
+                        modifier = Modifier
+                            .size(screenWidth * 0.07f),
+                        colorFilter = ColorFilter.tint(Color(0xFF90CECE))
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f), // Use weight for remaining height
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                ) {
+                    items(lesson.items) { item ->
+                        LessonItemRowUI(item = item)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LessonItemRowUI(item: CourseItem) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val cardShape = RoundedCornerShape(16.dp)
+
+    Box( // Outer Box for shadow, similar to SearchBar
+        modifier = Modifier
+            .fillMaxWidth()
+            // Add some padding around the box to give space for the shadow to spread
+            // .padding(vertical = 2.dp) // Example: 4dp vertical padding
+            .clickable { /* TODO: Handle click to open item content later */ }
+            .shadow(
+                elevation = 6.dp, // Increased elevation for a more prominent and spread shadow
+                shape = cardShape,
+                clip = false // Crucial to allow shadow to spread beyond the Composable's bounds
+            )
+            .clip(cardShape) // This clips the shadow-casting Box itself to the rounded corners
+    ) {
+        Box( // Inner Box for background and border, similar to SearchBar
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, cardShape) // Inner content background is White
+                .border(1.dp, Color(0xFF90CECE), cardShape) // Border with the specified color
+                .padding(horizontal = 16.dp, vertical = 12.dp), // Padding for content inside the border
+            contentAlignment = Alignment.Center // Center content vertically within this box
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = item.title,
+                        fontSize = (screenWidth * 0.03f).value.sp,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textAlign = TextAlign.End,
+                    )
+                    Text(
+                        text = "15 دقیقه", // Placeholder duration. Replace with item.duration if available.
+                        fontSize = (screenWidth * 0.028f).value.sp,
+                        fontFamily = iranSans,
+                        color = Color.Gray,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                val iconRes = when (item.type) {
+                    CourseItemType.VIDEO -> R.drawable.video
+                    CourseItemType.DOCUMENT -> R.drawable.document
+                    CourseItemType.QUIZ1, CourseItemType.QUIZ2, CourseItemType.QUIZ3, CourseItemType.FINAL_EXAM -> R.drawable.exam
+                    CourseItemType.WORDS -> R.drawable.words
+                }
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(screenWidth * 0.07f)
+                )
+            }
+        }
+    }
+}
+
+// REMOVE THE FakeNavController CLASS ENTIRELY
+// class FakeNavController : NavController(null) {
+//     override fun popBackStack(): Boolean {
+//         return true
+//     }
+// }
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+fun PreviewDarsDetailsScreen() {
+    val sampleLesson = CourseLesson(
+        id = "02",
+        title = "الفبا و تلفظ حروف",
+        duration = "45",
+        isUnlocked = true,
+        isCompleted = false,
+        items = listOf(
+            CourseItem(CourseItemType.VIDEO, "آشنایی با حروف الفبای آلمانی", isCompleted = true, isInProgress = false),
+            CourseItem(CourseItemType.DOCUMENT, "جزوه تکمیلی", isCompleted = false, isInProgress = true),
+            CourseItem(CourseItemType.QUIZ1, "آزمون اول(جزوه و ویدیو آموزشی)", isCompleted = false, isInProgress = false),
+            CourseItem(CourseItemType.WORDS, "کلمات این درس", isCompleted = false, isInProgress = false),
+            CourseItem(CourseItemType.QUIZ2, "آزمون دوم(کلمات)", isCompleted = false, isInProgress = false),
+            CourseItem(CourseItemType.FINAL_EXAM, "آزمون پایان درس", isCompleted = false, isInProgress = false)
+        )
+    )
+
+    MaterialTheme {
+        // Use rememberNavController() directly in the preview
+        DarsDetails(lesson = sampleLesson, navController = rememberNavController())
+    }
+}

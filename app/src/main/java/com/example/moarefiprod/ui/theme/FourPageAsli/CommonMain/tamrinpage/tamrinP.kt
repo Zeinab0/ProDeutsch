@@ -77,7 +77,8 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController){
             ) {
                 items(newCourses) { course ->
                     Box {
-                        CourseCard(course = course)
+                      // CourseCard(course = course)
+                        CourseCard(course = course, navController = navController)
                         if (course.isNew) {
                             NewLabel()
                         }

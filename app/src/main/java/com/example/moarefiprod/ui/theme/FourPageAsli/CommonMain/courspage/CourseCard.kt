@@ -24,12 +24,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController // Import NavController
 import com.example.moarefiprod.iranSans
 
 @Composable
-fun CourseCard(course: Course) {
+fun CourseCard(
+    course: Course,
+    navController: NavController // NavController را به عنوان پارامتر اضافه می کنیم
+) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val cardHeight = screenWidth * 0.3f // ارتفاع متناسب با عرض صفحه
+    val cardHeight = screenWidth * 0.3f
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
 
@@ -68,13 +72,20 @@ fun CourseCard(course: Course) {
                     fontSize = 10.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
-                    color = if (course.price == 0) Color(0xFF2E7D32) else Color(0xFF000000), // سبز برای رایگان
+                    color = if (course.price == 0) Color(0xFF2E7D32) else Color(0xFF000000),
                     textAlign = TextAlign.Right
                 )
 
-
                 Button(
-                    onClick = { /* TODO */ },
+                    onClick = {
+                        // 🔴🔴🔴 مهمترین تغییر در اینجا 🔴🔴🔴
+                        // به جای ذخیره کردن در savedStateHandle، عنوان دوره را در مسیر ناوبری پاس می‌دهیم.
+                        // این عنوان در MainActivity توسط composable("course_detail/{courseTitle}") دریافت می‌شود.
+                        navController.navigate("course_detail/${course.title}") {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -82,7 +93,6 @@ fun CourseCard(course: Course) {
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C))
                 ) {
-
                     Text(
                         text = "شروع دوره",
                         modifier = Modifier
@@ -102,7 +112,6 @@ fun CourseCard(course: Course) {
                     .padding(0.dp,10.dp,10.dp,10.dp)
                     .fillMaxHeight()
                     .width(200.dp),
-//                    .background(Color(0xFF9B3131)),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -174,8 +183,6 @@ fun CourseCard(course: Course) {
                     color = Color.DarkGray,
                     textAlign = TextAlign.Right
                 )
-
-
             }
         }
     }
@@ -185,8 +192,8 @@ fun CourseCard(course: Course) {
 fun NewLabel() {
     Box(
         modifier = Modifier
-            .offset(x = (-10).dp, y = 6.dp) // محل قرارگیری بالا چپ
-            .rotate(-40f) // چرخش مورب
+            .offset(x = (-10).dp, y = 6.dp)
+            .rotate(-40f)
             .background(Color.Red, shape = RoundedCornerShape(4.dp))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
@@ -199,4 +206,3 @@ fun NewLabel() {
         )
     }
 }
-

@@ -82,7 +82,7 @@ fun HomeScreen(navController: NavController) {
                 // ⬇ صفحه‌ها
                 when (selectedIndex) {
                     0 -> mainpage()
-                    1 -> tamrinpage()
+                    1 -> tamrinpage(navController = navController)
                     2 -> courspage(
                         onShowDialog = { showDialog = true },
                         navController = navController
