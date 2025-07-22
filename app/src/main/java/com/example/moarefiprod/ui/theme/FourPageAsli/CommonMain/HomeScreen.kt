@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.UnavailableDialog
 import com.google.firebase.auth.FirebaseAuth
@@ -128,7 +127,7 @@ fun HomeScreen(navController: NavController,userViewModel: UserProfileViewModel)
             exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }),
             modifier = Modifier
                 .fillMaxHeight()
-                .width(260.dp)
+                .width(screenWidth * 0.65f)
                 .align(Alignment.TopEnd)
                 .zIndex(2f)
         ) {

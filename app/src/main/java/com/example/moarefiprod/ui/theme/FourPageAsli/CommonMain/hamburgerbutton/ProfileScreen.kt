@@ -194,9 +194,13 @@ fun ProfileScreen(navController: NavController,userViewModel: UserProfileViewMod
                     }
 
                     Box(
-                        modifier = Modifier.width(129.dp).height(53.dp).background(Color(0xFFD1F1EF), RoundedCornerShape(cornerRadius)).clickable {
-                            navController.popBackStack()
-                        },
+                        modifier = Modifier
+                            .width(129.dp)
+                            .height(53.dp)
+                            .background(Color(0xFFD1F1EF), RoundedCornerShape(cornerRadius))
+                            .clickable {
+                                navController.popBackStack()
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text("انصراف", color = Color.Black, fontFamily = iranSans)

@@ -8,8 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,12 +26,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun DrawerContent(
@@ -118,8 +116,8 @@ fun DrawerContent(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text(userName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text(email, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                Text(userName, fontWeight = FontWeight.Bold, fontSize = (fontScale * 16).sp,)
+                Text(email, fontWeight = FontWeight.Medium, fontSize = (fontScale * 12).sp,)
             }
         }
 
@@ -289,18 +287,48 @@ fun DrawerContent(
 
                                     user.reauthenticate(credential).addOnCompleteListener { reauthTask ->
                                         if (reauthTask.isSuccessful) {
-                                            user.delete().addOnCompleteListener { deleteTask ->
-                                                isLoading = false
-                                                showDeleteDialog = false
-                                                if (deleteTask.isSuccessful) {
-                                                    Toast.makeText(context, "حساب شما حذف شد ✅", Toast.LENGTH_LONG).show()
-                                                    navController.navigate("register") {
-                                                        popUpTo(0)
+                                            // اول سند Firestore رو پیدا و حذف کن
+                                            val db = FirebaseFirestore.getInstance()
+                                            db.collection("users")
+                                                .whereEqualTo("email", email)
+                                                .get()
+                                                .addOnSuccessListener { querySnapshot ->
+                                                    val doc = querySnapshot.documents.firstOrNull()
+                                                    doc?.reference?.delete()?.addOnSuccessListener {
+                                                        // بعد از حذف Firestore، از Authentication حذف کن
+                                                        user.delete().addOnCompleteListener { deleteTask ->
+                                                            isLoading = false
+                                                            showDeleteDialog = false
+                                                            if (deleteTask.isSuccessful) {
+                                                                Toast.makeText(context, "حساب شما حذف شد ✅", Toast.LENGTH_LONG).show()
+                                                                navController.navigate("register") {
+                                                                    popUpTo(0)
+                                                                }
+                                                            } else {
+                                                                Toast.makeText(context, "❌ خطا در حذف حساب از احراز هویت", Toast.LENGTH_LONG).show()
+                                                            }
+                                                        }
+                                                    } ?: run {
+                                                        // اگر سندی پیدا نشد، فقط Authentication رو حذف کن
+                                                        user.delete().addOnCompleteListener { deleteTask ->
+                                                            isLoading = false
+                                                            showDeleteDialog = false
+                                                            if (deleteTask.isSuccessful) {
+                                                                Toast.makeText(context, "حساب شما حذف شد (بدون اطلاعات در دیتابیس)", Toast.LENGTH_LONG).show()
+                                                                navController.navigate("register") {
+                                                                    popUpTo(0)
+                                                                }
+                                                            } else {
+                                                                Toast.makeText(context, "❌ خطا در حذف حساب", Toast.LENGTH_LONG).show()
+                                                            }
+                                                        }
                                                     }
-                                                } else {
-                                                    Toast.makeText(context, "❌خطا در حذف حساب ", Toast.LENGTH_LONG).show()
                                                 }
-                                            }
+                                                .addOnFailureListener {
+                                                    isLoading = false
+                                                    Toast.makeText(context, "❌ خطا در حذف اطلاعات از پایگاه داده", Toast.LENGTH_LONG).show()
+                                                }
+
                                         } else {
                                             isLoading = false
                                             passwordError = true
@@ -308,8 +336,9 @@ fun DrawerContent(
                                     }
                                 } else {
                                     isLoading = false
-                                    Toast.makeText(context, "❌کاربر یافت نشد", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "❌ کاربر یافت نشد", Toast.LENGTH_LONG).show()
                                 }
+
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -325,7 +354,7 @@ fun DrawerContent(
                                     color = Color.Red
                                 )
                             } else {
-                                Text("حذف حساب", color = Color.Red, fontFamily = iranSans)
+                                Text("حذف حساب", color = Color.Red, fontFamily = iranSans, fontSize = (fontScale * 14).sp,)
                             }
                         }
 
@@ -341,7 +370,7 @@ fun DrawerContent(
                             shape = RoundedCornerShape(screenWidth * 0.025f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7AB2B2))
                         ) {
-                            Text("لغو", color = Color.White, fontFamily = iranSans)
+                            Text("لغو", color = Color.White, fontFamily = iranSans, fontSize = (fontScale * 14).sp,)
                         }
                     }
                 }
