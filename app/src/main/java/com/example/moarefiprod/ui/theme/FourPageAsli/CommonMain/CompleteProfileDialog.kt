@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
+import UserProfileViewModel
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -44,7 +45,9 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun CompleteProfileDialog(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    viewModel: UserProfileViewModel
+
 ) {
     val context = LocalContext.current
 
@@ -69,16 +72,6 @@ fun CompleteProfileDialog(
     val years = (1350..1405).map { it.toString() }
     val months = (1..12).map { it.toString().padStart(2, '0') }
     val days = (1..31).map { it.toString().padStart(2, '0') }
-
-
-    // بالاتر از Column در متغیرها:
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        imageUri = uri
-    }
-
 
     Box(
         modifier = Modifier
@@ -108,39 +101,27 @@ fun CompleteProfileDialog(
                         modifier = Modifier
                             .size(96.dp)
                             .clip(CircleShape)
-                            .background(Color.LightGray)
-                            .clickable { imagePickerLauncher.launch("image/*") },
+                            .background(Color.LightGray) ,
                         contentAlignment = Alignment.Center
                     ) {
-                        when {
-                            imageUri != null -> {
-                                Image(
-                                    painter = rememberAsyncImagePainter(imageUri),
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            gender == "مرد" -> {
-                                Image(
-                                    painter = painterResource(id = R.drawable.profm),
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            gender == "زن" -> {
-                                Image(
-                                    painter = painterResource(id = R.drawable.profw),
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            else -> {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = Color.White)
-                            }
-                        }
+                        when (gender) {
+                            "مرد" -> painterResource(id = R.drawable.profm)
+                            "زن" -> painterResource(id = R.drawable.profw)
+                            else -> null
+                        }?.let { painter ->
+                            Image(
+                                painter = painter,
+                                contentDescription = "عکس پروفایل",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } ?: Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "آیکن پیش‌فرض",
+                            tint = Color.White,
+                            modifier = Modifier.size(48.dp)
+                        )
+
                     }
 
                     CustomField("نام", firstName, { firstName = it }, firstNameHasError)
@@ -259,16 +240,50 @@ fun CompleteProfileDialog(
                                                 "enrolledCourses" to listOf<String>()
                                             )
 
+//                                            FirebaseFirestore.getInstance()
+//                                                .collection("users")
+//                                                .document(uid)
+//                                                .set(userData)
+//                                                .await() // 👈 بهتر از addOnSuccessListener
+
                                             FirebaseFirestore.getInstance()
                                                 .collection("users")
-                                                .document(uid)
-                                                .set(userData)
-                                                .await() // 👈 بهتر از addOnSuccessListener
+                                                .whereEqualTo("email", email)
+                                                .get()
+                                                .addOnSuccessListener { result ->
+                                                    if (result.isEmpty) {
+                                                        // اولین ورود، سند جدید بساز با uid سفارشی
+                                                        FirebaseFirestore.getInstance()
+                                                            .collection("users")
+                                                            .document(uid) // <- استفاده از generateReadableUserId
+                                                            .set(userData)
+                                                            .addOnSuccessListener {
+                                                                viewModel.loadUserData() // ⬅️ خیلی مهم
+                                                                Toast.makeText(context, "اطلاعات ذخیره شد", Toast.LENGTH_SHORT).show()
+                                                                onDismiss()
+                                                            }
+                                                    } else {
+                                                        // اگر سندی وجود داشت، به‌روزرسانی کن
+                                                        val doc = result.documents.first()
+                                                        FirebaseFirestore.getInstance()
+                                                            .collection("users")
+                                                            .document(doc.id)
+                                                            .set(userData)
+                                                            .addOnSuccessListener {
+                                                                viewModel.loadUserData()
+                                                                Toast.makeText(context, "اطلاعات به‌روزرسانی شد", Toast.LENGTH_SHORT).show()
+                                                                onDismiss()
+                                                            }
+                                                    }
+                                                }
 
                                             withContext(Dispatchers.Main) {
+                                                viewModel.loadUserData()
                                                 Toast.makeText(context, "اطلاعات ذخیره شد", Toast.LENGTH_SHORT).show()
                                                 onDismiss()
                                             }
+
+
                                         } catch (e: Exception) {
                                             withContext(Dispatchers.Main) {
                                                 val errorMsg = e.localizedMessage ?: e.message ?: "خطای ناشناخته"
@@ -469,10 +484,10 @@ suspend fun generateReadableUserId(firstName: String, lastName: String): String 
     return finalId
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewCompleteProfileDialog() {
-    MaterialTheme {
-        CompleteProfileDialog(onDismiss = {})
-    }
-}
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun PreviewCompleteProfileDialog() {
+//    MaterialTheme {
+//        CompleteProfileDialog(onDismiss = {})
+//    }
+//}

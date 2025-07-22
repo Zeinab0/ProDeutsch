@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
+import UserProfileViewModel
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -7,12 +8,15 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -24,6 +28,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
@@ -33,8 +38,12 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun DrawerContent(
     navController: NavController,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    userViewModel: UserProfileViewModel
 ) {
+    val userName by userViewModel.firstName
+    val email by userViewModel.email
+    val profileImage by userViewModel.profileImage
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -51,6 +60,7 @@ fun DrawerContent(
 
     var passwordVisible by remember { mutableStateOf(false) }
 
+
     Column(
         modifier = Modifier
             .width(screenWidth * 0.5f)
@@ -65,29 +75,51 @@ fun DrawerContent(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 24.dp)
         ) {
+            // ✅ کادر پروفایل
             Box(
                 modifier = Modifier
-                    .size(screenWidth * 0.15f)
+                    .size(screenWidth * 0.16f) // ✅ اندازه پویا برای تطابق با دستگاه‌های مختلف
                     .border(
-                        width = 2.dp,
+                        width = screenWidth * 0.004f, // ✅ عرض بوردر بر اساس سایز صفحه
                         color = Color(0xff4D869C),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(screenWidth * 0.03f) // ✅ گوشه‌های گرد متناسب با صفحه
                     )
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(screenWidth * 0.03f)), // ✅ گرد کردن گوشه‌ها
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile_image),
-                    contentDescription = "Profile Picture",
+
+                Box(
                     modifier = Modifier
-                        .size(screenWidth * 0.12f)
-                        .background(Color(0xffDAF8F5), RoundedCornerShape(8.dp))
-                )
+                        .size(screenWidth * 0.13f)
+                        .background(Color(0xffDAF8F5), RoundedCornerShape(screenWidth * 0.02f))
+                        .clip(RoundedCornerShape(screenWidth * 0.02f))
+                ) {
+                    when (profileImage) {
+                        "profm" -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.profm),
+                                contentDescription = "مرد",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        "profw" -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.profw),
+                                contentDescription = "زن",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+
+                    }
+                }
+
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text("Zeinab", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text("zizi_germany", fontSize = 12.sp, color = Color.DarkGray)
+                Text(userName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(email, fontWeight = FontWeight.Medium, fontSize = 12.sp)
             }
         }
 

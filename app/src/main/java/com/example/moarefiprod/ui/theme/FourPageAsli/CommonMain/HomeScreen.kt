@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
+import UserProfileViewModel
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.UnavailableDialog
 import com.google.firebase.auth.FirebaseAuth
@@ -32,7 +34,7 @@ import kotlinx.coroutines.tasks.await
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController,userViewModel: UserProfileViewModel) {
     var selectedIndex by remember { mutableStateOf(0) }
     var showDialog by remember { mutableStateOf(false) } // ✅ اینجا کنترل پاپ‌آپ
 
@@ -73,8 +75,10 @@ fun HomeScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(30.dp))
 
                 HeaderSection(
-                    onMenuClick = { isDrawerOpen = true } // ✅ باز کردن دراور از اینجا
+                    onMenuClick = { isDrawerOpen = true },
+                    userViewModel = userViewModel
                 )
+
 
                 Spacer(modifier = Modifier.height(8.dp))
                 SearchBar()
@@ -130,13 +134,15 @@ fun HomeScreen(navController: NavController) {
         ) {
             DrawerContent(
                 navController = navController,
-                onClose = { isDrawerOpen = false }
+                onClose = { isDrawerOpen = false },
+                userViewModel = userViewModel
             )
         }
 
         if (showCompleteProfileDialog.value) {
             CompleteProfileDialog(
-                onDismiss = { showCompleteProfileDialog.value = false }
+                onDismiss = { showCompleteProfileDialog.value = false },
+                viewModel = userViewModel
             )
         }
 

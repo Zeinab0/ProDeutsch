@@ -1,6 +1,7 @@
 package com.example.moarefiprod
 
 import RecoverySuccess
+import UserProfileViewModel
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -96,6 +98,8 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+            val userViewModel: UserProfileViewModel = viewModel()
+
             NavHost(navController = navController, startDestination = "firstLogo") {
 
                 composable("firstLogo") {
@@ -154,7 +158,7 @@ class MainActivity : ComponentActivity() {
                     RecoverySuccess(navController = navController)
                 }
                 composable("home") {
-                    HomeScreen(navController = navController)
+                    HomeScreen(navController = navController, userViewModel = userViewModel)
                 }
                 composable("grammar_page") {
                     GrammarPage(navController = navController)
@@ -236,7 +240,7 @@ class MainActivity : ComponentActivity() {
                     tamrinpage(navController = navController)
                 }
                 composable("profile") {
-                    ProfileScreen(navController = navController)
+                    ProfileScreen(navController = navController, userViewModel = userViewModel,)
                 }
 
                 // ✅ مسیر جدید برای صفحه تغییر رمز عبور
