@@ -1,7 +1,7 @@
-// com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage/tamrinpage.kt
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage
 
 import FilterChips
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,32 +31,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.data.allAppCourses // ⬅️ **این خط جدید اضافه شده است**
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun tamrinpage(navController: NavController){
-
+fun tamrinpage(
+    navController: NavController,
+    viewModel: CourseViewModel = viewModel()
+) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.dp
 
-    var selectedFilter by remember { mutableStateOf("همه") } // ✅ مقدار اولیه
+    // مدیریت فیلتر
+    var selectedFilter by remember { mutableStateOf("همه") }
 
-    // 🔴 **این خط جایگزین لیست sampleCourses قبلی شما شده است**
-    val coursesToDisplay = allAppCourses // حالا از لیست جامع و کامل استفاده می‌کنیم
+    // جمع‌آوری داده‌ها از ViewModel
+    val allCourses by viewModel.allCourses.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
+    LaunchedEffect(allCourses) {
+        allCourses.forEach { course ->
+            Log.d("TamrinPage", "Course: ${course.title}, isNew: ${course.isNew}")
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(horizontal = screenWidth * 0.05f) // ✅ پدینگ کلی برای هماهنگی بهتر
+            .padding(horizontal = screenWidth * 0.05f)
     ) {
-        // ✅ بنر تبلیغاتی
         BannerSection()
 
-        // ✅ متن راست‌چین
+        // متن دوره‌ها
         Text(
             text = ":دوره‌ها",
             fontSize = (screenWidth * 0.035f).value.sp,
@@ -65,8 +74,10 @@ fun tamrinpage(navController: NavController){
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentWidth(align = Alignment.End)
+                .padding(top = 10.dp)
         )
 
+        // فیلترها
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,13 +94,25 @@ fun tamrinpage(navController: NavController){
                 )
             }
         }
+
+        // نمایش دوره‌ها با فیلتر
         val filteredCourses = when (selectedFilter) {
-            "رایگان" -> coursesToDisplay.filter { it.price == 0 } // استفاده از coursesToDisplay
-            "جدید" -> coursesToDisplay.filter { it.isNew }     // استفاده از coursesToDisplay
-            else -> coursesToDisplay                           // استفاده از coursesToDisplay
+            "رایگان" -> allCourses.filter { it.price == 0 }
+            "جدید" -> allCourses.filter { it.isNew }
+            else -> allCourses
         }
 
-        // ✅ فقط لیست دوره‌ها اسکرول میشه
+        if (isLoading) {
+            Text("در حال بارگذاری...", color = Color.Gray, modifier = Modifier.fillMaxWidth().padding(16.dp))
+        }
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(16.dp)
+            )
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()

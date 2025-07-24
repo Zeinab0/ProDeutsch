@@ -30,8 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Course
+import com.example.moarefiprod.data.models.Course
 
 @Composable
 fun WordCard(course: Course) {
@@ -71,16 +72,26 @@ fun WordCard(course: Course) {
             )
 
             // تصویر
-            Image(
-                painter = painterResource(id = course.image),
-                contentDescription = null,
+            AsyncImage(
+                model = course.imageUrl,
+                contentDescription = "Course Image",
                 modifier = Modifier
                     .width(cardWidth * 0.85f)
                     .height(imageHeight)
                     .background(Color(0xFF983434))
-                    .clip(RectangleShape), // برش دقیق طبق قاب
-                contentScale = ContentScale.Crop // ❗ برش بزنه تا فیت بشه داخل اندازه
+                    .clip(RectangleShape),
+                contentScale = ContentScale.Crop
             )
+//            Image(
+//                painter = painterResource(id = course.image),
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .width(cardWidth * 0.85f)
+//                    .height(imageHeight)
+//                    .background(Color(0xFF983434))
+//                    .clip(RectangleShape), // برش دقیق طبق قاب
+//                contentScale = ContentScale.Crop // ❗ برش بزنه تا فیت بشه داخل اندازه
+//            )
 
             // دکمه ادامه یادگیری
             Button(

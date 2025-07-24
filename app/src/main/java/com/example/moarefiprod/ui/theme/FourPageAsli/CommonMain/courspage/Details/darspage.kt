@@ -29,13 +29,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController // Import this for preview
+import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseItem
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseItemType
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseLesson
-
+import com.example.moarefiprod.data.models.CourseItem
+import com.example.moarefiprod.data.models.CourseItemType
+import com.example.moarefiprod.data.models.CourseLesson
 
 @Composable
 fun DarsDetails(lesson: CourseLesson, navController: NavController) {
@@ -52,8 +51,7 @@ fun DarsDetails(lesson: CourseLesson, navController: NavController) {
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .background(Color.White)
-        )
-        {
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.dars_pic),
                 contentDescription = null,
@@ -82,8 +80,6 @@ fun DarsDetails(lesson: CourseLesson, navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .offset(y = imageSectionHeight - overlapAmount)
-                    // You commented this out, ensure it's intentional, otherwise it might lead to unbounded height
-                    // .height(screenHeight - (imageSectionHeight - overlapAmount) - paddingValues.calculateBottomPadding())
                     .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
                     .shadow(22.dp, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
                     .background(Color.White)
@@ -144,7 +140,7 @@ fun DarsDetails(lesson: CourseLesson, navController: NavController) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f), // Use weight for remaining height
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
                 ) {
                     items(lesson.items) { item ->
@@ -161,26 +157,24 @@ fun LessonItemRowUI(item: CourseItem) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardShape = RoundedCornerShape(16.dp)
 
-    Box( // Outer Box for shadow, similar to SearchBar
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            // Add some padding around the box to give space for the shadow to spread
-            // .padding(vertical = 2.dp) // Example: 4dp vertical padding
             .clickable { /* TODO: Handle click to open item content later */ }
             .shadow(
-                elevation = 6.dp, // Increased elevation for a more prominent and spread shadow
+                elevation = 6.dp,
                 shape = cardShape,
-                clip = false // Crucial to allow shadow to spread beyond the Composable's bounds
+                clip = false
             )
-            .clip(cardShape) // This clips the shadow-casting Box itself to the rounded corners
+            .clip(cardShape)
     ) {
-        Box( // Inner Box for background and border, similar to SearchBar
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, cardShape) // Inner content background is White
-                .border(1.dp, Color(0xFF90CECE), cardShape) // Border with the specified color
-                .padding(horizontal = 16.dp, vertical = 12.dp), // Padding for content inside the border
-            contentAlignment = Alignment.Center // Center content vertically within this box
+                .background(Color.White, cardShape)
+                .border(1.dp, Color(0xFF90CECE), cardShape)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -211,11 +205,12 @@ fun LessonItemRowUI(item: CourseItem) {
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                val iconRes = when (item.type) {
+                val iconRes = when (item.type) { // حالا type از نوع CourseItemType هست
                     CourseItemType.VIDEO -> R.drawable.video
                     CourseItemType.DOCUMENT -> R.drawable.document
                     CourseItemType.QUIZ1, CourseItemType.QUIZ2, CourseItemType.QUIZ3, CourseItemType.FINAL_EXAM -> R.drawable.exam
                     CourseItemType.WORDS -> R.drawable.words
+                    else -> R.drawable.video
                 }
                 Icon(
                     painter = painterResource(id = iconRes),
@@ -228,34 +223,20 @@ fun LessonItemRowUI(item: CourseItem) {
     }
 }
 
-// REMOVE THE FakeNavController CLASS ENTIRELY
-// class FakeNavController : NavController(null) {
-//     override fun popBackStack(): Boolean {
-//         return true
-//     }
-// }
-
-@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true)
 @Composable
-fun PreviewDarsDetailsScreen() {
+fun PreviewDarsDetails() {
     val sampleLesson = CourseLesson(
-        id = "02",
-        title = "الفبا و تلفظ حروف",
-        duration = "45",
-        isUnlocked = true,
-        isCompleted = false,
+        id = "01",
+        title = "الفبای آلمانی",
+        duration = "15",
         items = listOf(
-            CourseItem(CourseItemType.VIDEO, "آشنایی با حروف الفبای آلمانی", isCompleted = true, isInProgress = false),
-            CourseItem(CourseItemType.DOCUMENT, "جزوه تکمیلی", isCompleted = false, isInProgress = true),
-            CourseItem(CourseItemType.QUIZ1, "آزمون اول(جزوه و ویدیو آموزشی)", isCompleted = false, isInProgress = false),
-            CourseItem(CourseItemType.WORDS, "کلمات این درس", isCompleted = false, isInProgress = false),
-            CourseItem(CourseItemType.QUIZ2, "آزمون دوم(کلمات)", isCompleted = false, isInProgress = false),
-            CourseItem(CourseItemType.FINAL_EXAM, "آزمون پایان درس", isCompleted = false, isInProgress = false)
-        )
+            CourseItem(type = CourseItemType.VIDEO, title = "فیلم آموزشی", isCompleted = false),
+            CourseItem(type = CourseItemType.DOCUMENT, title = "جزوه", isCompleted = false)
+        ),
+        isUnlocked = true,
+        isCompleted = false
     )
-
-    MaterialTheme {
-        // Use rememberNavController() directly in the preview
-        DarsDetails(lesson = sampleLesson, navController = rememberNavController())
-    }
+    val navController = rememberNavController()
+    DarsDetails(sampleLesson, navController)
 }

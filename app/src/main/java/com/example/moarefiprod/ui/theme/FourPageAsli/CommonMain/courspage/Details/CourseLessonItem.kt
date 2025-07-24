@@ -19,6 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.R
+import com.example.moarefiprod.data.models.CourseItem
+import com.example.moarefiprod.data.models.CourseLesson
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Details.DottedLine
 
@@ -122,11 +124,19 @@ fun CourseLessonItem(
         }
 
         // Animated visibility for lesson items
+//        AnimatedVisibility(
+//            visible = isSelected,
+//            enter = expandVertically(expandFrom = Alignment.Top),
+//            exit = shrinkVertically(shrinkTowards = Alignment.Top)
+//        )
+        // تو CourseLessonItem.kt، به صورت موقت این خط رو تغییر بده:
         AnimatedVisibility(
-            visible = isSelected,
+            visible = true, // به جای isSelected
             enter = expandVertically(expandFrom = Alignment.Top),
             exit = shrinkVertically(shrinkTowards = Alignment.Top)
-        ) {
+        )
+
+        {
             Column {
                 Spacer(modifier = Modifier.height(8.dp))
                 lesson.items.forEachIndexed { index, item ->

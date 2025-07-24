@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -21,11 +22,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.moarefiprod.data.allAppCourses
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import com.example.moarefiprod.data.FirestoreRepository
+import com.example.moarefiprod.data.models.Course
+import com.example.moarefiprod.data.models.CourseLesson
 import com.example.moarefiprod.ui.SignUpScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.MyCoursesScreen
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseDetailPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.details.DarsDetails
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
@@ -35,16 +39,14 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.my
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
-// ادامه‌ی سایر importها به همان شکل قبل
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ChangePasswordScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ContactUsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.LogoutScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.ProfileScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.courspage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioTestScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.HörenPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.HörenLevelDetailPage
 import com.example.moarefiprod.ui.theme.Login.LoginScreen
@@ -55,10 +57,9 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioTestScreen
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.tamrinpage
-
+import java.util.Date
 
 val iranSans = FontFamily(
     Font(R.font.iransans_bold, FontWeight.Bold),
@@ -87,8 +88,17 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            NavHost(navController = navController, startDestination = "firstLogo") {
+            val viewModel: CourseViewModel = viewModel()
 
+            // لود اولیه داده‌ها
+            LaunchedEffect(Unit) {
+                viewModel.loadAllCourses()
+            }
+
+            // جمع‌آوری StateFlow به‌صورت State
+            val allCourses by viewModel.allCourses.collectAsState()
+
+            NavHost(navController = navController, startDestination = "firstLogo") {
                 composable("firstLogo") {
                     Firstlogopage(
                         isLoggedIn = isUserLoggedIn,
@@ -171,7 +181,6 @@ class MainActivity : ComponentActivity() {
                     AudioTestScreen(navController, level = level, exerciseId = exerciseId)
                 }
 
-
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)
                 }
@@ -202,7 +211,7 @@ class MainActivity : ComponentActivity() {
 
                     val reviewWords = parentEntry
                         .savedStateHandle
-                        .get<List<Word>>("review_words")
+                        ?.get<List<Word>>("review_words")
 
                     if (!reviewWords.isNullOrEmpty()) {
                         ReviewPage(
@@ -224,20 +233,21 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable("tamrin_page_route") {
-                    tamrinpage(navController = navController)
+                    courspage(
+                        onShowDialog = {}, // لامبدا خالی برای رفع خطا، مدیریت دیالوگ توی courspage موند
+                        navController = navController
+                    )
                 }
                 composable("profile") {
                     ProfileScreen(navController = navController)
                 }
 
-                // ✅ مسیر جدید برای صفحه تغییر رمز عبور
                 composable("change_password") {
                     ChangePasswordScreen(navController = navController)
                 }
                 composable("logout_screen") {
                     LogoutScreen(navController = navController)
                 }
-// داخل NavHost
                 composable("contact_us") {
                     ContactUsScreen(navController = navController)
                 }
@@ -247,52 +257,39 @@ class MainActivity : ComponentActivity() {
                 composable("my_courses_screen") {
                     MyCoursesScreen(navController = navController)
                 }
-                // حالا courseTitle را به عنوان NavArgument دریافت می‌کنیم.
                 composable(
-                    route = "course_detail/{courseTitle}", // ⬅️ مسیر را تغییر دادیم
+                    route = "course_detail/{courseTitle}",
                     arguments = listOf(navArgument("courseTitle") { type = NavType.StringType })
                 ) { backStackEntry ->
                     val courseTitle = backStackEntry.arguments?.getString("courseTitle")
-
-                    // Course را از allAppCourses پیدا می‌کنیم
-                    val course = remember(courseTitle) {
-                        allAppCourses.find { it.title == courseTitle }
-                    }
+                    val course = allCourses.find { it.title == courseTitle }
 
                     if (course != null) {
-                        CourseDetailPage(navController = navController, course = course) // ⬅️ Course را به CourseDetailPage پاس می‌دهیم
+                        CourseDetailPage(navController = navController, course = course)
                     } else {
-                        // در صورتی که دوره پیدا نشد، پیام خطا می‌دهیم.
-                        // این به جای خطای اولیه "اطلاعات دوره پیدا نشد" در CourseDetailPage نمایش داده می‌شود.
                         Text("خطا: اطلاعات دوره با عنوان '$courseTitle' پیدا نشد.",
-                            color = Color.Red, // از Color.Red استفاده کنید
+                            color = Color.Red,
                             fontFamily = iranSans)
                         LaunchedEffect(Unit) {
-                            // می‌توانید به صفحه قبل برگردید
                             // navController.popBackStack()
                         }
                     }
                 }
 
-                // 🔴🔴🔴 این Composable برای lesson_detail کاملا صحیح است و نیازی به تغییر ندارد 🔴🔴🔴
                 composable(
                     route = "lesson_detail/{courseTitle}/{lessonId}",
                     arguments = listOf(
                         navArgument("courseTitle") { type = NavType.StringType },
-                        navArgument("lessonId") { type = NavType.StringType } // این آرگومان "navArgument" نیست، بلکه "lessonId" است.
+                        navArgument("lessonId") { type = NavType.StringType }
                     )
                 ) { backStackEntry ->
                     val courseTitle = backStackEntry.arguments?.getString("courseTitle")
                     val lessonId = backStackEntry.arguments?.getString("lessonId")
 
-                    val parentCourse = remember(courseTitle) {
-                        allAppCourses.find { it.title == courseTitle }
-                    }
+                    val parentCourse = allCourses.find { it.title == courseTitle }
 
                     if (parentCourse != null && lessonId != null) {
-                        val lesson = remember(parentCourse, lessonId) {
-                            parentCourse.lessons.find { it.id == lessonId }
-                        }
+                        val lesson = parentCourse.lessons.find { it.id == lessonId }
                         if (lesson != null) {
                             DarsDetails(lesson = lesson, navController = navController)
                         } else {
@@ -310,19 +307,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-//                composable(
-//                    route = "lesson_detail/{lessonId}",
-//                    arguments = listOf(navArgument("lessonId") { type = NavType.StringType })
-//                ) { backStackEntry ->
-//                    val lessonId = backStackEntry.arguments?.getString("lessonId")
-//                    val course = navController.previousBackStackEntry?.savedStateHandle?.get<Course>("course")
-//                    val lesson = course?.lessons?.find { it.id == lessonId }
-//
-//                    lesson?.let {
-//                        DarsDetails(lesson = it, navController = navController)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}

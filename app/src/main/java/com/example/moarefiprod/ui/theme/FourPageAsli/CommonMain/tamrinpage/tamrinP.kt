@@ -18,16 +18,45 @@ import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Cards
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.NewLabel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.flashCard
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Course
+import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseCard
+import java.util.Date
 
 @Composable
-fun courspage(onShowDialog: () -> Unit, navController: NavController){
+fun courspage(onShowDialog: () -> Unit, navController: NavController) {
     var showDialog by remember { mutableStateOf(false) }
 
     val allCourses = listOf(
-        Course("A1 آموزش آلمانی سطح", "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", "بدون پیش‌نیاز", "۱۰ ساعت و ۳۰ دقیقه", "۱۲ جلسه + ۲۴ آزمون", 120, R.drawable.cours1, true),
-        Course("A2 آموزش آلمانی سطح", "ادامه مسیر یادگیری آلمانی با نکات بیشتر", "نیازمند A1", "۹ ساعت", "۱۰ جلسه + تمرین", 0, R.drawable.cours1, true)
+        Course(
+            "A1 آموزش آلمانی سطح", // id (پیش‌فرض "")
+            "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", // title
+            "", // description
+            "بدون پیش‌نیاز", // sath
+            "۱۰ ساعت و ۳۰ دقیقه", // zaman
+            12, // teadad
+            120, // price
+            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
+            true, // isNew
+            false, // isFree
+            Date(), // publishedAt
+            false, // isPurchased
+            emptyList() // lessons
+        ),
+        Course(
+            "A2 آموزش آلمانی سطح", // id (پیش‌فرض "")
+            "ادامه مسیر یادگیری آلمانی با نکات بیشتر", // title
+            "", // description
+            "نیازمند A1", // sath
+            "۹ ساعت", // zaman
+            10, // teadad
+            0, // price
+            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
+            true, // isNew
+            true, // isFree
+            Date(), // publishedAt
+            false, // isPurchased
+            emptyList() // lessons
+        )
     )
 
     val allCards = listOf(
@@ -40,21 +69,17 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController){
     val newCards = allCards.filter { it.isNew }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         Column(modifier = Modifier.fillMaxSize()) {
-
             ExercisesSection(
                 items = exerciseList,
                 onItemClick = { selected ->
                     when (selected.title) {
                         "پادکست" -> onShowDialog()
                         "گرامر" -> navController.navigate("grammar_page")
-                        "مهارت شنیداری" -> navController.navigate("hören_page") // 👈 اضافه شد
-
+                        "مهارت شنیداری" -> navController.navigate("hören_page")
                     }
                 }
             )
-
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -77,7 +102,6 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController){
             ) {
                 items(newCourses) { course ->
                     Box {
-                      // CourseCard(course = course)
                         CourseCard(course = course, navController = navController)
                         if (course.isNew) {
                             NewLabel()
@@ -93,11 +117,10 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController){
                         }
                     }
                 }
-
             }
         }
 
-        // ✅ پاپ‌آپ با لایه محو روی همه‌چی (opacity 50%)
+        // پاپ‌آپ با لایه محو روی همه‌چی (opacity 50%)
         if (showDialog) {
             Box(
                 modifier = Modifier

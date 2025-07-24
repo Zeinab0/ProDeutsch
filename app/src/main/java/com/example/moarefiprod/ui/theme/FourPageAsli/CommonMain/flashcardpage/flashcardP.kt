@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Course
+import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.NewLabel
 
 @Composable
