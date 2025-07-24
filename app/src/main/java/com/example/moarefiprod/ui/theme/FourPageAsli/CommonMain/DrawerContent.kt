@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
+import UserProfileViewModel
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -29,12 +31,17 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun DrawerContent(
     navController: NavController,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    userViewModel: UserProfileViewModel
 ) {
+    val userName by userViewModel.firstName
+    val email by userViewModel.email
+    val profileImage by userViewModel.profileImage
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -51,6 +58,7 @@ fun DrawerContent(
 
     var passwordVisible by remember { mutableStateOf(false) }
 
+
     Column(
         modifier = Modifier
             .width(screenWidth * 0.5f)
@@ -65,29 +73,51 @@ fun DrawerContent(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 24.dp)
         ) {
+            // ✅ کادر پروفایل
             Box(
                 modifier = Modifier
-                    .size(screenWidth * 0.15f)
+                    .size(screenWidth * 0.16f) // ✅ اندازه پویا برای تطابق با دستگاه‌های مختلف
                     .border(
-                        width = 2.dp,
+                        width = screenWidth * 0.004f, // ✅ عرض بوردر بر اساس سایز صفحه
                         color = Color(0xff4D869C),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(screenWidth * 0.03f) // ✅ گوشه‌های گرد متناسب با صفحه
                     )
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(screenWidth * 0.03f)), // ✅ گرد کردن گوشه‌ها
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile_image),
-                    contentDescription = "Profile Picture",
+
+                Box(
                     modifier = Modifier
-                        .size(screenWidth * 0.12f)
-                        .background(Color(0xffDAF8F5), RoundedCornerShape(8.dp))
-                )
+                        .size(screenWidth * 0.13f)
+                        .background(Color(0xffDAF8F5), RoundedCornerShape(screenWidth * 0.02f))
+                        .clip(RoundedCornerShape(screenWidth * 0.02f))
+                ) {
+                    when (profileImage) {
+                        "profm" -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.profm),
+                                contentDescription = "مرد",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        "profw" -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.profw),
+                                contentDescription = "زن",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+
+                    }
+                }
+
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text("Zeinab", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text("zizi_germany", fontSize = 12.sp, color = Color.DarkGray)
+                Text(userName, fontWeight = FontWeight.Bold, fontSize = (fontScale * 16).sp,)
+                Text(email, fontWeight = FontWeight.Medium, fontSize = (fontScale * 12).sp,)
             }
         }
 
@@ -257,18 +287,48 @@ fun DrawerContent(
 
                                     user.reauthenticate(credential).addOnCompleteListener { reauthTask ->
                                         if (reauthTask.isSuccessful) {
-                                            user.delete().addOnCompleteListener { deleteTask ->
-                                                isLoading = false
-                                                showDeleteDialog = false
-                                                if (deleteTask.isSuccessful) {
-                                                    Toast.makeText(context, "حساب شما حذف شد ✅", Toast.LENGTH_LONG).show()
-                                                    navController.navigate("register") {
-                                                        popUpTo(0)
+                                            // اول سند Firestore رو پیدا و حذف کن
+                                            val db = FirebaseFirestore.getInstance()
+                                            db.collection("users")
+                                                .whereEqualTo("email", email)
+                                                .get()
+                                                .addOnSuccessListener { querySnapshot ->
+                                                    val doc = querySnapshot.documents.firstOrNull()
+                                                    doc?.reference?.delete()?.addOnSuccessListener {
+                                                        // بعد از حذف Firestore، از Authentication حذف کن
+                                                        user.delete().addOnCompleteListener { deleteTask ->
+                                                            isLoading = false
+                                                            showDeleteDialog = false
+                                                            if (deleteTask.isSuccessful) {
+                                                                Toast.makeText(context, "حساب شما حذف شد ✅", Toast.LENGTH_LONG).show()
+                                                                navController.navigate("register") {
+                                                                    popUpTo(0)
+                                                                }
+                                                            } else {
+                                                                Toast.makeText(context, "❌ خطا در حذف حساب از احراز هویت", Toast.LENGTH_LONG).show()
+                                                            }
+                                                        }
+                                                    } ?: run {
+                                                        // اگر سندی پیدا نشد، فقط Authentication رو حذف کن
+                                                        user.delete().addOnCompleteListener { deleteTask ->
+                                                            isLoading = false
+                                                            showDeleteDialog = false
+                                                            if (deleteTask.isSuccessful) {
+                                                                Toast.makeText(context, "حساب شما حذف شد (بدون اطلاعات در دیتابیس)", Toast.LENGTH_LONG).show()
+                                                                navController.navigate("register") {
+                                                                    popUpTo(0)
+                                                                }
+                                                            } else {
+                                                                Toast.makeText(context, "❌ خطا در حذف حساب", Toast.LENGTH_LONG).show()
+                                                            }
+                                                        }
                                                     }
-                                                } else {
-                                                    Toast.makeText(context, "❌خطا در حذف حساب ", Toast.LENGTH_LONG).show()
                                                 }
-                                            }
+                                                .addOnFailureListener {
+                                                    isLoading = false
+                                                    Toast.makeText(context, "❌ خطا در حذف اطلاعات از پایگاه داده", Toast.LENGTH_LONG).show()
+                                                }
+
                                         } else {
                                             isLoading = false
                                             passwordError = true
@@ -276,8 +336,9 @@ fun DrawerContent(
                                     }
                                 } else {
                                     isLoading = false
-                                    Toast.makeText(context, "❌کاربر یافت نشد", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "❌ کاربر یافت نشد", Toast.LENGTH_LONG).show()
                                 }
+
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -293,7 +354,7 @@ fun DrawerContent(
                                     color = Color.Red
                                 )
                             } else {
-                                Text("حذف حساب", color = Color.Red, fontFamily = iranSans)
+                                Text("حذف حساب", color = Color.Red, fontFamily = iranSans, fontSize = (fontScale * 14).sp,)
                             }
                         }
 
@@ -309,7 +370,7 @@ fun DrawerContent(
                             shape = RoundedCornerShape(screenWidth * 0.025f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7AB2B2))
                         ) {
-                            Text("لغو", color = Color.White, fontFamily = iranSans)
+                            Text("لغو", color = Color.White, fontFamily = iranSans, fontSize = (fontScale * 14).sp,)
                         }
                     }
                 }
