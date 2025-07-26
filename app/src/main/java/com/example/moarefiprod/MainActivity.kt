@@ -89,7 +89,18 @@ class MainActivity : ComponentActivity() {
                     Word("خدا", "Tschüss", WordStatus.NEW),
                 )
             }
+
+            val viewModel: CourseViewModel = viewModel()
             val userViewModel: UserProfileViewModel = viewModel()
+
+            // لود اولیه داده‌ها
+            LaunchedEffect(Unit) {
+                viewModel.loadAllCourses()
+            }
+
+            // جمع‌آوری StateFlow به‌صورت State
+            val allCourses by viewModel.allCourses.collectAsState()
+
 
             NavHost(navController = navController, startDestination = "firstLogo") {
                 composable("firstLogo") {
@@ -232,7 +243,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable("profile") {
-                    ProfileScreen(navController = navController, userViewModel = userViewModel)
+                    ProfileScreen(navController = navController, userViewModel = userViewModel,)
                 }
 
                 composable("change_password") {
