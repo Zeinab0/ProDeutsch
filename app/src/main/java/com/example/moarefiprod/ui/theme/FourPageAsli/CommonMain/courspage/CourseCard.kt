@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/moarefiprod/ui/theme.FourPageAsli.CommonMain.courspage/CourseCard.kt
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage
 
 import androidx.compose.foundation.Image
@@ -16,9 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale // ✅ ایمپورت جدید برای Coil
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-//import androidx.compose.ui.res.painterResource // ❌ این خط دیگر لازم نیست
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -29,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.iranSans
-import coil.compose.AsyncImage // ✅ ایمپورت جدید برای Coil
+import coil.compose.AsyncImage
 
 @Composable
 fun CourseCard(
@@ -52,16 +50,15 @@ fun CourseCard(
         Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            // ✅ تغییر اساسی: استفاده از AsyncImage برای بارگذاری از URL
-            AsyncImage( // جایگزین Image و painterResource شد
-                model = course.imageUrl, // 💡 حالا از imageUrl استفاده می‌کنیم
+            AsyncImage(
+                model = course.imageUrl,
                 contentDescription = "Course Image",
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(cardHeight)
                     .padding(10.dp)
                     .clip(RoundedCornerShape(5.dp)),
-                contentScale = ContentScale.Crop // 💡 تنظیم نوع نمایش عکس
+                contentScale = ContentScale.Crop
             )
 
             Column(
@@ -72,7 +69,6 @@ fun CourseCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // ✅ نمایش "رایگان" یا قیمت
                 Text(
                     text = if (course.price == 0) "رایگان" else "هزار تومان ${course.price}",
                     fontSize = 10.sp,
@@ -84,13 +80,9 @@ fun CourseCard(
 
                 Button(
                     onClick = {
-                        // 🔴🔴🔴 مهمترین تغییر در اینجا 🔴🔴🔴
-                        // به جای ذخیره کردن در savedStateHandle، عنوان دوره را در مسیر ناوبری پاس می‌دهیم.
-                        // این عنوان در MainActivity توسط composable("course_detail/{courseTitle}") دریافت می‌شود.
-                        // 💡 پیشنهاد: بهتر است ID دوره را پاس دهید، نه عنوان. عنوان ممکن است تکراری باشد.
-                        // اگر courseId را در مدل Course دارید: navController.navigate("course_detail/${course.id}")
-                        // فعلاً با title ادامه می‌دهیم تا تغییرات کمتری داشته باشید.
-                        navController.navigate("course_detail/${course.title}") {
+                        // 🔴🔴🔴 تغییر مهم اینجا 🔴🔴🔴
+                        // به جای course.title از course.id استفاده کنید
+                        navController.navigate("course_detail/${course.id}") { // ✅ این خط اصلاح شد
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -120,7 +112,7 @@ fun CourseCard(
                 modifier = Modifier
                     .padding(0.dp,10.dp,10.dp,10.dp)
                     .fillMaxHeight()
-                    .width(200.dp), // اگر این 200dp ثابت است، شاید باید dynamic تر باشد
+                    .width(200.dp),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -145,7 +137,6 @@ fun CourseCard(
                 )
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
-                // ✅ نمایش سطح دوره
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = buildAnnotatedString {
@@ -153,7 +144,7 @@ fun CourseCard(
                             append("سطح دوره: ")
                         }
                         withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.sath) // استفاده از sath
+                            append(course.sath)
                         }
                     },
                     fontSize = 6.sp,
@@ -162,7 +153,6 @@ fun CourseCard(
                     textAlign = TextAlign.Right
                 )
 
-                // ✅ نمایش مدت زمان دوره
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = buildAnnotatedString {
@@ -170,7 +160,7 @@ fun CourseCard(
                             append("مدت زمان دوره: ")
                         }
                         withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.zaman) // استفاده از zaman
+                            append(course.zaman)
                         }
                     },
                     fontSize = 6.sp,
@@ -179,7 +169,6 @@ fun CourseCard(
                     textAlign = TextAlign.Right
                 )
 
-                // ✅ نمایش تعداد دروس
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = buildAnnotatedString {
@@ -187,7 +176,7 @@ fun CourseCard(
                             append("تعداد دروس: ")
                         }
                         withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.teadad.toString()) // 💡 teadad عدد است، باید به String تبدیل شود
+                            append(course.teadad.toString())
                         }
                     },
                     fontSize = 6.sp,
@@ -200,7 +189,6 @@ fun CourseCard(
     }
 }
 
-// NewLabel تابع قبلی شما، بدون تغییر
 @Composable
 fun NewLabel() {
     Box(

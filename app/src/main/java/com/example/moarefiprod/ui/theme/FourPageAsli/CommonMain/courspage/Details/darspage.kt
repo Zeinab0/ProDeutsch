@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.details
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,12 +9,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel // ✅ اضافه کردن ایمپورت ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
@@ -35,9 +42,42 @@ import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseItemType
 import com.example.moarefiprod.data.models.CourseLesson
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel // ✅ ایمپورت CourseViewModel
+
 
 @Composable
-fun DarsDetails(lesson: CourseLesson, navController: NavController) {
+fun DarsDetails(
+    navController: NavController,
+    courseId: String, // ✅ دریافت courseId از ناوبری
+    lessonId: String, // ✅ دریافت lessonId از ناوبری
+    courseViewModel: CourseViewModel = viewModel() // ✅ تزریق ViewModel
+) {
+    // ✅ مشاهده وضعیت‌های از ViewModel
+    val course by courseViewModel.selectedCourse.collectAsState() // ممکن است اینجا نیاز به course کامل نباشد، اما برای چک‌های آتی خوب است
+    val lessons by courseViewModel.selectedCourseLessons.collectAsState() // برای پیدا کردن lesson مربوطه
+    val lessonItems by courseViewModel.selectedLessonItems.collectAsState() // آیتم‌های محتوایی درس
+    val isLoading by courseViewModel.isLoading.collectAsState()
+    val errorMessage by courseViewModel.errorMessage.collectAsState()
+
+    // ✅ پیدا کردن CourseLesson مربوطه از لیست lessons
+    // این کار را هر زمان که lessons یا lessonId تغییر کرد انجام می‌دهیم
+    val currentLesson = remember(lessons, lessonId) {
+        lessons.find { it.id == lessonId }
+    }
+    LaunchedEffect(courseId, lessonId) {
+        courseViewModel.loadSelectedCourseDetailsAndLessons(courseId)
+        courseViewModel.loadLessonItems(courseId, lessonId)
+        Log.d("DarsDetails", "lessonItems: $lessonItems")
+    }
+    // ✅ فراخوانی بارگذاری داده‌ها وقتی کامپوزبل وارد Composition می‌شود یا courseId/lessonId تغییر می‌کند
+//    LaunchedEffect(courseId, lessonId) {
+//        // مطمئن شوید که courseDetails نیز بارگذاری شود، چون lessonItems به آن وابسته است
+//        // در CourseViewModel.loadSelectedCourseDetailsAndLessons ما دروس را هم لود میکردیم
+//        // اما برای اطمینان و دسترسی به آبجکت course در اینجا
+//        courseViewModel.loadSelectedCourseDetailsAndLessons(courseId)
+//        courseViewModel.loadLessonItems(courseId, lessonId)
+//    }
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -45,106 +85,122 @@ fun DarsDetails(lesson: CourseLesson, navController: NavController) {
     val imageSectionHeight = screenHeight * 0.32f
     val overlapAmount = 50.dp
 
-    Scaffold { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-                .background(Color.White)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.dars_pic),
-                contentDescription = null,
+    // ✅ نمایش وضعیت بارگذاری یا خطا
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (errorMessage != null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = "خطا: $errorMessage", color = Color.Red, fontFamily = iranSans)
+        }
+    } else if (currentLesson == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = "درس یافت نشد.", fontFamily = iranSans)
+        }
+    } else { // ✅ فقط زمانی که currentLesson بارگذاری شده است، UI را نمایش دهید
+        Scaffold { paddingValues ->
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(imageSectionHeight)
-                    .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier
-                    .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
-                    .align(Alignment.TopStart)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.backbtn),
-                    contentDescription = "Back",
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(screenWidth * 0.07f)
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = imageSectionHeight - overlapAmount)
-                    .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
-                    .shadow(22.dp, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+                    .fillMaxSize()
+                    .padding(bottom = paddingValues.calculateBottomPadding())
                     .background(Color.White)
-                    .padding(horizontal = screenWidth * 0.07f)
             ) {
-                Row(
+                Image(
+                    painter = painterResource(id = R.drawable.dars_pic),
+                    contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = screenHeight * 0.03f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
+                        .height(imageSectionHeight)
+                        .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier
+                        .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
+                        .align(Alignment.TopStart)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Text(
-                            text = lesson.title,
-                            fontSize = (screenWidth * 0.04f).value.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = iranSans,
-                            color = Color.Black,
-                            textAlign = TextAlign.End,
-                        )
-                        Text(
-                            text = "${lesson.duration} دقیقه",
-                            fontSize = (screenWidth * 0.03f).value.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = iranSans,
-                            color = Color.Gray,
-                            textAlign = TextAlign.End,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Image(
-                        painter = painterResource(
-                            id = when (lesson.id) {
-                                "01" -> R.drawable.num_01
-                                "02" -> R.drawable.num_02
-                                "03" -> R.drawable.num_03
-                                "04" -> R.drawable.num_04
-                                "05" -> R.drawable.num_05
-                                "06" -> R.drawable.num_06
-                                "07" -> R.drawable.num_07
-                                else -> R.drawable.num_01
-                            }
-                        ),
-                        contentDescription = "Lesson Number",
-                        modifier = Modifier
-                            .size(screenWidth * 0.07f),
-                        colorFilter = ColorFilter.tint(Color(0xFF90CECE))
+                    Icon(
+                        painter = painterResource(id = R.drawable.backbtn),
+                        contentDescription = "Back",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(screenWidth * 0.07f)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                        .offset(y = imageSectionHeight - overlapAmount)
+                        .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+                        .shadow(22.dp, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+                        .background(Color.White)
+                        .padding(horizontal = screenWidth * 0.07f)
                 ) {
-                    items(lesson.items) { item ->
-                        LessonItemRowUI(item = item)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = screenHeight * 0.03f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = currentLesson.title, // ✅ استفاده از currentLesson
+                                fontSize = (screenWidth * 0.04f).value.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFamily = iranSans,
+                                color = Color.Black,
+                                textAlign = TextAlign.End,
+                            )
+                            Text(
+                                text = "${currentLesson.duration} دقیقه", // ✅ استفاده از currentLesson
+                                fontSize = (screenWidth * 0.03f).value.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = iranSans,
+                                color = Color.Gray,
+                                textAlign = TextAlign.End,
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Image(
+                            painter = painterResource(
+                                id = when (currentLesson.id) { // ✅ استفاده از currentLesson
+                                    "01" -> R.drawable.num_01
+                                    "02" -> R.drawable.num_02
+                                    "03" -> R.drawable.num_03
+                                    "04" -> R.drawable.num_04
+                                    "05" -> R.drawable.num_05
+                                    "06" -> R.drawable.num_06
+                                    "07" -> R.drawable.num_07
+                                    else -> R.drawable.num_01
+                                }
+                            ),
+                            contentDescription = "Lesson Number",
+                            modifier = Modifier
+                                .size(screenWidth * 0.07f),
+                            colorFilter = ColorFilter.tint(Color(0xFF90CECE))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                    ) {
+                        // ✅ حالا از لیست lessonItems که از ViewModel آمده استفاده می‌کنیم
+                        items(lessonItems) { item ->
+                            LessonItemRowUI(item = item)
+                        }
                     }
                 }
             }
@@ -194,7 +250,7 @@ fun LessonItemRowUI(item: CourseItem) {
                         textAlign = TextAlign.End,
                     )
                     Text(
-                        text = "15 دقیقه", // Placeholder duration. Replace with item.duration if available.
+                        text = "${item.duration} دقیقه", // ✅ حالا از item.duration استفاده می‌کنیم
                         fontSize = (screenWidth * 0.028f).value.sp,
                         fontFamily = iranSans,
                         color = Color.Gray,
@@ -204,13 +260,12 @@ fun LessonItemRowUI(item: CourseItem) {
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
-
-                val iconRes = when (item.type) { // حالا type از نوع CourseItemType هست
+                Text(text = "Test Item: ${item.title}", fontFamily = iranSans)
+                val iconRes = when (item.type) {
                     CourseItemType.VIDEO -> R.drawable.video
                     CourseItemType.DOCUMENT -> R.drawable.document
                     CourseItemType.QUIZ1, CourseItemType.QUIZ2, CourseItemType.QUIZ3, CourseItemType.FINAL_EXAM -> R.drawable.exam
                     CourseItemType.WORDS -> R.drawable.words
-                    else -> R.drawable.video
                 }
                 Icon(
                     painter = painterResource(id = iconRes),
@@ -223,20 +278,3 @@ fun LessonItemRowUI(item: CourseItem) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewDarsDetails() {
-    val sampleLesson = CourseLesson(
-        id = "01",
-        title = "الفبای آلمانی",
-        duration = "15",
-        items = listOf(
-            CourseItem(type = CourseItemType.VIDEO, title = "فیلم آموزشی", isCompleted = false),
-            CourseItem(type = CourseItemType.DOCUMENT, title = "جزوه", isCompleted = false)
-        ),
-        isUnlocked = true,
-        isCompleted = false
-    )
-    val navController = rememberNavController()
-    DarsDetails(sampleLesson, navController)
-}

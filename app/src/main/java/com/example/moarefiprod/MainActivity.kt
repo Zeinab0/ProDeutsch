@@ -1,11 +1,13 @@
 package com.example.moarefiprod
 
 import RecoverySuccess
+import UserProfileViewModel
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,16 +89,7 @@ class MainActivity : ComponentActivity() {
                     Word("خدا", "Tschüss", WordStatus.NEW),
                 )
             }
-
-            val viewModel: CourseViewModel = viewModel()
-
-            // لود اولیه داده‌ها
-            LaunchedEffect(Unit) {
-                viewModel.loadAllCourses()
-            }
-
-            // جمع‌آوری StateFlow به‌صورت State
-            val allCourses by viewModel.allCourses.collectAsState()
+            val userViewModel: UserProfileViewModel = viewModel()
 
             NavHost(navController = navController, startDestination = "firstLogo") {
                 composable("firstLogo") {
@@ -155,7 +148,7 @@ class MainActivity : ComponentActivity() {
                     RecoverySuccess(navController = navController)
                 }
                 composable("home") {
-                    HomeScreen(navController = navController)
+                    HomeScreen(navController = navController, userViewModel = userViewModel)
                 }
                 composable("grammar_page") {
                     GrammarPage(navController = navController)
@@ -234,12 +227,12 @@ class MainActivity : ComponentActivity() {
                 }
                 composable("tamrin_page_route") {
                     courspage(
-                        onShowDialog = {}, // لامبدا خالی برای رفع خطا، مدیریت دیالوگ توی courspage موند
+                        onShowDialog = {},
                         navController = navController
                     )
                 }
                 composable("profile") {
-                    ProfileScreen(navController = navController)
+                    ProfileScreen(navController = navController, userViewModel = userViewModel)
                 }
 
                 composable("change_password") {
@@ -257,50 +250,48 @@ class MainActivity : ComponentActivity() {
                 composable("my_courses_screen") {
                     MyCoursesScreen(navController = navController)
                 }
-                composable(
-                    route = "course_detail/{courseTitle}",
-                    arguments = listOf(navArgument("courseTitle") { type = NavType.StringType })
-                ) { backStackEntry ->
-                    val courseTitle = backStackEntry.arguments?.getString("courseTitle")
-                    val course = allCourses.find { it.title == courseTitle }
 
-                    if (course != null) {
-                        CourseDetailPage(navController = navController, course = course)
+                composable(
+                    route = "course_detail/{courseId}",
+                    arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId")
+                    Log.d("CourseDetailPageNav", "Received courseId: $courseId")
+                    if (courseId != null) {
+                        CourseDetailPage(navController = navController, courseId = courseId)
                     } else {
-                        Text("خطا: اطلاعات دوره با عنوان '$courseTitle' پیدا نشد.",
+                        Text(
+                            "خطا: شناسه دوره یافت نشد.",
                             color = Color.Red,
-                            fontFamily = iranSans)
+                            fontFamily = iranSans
+                        )
                         LaunchedEffect(Unit) {
-                            // navController.popBackStack()
+                            navController.popBackStack()
                         }
                     }
                 }
 
                 composable(
-                    route = "lesson_detail/{courseTitle}/{lessonId}",
+                    route = "lesson_detail/{courseId}/{lessonId}",
                     arguments = listOf(
-                        navArgument("courseTitle") { type = NavType.StringType },
+                        navArgument("courseId") { type = NavType.StringType },
                         navArgument("lessonId") { type = NavType.StringType }
                     )
                 ) { backStackEntry ->
-                    val courseTitle = backStackEntry.arguments?.getString("courseTitle")
+                    val courseId = backStackEntry.arguments?.getString("courseId")
                     val lessonId = backStackEntry.arguments?.getString("lessonId")
-
-                    val parentCourse = allCourses.find { it.title == courseTitle }
-
-                    if (parentCourse != null && lessonId != null) {
-                        val lesson = parentCourse.lessons.find { it.id == lessonId }
-                        if (lesson != null) {
-                            DarsDetails(lesson = lesson, navController = navController)
-                        } else {
-                            Text("درس با شناسه '$lessonId' در دوره '$courseTitle' پیدا نشد.",
-                                color = Color.Red,
-                                fontFamily = iranSans)
-                        }
+                    Log.d("LessonDetailNav", "Received courseId: $courseId, lessonId: $lessonId")
+                    if (courseId != null && lessonId != null) {
+                        DarsDetails(navController = navController, courseId = courseId, lessonId = lessonId)
                     } else {
-                        Text("اطلاعات دوره یا درس در مسیریابی ناقص است.",
+                        Text(
+                            "خطا: شناسه دوره یا درس در مسیریابی ناقص است.",
                             color = Color.Red,
-                            fontFamily = iranSans)
+                            fontFamily = iranSans
+                        )
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
                     }
                 }
             }

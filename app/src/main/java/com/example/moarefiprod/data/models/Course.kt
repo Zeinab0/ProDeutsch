@@ -1,15 +1,13 @@
-// app/src/main/java/com/example/moarefiprod/data/models/Course.kt
 package com.example.moarefiprod.data.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.PropertyName
 import java.util.Date
 
 @Parcelize
 data class Course(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val title: String = "",
     val description: String = "",
     val sath: String = "",
@@ -17,42 +15,35 @@ data class Course(
     val teadad: Int = 0,
     val price: Int = 0,
     val imageUrl: String = "",
-    val isNew: Boolean = false,
-    val isFree: Boolean = false,
+    @PropertyName("isNew") val isNew: Boolean = false,
+    @PropertyName("isFree") val isFree: Boolean = false,
     val publishedAt: Date = Date(),
-    // ✅ این فیلد را برای همگام‌سازی با CourseDetailPage اضافه می‌کنیم
-    val isPurchased: Boolean = false, // یا هر منطق پیش‌فرض دیگری
-    // ✅ لیست دروس باید اینجا باشد اگر به صورت Nested Object در Firestore ذخیره می‌شوند
-    val lessons: List<CourseLesson> = emptyList() // این خط قبلاً بود، فقط مطمئن شوید که هست
+    val isPurchased: Boolean = false,
+    val lessons: List<CourseLesson> = emptyList()
 ) : Parcelable
 
 @Parcelize
 data class CourseLesson(
-    val id: String = "",
+    val id: String = "", // بدون @DocumentId
     val title: String = "",
     val duration: String = "",
     val items: List<CourseItem> = emptyList(),
-    // ✅ این فیلدها را برای همگام‌سازی با CourseLessonItem و darspage اضافه می‌کنیم
-    val isUnlocked: Boolean = false,
+    @PropertyName("isUnlocked") val isUnlocked: Boolean = false, // اضافه کردن این خط
     val isCompleted: Boolean = false,
     val isInProgress: Boolean = false
 ) : Parcelable
 
-//@Parcelize
-//data class CourseItem(
-//    val type: String = "",
-//    val title: String = "",
-//    // ✅ این فیلدها را برای همگام‌سازی با darspage اضافه می‌کنیم (اگرچه از CourseLesson می‌آیند)
-//    val isCompleted: Boolean = false,
-//    val isInProgress: Boolean = false
-//) : Parcelable
-
 @Parcelize
 data class CourseItem(
-    val type: CourseItemType = CourseItemType.VIDEO, // تغییر به CourseItemType
+    val id: String = "",
+    val type: CourseItemType = CourseItemType.VIDEO,
     val title: String = "",
     val isCompleted: Boolean = false,
-    val isInProgress: Boolean = false
+    val isUnlocked: Boolean = true,
+    val isInProgress: Boolean = false,
+    val duration: Int = 0,
+    val lessonNumber: Int,
+    val url: String = ""
 ) : Parcelable
 
 enum class CourseItemType {

@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -182,7 +183,9 @@ fun CourseLessonItem(
                             modifier = Modifier.size(18.dp)
                         )
                     }
-
+                    lesson.items.forEachIndexed { index, item ->
+                        Log.d("CourseLessonItem", "Item $index: ${item.title}")
+                    }
                     if (index < lesson.items.lastIndex) {
                         Row(
                             modifier = Modifier
