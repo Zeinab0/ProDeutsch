@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,35 +31,29 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel // ✅ اضافه کردن ایمپورت ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseItemType
-import com.example.moarefiprod.data.models.CourseLesson
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel // ✅ ایمپورت CourseViewModel
-
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 
 @Composable
 fun DarsDetails(
     navController: NavController,
-    courseId: String, // ✅ دریافت courseId از ناوبری
-    lessonId: String, // ✅ دریافت lessonId از ناوبری
-    courseViewModel: CourseViewModel = viewModel() // ✅ تزریق ViewModel
+    courseId: String,
+    lessonId: String,
+    courseViewModel: CourseViewModel = viewModel()
 ) {
-    // ✅ مشاهده وضعیت‌های از ViewModel
     val course by courseViewModel.selectedCourse.collectAsState()
     val lessons by courseViewModel.selectedCourseLessons.collectAsState()
     val lessonItems by courseViewModel.selectedLessonItems.collectAsState()
     val isLoading by courseViewModel.isLoading.collectAsState()
     val errorMessage by courseViewModel.errorMessage.collectAsState()
 
-    // ✅ پیدا کردن CourseLesson مربوطه از لیست lessons
     val currentLesson = remember(lessons, lessonId) {
         lessons.find { it.id == lessonId }
     }
@@ -162,15 +155,15 @@ fun DarsDetails(
 
                         Image(
                             painter = painterResource(
-                                id = when (currentLesson.id) {
-                                    "01" -> R.drawable.num_01
-                                    "02" -> R.drawable.num_02
-                                    "03" -> R.drawable.num_03
-                                    "04" -> R.drawable.num_04
-                                    "05" -> R.drawable.num_05
-                                    "06" -> R.drawable.num_06
-                                    "07" -> R.drawable.num_07
-                                    else -> R.drawable.num_01
+                                id = when (currentLesson.order) {
+                                    1 -> R.drawable.num_01
+                                    2 -> R.drawable.num_02
+                                    3 -> R.drawable.num_03
+                                    4 -> R.drawable.num_04
+                                    5 -> R.drawable.num_05
+                                    6 -> R.drawable.num_06
+                                    7 -> R.drawable.num_07
+                                    else -> R.drawable.num_01 // پیش‌فرض
                                 }
                             ),
                             contentDescription = "Lesson Number",
@@ -183,9 +176,9 @@ fun DarsDetails(
                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f),
+                        contentPadding = PaddingValues(bottom = screenHeight * 0.02f) // اضافه کردن پدینگ پایین
                     ) {
                         items(lessonItems) { item ->
                             LessonItemRowUI(item = item)
@@ -209,7 +202,7 @@ fun LessonItemRowUI(item: CourseItem) {
             .shadow(
                 elevation = 6.dp,
                 shape = cardShape,
-                clip = true // clip = true برای اینکه سایه بیرون نزنه و فضای اضافی حذف بشه
+                clip = true
             )
             .clip(cardShape)
     ) {
