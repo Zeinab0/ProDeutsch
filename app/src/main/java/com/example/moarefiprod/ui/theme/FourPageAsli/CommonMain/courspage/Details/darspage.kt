@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,14 +54,13 @@ fun DarsDetails(
     courseViewModel: CourseViewModel = viewModel() // ✅ تزریق ViewModel
 ) {
     // ✅ مشاهده وضعیت‌های از ViewModel
-    val course by courseViewModel.selectedCourse.collectAsState() // ممکن است اینجا نیاز به course کامل نباشد، اما برای چک‌های آتی خوب است
-    val lessons by courseViewModel.selectedCourseLessons.collectAsState() // برای پیدا کردن lesson مربوطه
-    val lessonItems by courseViewModel.selectedLessonItems.collectAsState() // آیتم‌های محتوایی درس
+    val course by courseViewModel.selectedCourse.collectAsState()
+    val lessons by courseViewModel.selectedCourseLessons.collectAsState()
+    val lessonItems by courseViewModel.selectedLessonItems.collectAsState()
     val isLoading by courseViewModel.isLoading.collectAsState()
     val errorMessage by courseViewModel.errorMessage.collectAsState()
 
     // ✅ پیدا کردن CourseLesson مربوطه از لیست lessons
-    // این کار را هر زمان که lessons یا lessonId تغییر کرد انجام می‌دهیم
     val currentLesson = remember(lessons, lessonId) {
         lessons.find { it.id == lessonId }
     }
@@ -69,14 +69,6 @@ fun DarsDetails(
         courseViewModel.loadLessonItems(courseId, lessonId)
         Log.d("DarsDetails", "lessonItems: $lessonItems")
     }
-    // ✅ فراخوانی بارگذاری داده‌ها وقتی کامپوزبل وارد Composition می‌شود یا courseId/lessonId تغییر می‌کند
-//    LaunchedEffect(courseId, lessonId) {
-//        // مطمئن شوید که courseDetails نیز بارگذاری شود، چون lessonItems به آن وابسته است
-//        // در CourseViewModel.loadSelectedCourseDetailsAndLessons ما دروس را هم لود میکردیم
-//        // اما برای اطمینان و دسترسی به آبجکت course در اینجا
-//        courseViewModel.loadSelectedCourseDetailsAndLessons(courseId)
-//        courseViewModel.loadLessonItems(courseId, lessonId)
-//    }
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -85,7 +77,6 @@ fun DarsDetails(
     val imageSectionHeight = screenHeight * 0.32f
     val overlapAmount = 50.dp
 
-    // ✅ نمایش وضعیت بارگذاری یا خطا
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -98,7 +89,7 @@ fun DarsDetails(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = "درس یافت نشد.", fontFamily = iranSans)
         }
-    } else { // ✅ فقط زمانی که currentLesson بارگذاری شده است، UI را نمایش دهید
+    } else {
         Scaffold { paddingValues ->
             Box(
                 modifier = Modifier
@@ -150,7 +141,7 @@ fun DarsDetails(
                             horizontalAlignment = Alignment.End
                         ) {
                             Text(
-                                text = currentLesson.title, // ✅ استفاده از currentLesson
+                                text = currentLesson.title,
                                 fontSize = (screenWidth * 0.04f).value.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = iranSans,
@@ -158,7 +149,7 @@ fun DarsDetails(
                                 textAlign = TextAlign.End,
                             )
                             Text(
-                                text = "${currentLesson.duration} دقیقه", // ✅ استفاده از currentLesson
+                                text = "${currentLesson.duration}",
                                 fontSize = (screenWidth * 0.03f).value.sp,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = iranSans,
@@ -171,7 +162,7 @@ fun DarsDetails(
 
                         Image(
                             painter = painterResource(
-                                id = when (currentLesson.id) { // ✅ استفاده از currentLesson
+                                id = when (currentLesson.id) {
                                     "01" -> R.drawable.num_01
                                     "02" -> R.drawable.num_02
                                     "03" -> R.drawable.num_03
@@ -193,11 +184,9 @@ fun DarsDetails(
 
                     LazyColumn(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
+                            .fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
                     ) {
-                        // ✅ حالا از لیست lessonItems که از ViewModel آمده استفاده می‌کنیم
                         items(lessonItems) { item ->
                             LessonItemRowUI(item = item)
                         }
@@ -220,7 +209,7 @@ fun LessonItemRowUI(item: CourseItem) {
             .shadow(
                 elevation = 6.dp,
                 shape = cardShape,
-                clip = false
+                clip = true // clip = true برای اینکه سایه بیرون نزنه و فضای اضافی حذف بشه
             )
             .clip(cardShape)
     ) {
@@ -229,7 +218,7 @@ fun LessonItemRowUI(item: CourseItem) {
                 .fillMaxWidth()
                 .background(Color.White, cardShape)
                 .border(1.dp, Color(0xFF90CECE), cardShape)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -248,9 +237,11 @@ fun LessonItemRowUI(item: CourseItem) {
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         textAlign = TextAlign.End,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "${item.duration} دقیقه", // ✅ حالا از item.duration استفاده می‌کنیم
+                        text = "${item.duration} دقیقه",
                         fontSize = (screenWidth * 0.028f).value.sp,
                         fontFamily = iranSans,
                         color = Color.Gray,
@@ -260,7 +251,7 @@ fun LessonItemRowUI(item: CourseItem) {
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(text = "Test Item: ${item.title}", fontFamily = iranSans)
+
                 val iconRes = when (item.type) {
                     CourseItemType.VIDEO -> R.drawable.video
                     CourseItemType.DOCUMENT -> R.drawable.document
@@ -277,4 +268,3 @@ fun LessonItemRowUI(item: CourseItem) {
         }
     }
 }
-

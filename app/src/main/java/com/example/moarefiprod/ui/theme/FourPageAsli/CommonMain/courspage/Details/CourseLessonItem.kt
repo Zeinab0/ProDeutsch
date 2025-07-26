@@ -30,13 +30,15 @@ fun CourseLessonItem(
     lesson: CourseLesson,
     isFreeCourse: Boolean,
     isSelected: Boolean,
-    onLessonClick: (String) -> Unit, // این برای Expand/Collapse کردن است
+    isLessonAccessible: Boolean,
+    onLessonClick: (String) -> Unit,
     onCourseItemClick: (CourseLesson, CourseItem) -> Unit
 ) {
+    Log.d("CourseLessonItem", "Rendering lesson: ${lesson.title}, order: ${lesson.order}, isUnlocked: ${lesson.isUnlocked}, isFreeCourse: $isFreeCourse, isLessonAccessible: $isLessonAccessible")
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onLessonClick(lesson.id) } // این فقط برای Expand/Collapse شدن درس است
+            .clickable { onLessonClick(lesson.id) }
             .padding(vertical = 15.dp),
         horizontalAlignment = Alignment.End
     ) {
@@ -45,7 +47,8 @@ fun CourseLessonItem(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (isFreeCourse || lesson.isUnlocked) {
+            if (isLessonAccessible) {
+                Log.d("CourseLessonItem", "Showing play icon for lesson: ${lesson.title}")
                 Icon(
                     painter = painterResource(id = R.drawable.play_ic),
                     contentDescription = "Play",
@@ -53,6 +56,7 @@ fun CourseLessonItem(
                     tint = Color.Unspecified
                 )
             } else {
+                Log.d("CourseLessonItem", "Showing lock icon for lesson: ${lesson.title}")
                 Icon(
                     painter = painterResource(id = R.drawable.lock_ic),
                     contentDescription = "Locked",
@@ -105,95 +109,92 @@ fun CourseLessonItem(
 
             Image(
                 painter = painterResource(
-                    id = when (lesson.id) {
-                        "01" -> R.drawable.num_01
-                        "02" -> R.drawable.num_02
-                        "03" -> R.drawable.num_03
-                        "04" -> R.drawable.num_04
-                        "05" -> R.drawable.num_05
-                        "06" -> R.drawable.num_06
-                        "07" -> R.drawable.num_07
+                    id = when (lesson.order) {
+                        1 -> R.drawable.num_01
+                        2 -> R.drawable.num_02
+                        3 -> R.drawable.num_03
+                        4 -> R.drawable.num_04
+                        5 -> R.drawable.num_05
+                        6 -> R.drawable.num_06
+                        7 -> R.drawable.num_07
                         else -> R.drawable.num_01
                     }
                 ),
                 contentDescription = "Lesson Number",
                 modifier = Modifier.size(30.dp),
-                colorFilter = if (lesson.isCompleted || isSelected) {
+                colorFilter = if (isLessonAccessible || isSelected) {
                     ColorFilter.tint(Color(0xFF4D869C))
                 } else null
             )
         }
 
-        // Animated visibility for lesson items
-//        AnimatedVisibility(
-//            visible = isSelected,
-//            enter = expandVertically(expandFrom = Alignment.Top),
-//            exit = shrinkVertically(shrinkTowards = Alignment.Top)
-//        )
-        // تو CourseLessonItem.kt، به صورت موقت این خط رو تغییر بده:
+        // نمایش زیربخش‌ها فقط وقتی درس انتخاب شده
         AnimatedVisibility(
-            visible = true, // به جای isSelected
+            visible = isSelected,
             enter = expandVertically(expandFrom = Alignment.Top),
             exit = shrinkVertically(shrinkTowards = Alignment.Top)
-        )
-
-        {
+        ) {
             Column {
                 Spacer(modifier = Modifier.height(8.dp))
-                lesson.items.forEachIndexed { index, item ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clickable {
-                                onCourseItemClick(lesson, item)
-                            },
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = item.title,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = iranSans,
-                            // 🔴🔴🔴 رنگ متن آیتم را هم بر اساس وضعیت تکمیل شدن تغییر می‌دهیم 🔴🔴🔴
-                            color = when {
-                                item.isCompleted -> Color(0xFF4D869C) // اگر تکمیل شده، رنگ سبز آبی
-                                // اگر در حال انجام باشد (فرض می‌کنیم اگر تکمیل نشده و isLocked هم نیست، در حال انجام است)
-                                !item.isCompleted && (lesson.isUnlocked || isFreeCourse) -> Color.Black // یا رنگی دیگر برای در حال انجام
-                                else -> Color.Gray // اگر قفل یا انجام نشده
-                            },
-                            textAlign = TextAlign.End
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        // 🔴🔴🔴 تغییر در اینجا: استفاده از آیکون ستاره و منطق رنگ‌آمیزی 🔴🔴🔴
-                        val starIconRes = if (item.isCompleted) R.drawable.star else R.drawable.star // ⬅️ اینجا آیکون ها را انتخاب می کنیم
-                        val starTint = when {
-                            item.isCompleted -> Color(0xFFFDD835) // ستاره زرد کامل برای تکمیل شده
-                            // اگر درس اصلی باز یا رایگان است و این آیتم تکمیل نشده، یعنی در حال انجام است
-                            !item.isCompleted && (lesson.isUnlocked || isFreeCourse) -> Color(0xFFFDD835).copy(alpha = 0.5f) // زرد نیمه شفاف برای در حال انجام (می‌تواند فقط دور ستاره باشد)
-                            else -> Color.Gray // طوسی برای انجام نشده / قفل
-                        }
-
-                        Icon(
-                            painter = painterResource(id = starIconRes),
-                            contentDescription = null,
-                            tint = starTint,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                if (lesson.items.isEmpty()) {
+                    Log.d("CourseLessonItem", "No items for lesson: ${lesson.title}")
+                    Text(
+                        text = "هیچ زیربخشی موجود نیست",
+                        fontSize = 12.sp,
+                        fontFamily = iranSans,
+                        color = Color.Gray,
+                        textAlign = TextAlign.End
+                    )
+                } else {
                     lesson.items.forEachIndexed { index, item ->
-                        Log.d("CourseLessonItem", "Item $index: ${item.title}")
-                    }
-                    if (index < lesson.items.lastIndex) {
+                        Log.d("CourseLessonItem", "Rendering item: ${item.title} for lesson: ${lesson.title}")
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 6.dp),
-                            horizontalArrangement = Arrangement.End
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    onCourseItemClick(lesson, item)
+                                },
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            DottedLine(width = 200.dp)
+                            Text(
+                                text = item.title,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = iranSans,
+                                color = when {
+                                    item.isCompleted -> Color(0xFF4D869C)
+                                    !item.isCompleted && isLessonAccessible -> Color.Black
+                                    else -> Color.Gray
+                                },
+                                textAlign = TextAlign.End
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            val starIconRes = if (item.isCompleted) R.drawable.star else R.drawable.star
+                            val starTint = when {
+                                item.isCompleted -> Color(0xFFFDD835)
+                                !item.isCompleted && isLessonAccessible -> Color(0xFFFDD835).copy(alpha = 0.5f)
+                                else -> Color.Gray
+                            }
+
+                            Icon(
+                                painter = painterResource(id = starIconRes),
+                                contentDescription = null,
+                                tint = starTint,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        if (index < lesson.items.lastIndex) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                DottedLine(width = 200.dp)
+                            }
                         }
                     }
                 }

@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.moarefiprod.data.FirestoreRepository
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.data.models.CourseItem
-import com.example.moarefiprod.data.models.CourseLesson // ایمپورت CourseLesson
+import com.example.moarefiprod.data.models.CourseLesson
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +40,6 @@ class CourseViewModel(
 
     private val _selectedLessonItems = MutableStateFlow<List<CourseItem>>(emptyList())
     val selectedLessonItems: StateFlow<List<CourseItem>> = _selectedLessonItems.asStateFlow()
-
 
     // State برای مدیریت وضعیت بارگذاری (مثلاً نمایش Progress Bar)
     private val _isLoading = MutableStateFlow(false)
@@ -101,45 +100,43 @@ class CourseViewModel(
         }
     }
 
-    // ✅ تابع اصلاح شده برای بارگذاری جزئیات یک دوره خاص و دروس آن
-//    fun loadSelectedCourseDetailsAndLessons(courseId: String) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            _errorMessage.value = null
-//            try {
-//                // 1. بارگذاری جزئیات دوره
-//                val course = repository.getCourseDetails(courseId)
-//                _selectedCourse.value = course
-//
-//                // 2. بارگذاری دروس مربوط به این دوره
-//                if (course != null) {
-//                    val lessons = repository.getLessonsForCourse(courseId)
-//                    _selectedCourseLessons.value = lessons
-//                } else {
-//                    _selectedCourseLessons.value = emptyList() // اگر دوره پیدا نشد، لیست دروس خالی باشد
-//                }
-//
-//            } catch (e: Exception) {
-//                _errorMessage.value = "خطا در بارگذاری جزئیات دوره و دروس آن برای $courseId: ${e.localizedMessage}"
-//                _selectedCourse.value = null // در صورت خطا، حالت را ریست کنید
-//                _selectedCourseLessons.value = emptyList()
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
+    // ✅ تابع اصلاح شده برای بارگذاری جزئیات یک دوره خاص و دروس آن با زیربخش‌ها
     fun loadSelectedCourseDetailsAndLessons(courseId: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
             try {
+                // 1. بارگذاری جزئیات دوره
                 val courseDoc = db.collection("Courses").document(courseId).get().await().toObject(Course::class.java)
                 _selectedCourse.value = courseDoc
                 Log.d("CourseViewModel", "Course loaded: $courseDoc")
+
+                // 2. بارگذاری دروس مربوط به این دوره
                 val lessonDocs = db.collection("Courses").document(courseId).collection("Lessons").get().await().toObjects(CourseLesson::class.java)
-                _selectedCourseLessons.value = lessonDocs
                 Log.d("CourseViewModel", "Lessons loaded: $lessonDocs")
+
+                // 3. بارگذاری زیربخش‌ها از Contents و مپ کردن به درس‌ها
+                val contentDocs = db.collection("Courses").document(courseId).collection("Lessons").get().await().toObjects(CourseLesson::class.java)
+                    .flatMap { lesson ->
+                        db.collection("Courses").document(courseId).collection("Lessons").document(lesson.id).collection("Contents")
+                            .get().await().toObjects(CourseItem::class.java).map { it.copy(lessonId = lesson.id) }
+                    }
+                Log.d("CourseViewModel", "Contents loaded: $contentDocs")
+
+                // 4. مپ کردن زیربخش‌ها به درس‌ها
+                val lessonsWithItems = lessonDocs.map { lesson ->
+                    lesson.copy(items = contentDocs.filter { it.lessonId == lesson.id })
+                }
+                _selectedCourseLessons.value = lessonsWithItems
+                Log.d("CourseViewModel", "Lessons with items: $lessonsWithItems")
+
             } catch (e: Exception) {
-                _errorMessage.value = e.message
+                _errorMessage.value = "خطا در بارگذاری جزئیات دوره و دروس آن برای $courseId: ${e.localizedMessage}"
+                _selectedCourse.value = null
+                _selectedCourseLessons.value = emptyList()
                 Log.e("CourseViewModel", "Error loading data: ${e.message}")
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -151,50 +148,15 @@ class CourseViewModel(
                     .document(courseId)
                     .collection("Lessons")
                     .document(lessonId)
-                    .collection("Contents") // اسم رو با دیتابیس (Contents) همگام کن
+                    .collection("Contents")
                     .get()
                     .await()
                     .toObjects(CourseItem::class.java)
-                // باید یه StateFlow برای lessonItems داشته باشی، مثلاً:
-                // _selectedLessonItems.value = itemDocs
-                Log.d("CourseViewModel", "Contents loaded: $itemDocs")
+                _selectedLessonItems.value = itemDocs // به‌روزرسانی StateFlow
+                Log.d("CourseViewModel", "Contents loaded for lesson $lessonId: $itemDocs")
             } catch (e: Exception) {
-                Log.e("CourseViewModel", "Error loading Contents: ${e.message}")
+                Log.e("CourseViewModel", "Error loading Contents for lesson $lessonId: ${e.message}")
             }
         }
     }
-    // ✅ تابع loadLessonItems را در اینجا، خارج از تابع loadSelectedCourseDetailsAndLessons قرار دهید
-//    fun loadLessonItems(courseId: String, lessonId: String) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            _errorMessage.value = null
-//            try {
-//                val items = repository.getCourseItemsForLesson(courseId, lessonId)
-//                _selectedLessonItems.value = items
-//            } catch (e: Exception) {
-//                _errorMessage.value = "خطا در بارگذاری آیتم‌های درس $lessonId در دوره $courseId: ${e.localizedMessage}"
-//                _selectedLessonItems.value = emptyList() // در صورت خطا، لیست را خالی کنید
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
-//    fun loadLessonItems(courseId: String, lessonId: String) {
-//        viewModelScope.launch {
-//            try {
-//                val itemDocs = db.collection("Courses")
-//                    .document(courseId)
-//                    .collection("Lessons")
-//                    .document(lessonId)
-//                    .collection("Contents")
-//                    .get()
-//                    .await()
-//                    .toObjects(CourseItem::class.java)
-//                // اینجا باید یه StateFlow برای lessonItems داشته باشی
-//                Log.d("CourseViewModel", "Lesson items loaded: $itemDocs")
-//            } catch (e: Exception) {
-//                Log.e("CourseViewModel", "Error loading items: ${e.message}")
-//            }
-//        }
-//    }
 }

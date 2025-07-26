@@ -24,13 +24,14 @@ data class Course(
 
 @Parcelize
 data class CourseLesson(
-    val id: String = "", // بدون @DocumentId
+    val id: String = "",
     val title: String = "",
     val duration: String = "",
     val items: List<CourseItem> = emptyList(),
-    @PropertyName("isUnlocked") val isUnlocked: Boolean = false, // اضافه کردن این خط
+    @PropertyName("isUnlocked") val isUnlocked: Boolean = false,
     val isCompleted: Boolean = false,
-    val isInProgress: Boolean = false
+    val isInProgress: Boolean = false,
+    @PropertyName("order") val order: Int = 0
 ) : Parcelable
 
 @Parcelize
@@ -39,11 +40,12 @@ data class CourseItem(
     val type: CourseItemType = CourseItemType.VIDEO,
     val title: String = "",
     val isCompleted: Boolean = false,
-    val isUnlocked: Boolean = true,
+    val isUnlocked: Boolean = false, // تغییر به false
     val isInProgress: Boolean = false,
     val duration: Int = 0,
-    val lessonNumber: Int,
-    val url: String = ""
+    val url: String = "",
+    @PropertyName("order") val order: Int = 0,
+    val lessonId: String? = null // فیلد جدید برای ربط به درس
 ) : Parcelable
 
 enum class CourseItemType {
