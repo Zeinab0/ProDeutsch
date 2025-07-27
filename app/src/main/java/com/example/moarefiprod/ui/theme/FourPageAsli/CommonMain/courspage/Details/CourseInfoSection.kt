@@ -29,7 +29,11 @@ fun CourseInfoSection(
 
     // تابع formatPrice را به اینجا منتقل می‌کنیم
     fun formatPrice(price: Int): String {
-        return if (price == 0) "رایگان" else "هزار تومان$price "
+        return if (price == 0) {
+            "رایگان"
+        } else {
+            "$price هزار تومان"
+        }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -41,7 +45,7 @@ fun CourseInfoSection(
             // این بلاک مسئول نمایش قیمت/رایگان است
             if (showPriceInHeader) { // فقط اگر showPriceInHeader true باشد، این Text نمایش داده می‌شود
                 Text(
-                    text = formatPrice(coursePrice), // اینجا از تابع formatPrice استفاده می‌شود
+                    text = formatPrice(coursePrice),
                     fontSize = (screenWidth * 0.04f).value.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = iranSans,
@@ -49,6 +53,9 @@ fun CourseInfoSection(
                     textAlign = TextAlign.Left,
                     maxLines = 1,
                     softWrap = false,
+                    style = androidx.compose.ui.text.TextStyle(
+                        textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                    )
                 )
             }
 
@@ -59,8 +66,12 @@ fun CourseInfoSection(
                 fontFamily = iranSans,
                 color = Color.Black,
                 textAlign = TextAlign.Right,
+                style = androidx.compose.ui.text.TextStyle(
+                    textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                ),
                 modifier = Modifier.weight(3f)
             )
+
         }
 
         Spacer(modifier = Modifier.height(screenHeight * 0.005f))
@@ -71,7 +82,10 @@ fun CourseInfoSection(
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             color = Color.Black.copy(alpha = 0.7f),
-            textAlign = TextAlign.End,
+            textAlign = TextAlign.Start,
+            style = androidx.compose.ui.text.TextStyle(
+                textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -101,7 +115,10 @@ fun CourseInfoSection(
             fontWeight = FontWeight.Normal,
             fontFamily = iranSans,
             color = Color.Black.copy(alpha = 0.8f),
-            textAlign = TextAlign.End,
+            textAlign = TextAlign.Start,
+            style = androidx.compose.ui.text.TextStyle(
+                textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+            ),
             modifier = Modifier.fillMaxWidth()
         )
     }

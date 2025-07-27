@@ -55,18 +55,37 @@ fun CourseHeaderSection(navController: NavController, courseSath: String) {
             )
         }
 
-        Text(
-            text = "آموزش زبان آلمانی سطح $courseSath",
-            fontSize = (screenWidth * 0.05f).value.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = iranSans,
-            color = Color.White,
-            textAlign = TextAlign.End,
+        Column(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(end = screenWidth * 0.04f)
-                .offset(y = (-screenHeight * 0.034f))
-                .fillMaxWidth(0.9f)
-        )
+                .padding(end = screenWidth * 0.048f)
+                .offset(y = (-screenHeight * 0.04f))
+                .fillMaxWidth(0.9f),
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = "آموزش زبان آلمانی",
+                fontSize = (screenWidth * 0.048f).value.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = iranSans,
+                color = Color.White,
+                textAlign = TextAlign.End,
+                style = androidx.compose.ui.text.TextStyle(
+                    textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                )
+            )
+
+            Text(
+                text = "سطح $courseSath",
+                fontSize = (screenWidth * 0.048f).value.sp, // کمی کوچکتر اختیاریه
+                fontWeight = FontWeight.Bold,
+                fontFamily = iranSans,
+                color = Color.White,
+                textAlign = TextAlign.End,
+                style = androidx.compose.ui.text.TextStyle(
+                    textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                )
+            )
+        }
     }
 }

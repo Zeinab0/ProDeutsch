@@ -95,12 +95,15 @@ fun CourseLessonItem(
                     }
 
                     Text(
-                        text = lesson.duration,
+                        text = "${lesson.duration}",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = iranSans,
                         color = Color.Gray,
-                        textAlign = TextAlign.End
+                        textAlign = TextAlign.End,
+                        style = androidx.compose.ui.text.TextStyle(
+                            textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                        )
                     )
                 }
             }
@@ -172,7 +175,7 @@ fun CourseLessonItem(
                             )
                             Spacer(modifier = Modifier.width(10.dp))
 
-                            val starIconRes = if (item.isCompleted) R.drawable.star else R.drawable.star
+                            val starIconRes = if (item.isCompleted) R.drawable.full_star else R.drawable.star
                             val starTint = when {
                                 item.isCompleted -> Color(0xFFFDD835)
                                 !item.isCompleted && isLessonAccessible -> Color(0xFFFDD835).copy(alpha = 0.5f)

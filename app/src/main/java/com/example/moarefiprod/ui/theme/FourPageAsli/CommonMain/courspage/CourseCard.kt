@@ -4,11 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,16 +14,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.iranSans
-import coil.compose.AsyncImage
 
 @Composable
 fun CourseCard(
@@ -70,19 +68,18 @@ fun CourseCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = if (course.price == 0) "رایگان" else "هزار تومان ${course.price}",
+                    text = if (course.price == 0) "رایگان" else "${course.price} هزار تومان",
                     fontSize = 10.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
                     color = if (course.price == 0) Color(0xFF2E7D32) else Color(0xFF000000),
-                    textAlign = TextAlign.Right
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl)
                 )
 
                 Button(
                     onClick = {
-                        // 🔴🔴🔴 تغییر مهم اینجا 🔴🔴🔴
-                        // به جای course.title از course.id استفاده کنید
-                        navController.navigate("course_detail/${course.id}") { // ✅ این خط اصلاح شد
+                        navController.navigate("course_detail/${course.id}") {
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -103,14 +100,14 @@ fun CourseCard(
                         fontSize = 8.sp,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
 
             Column(
                 modifier = Modifier
-                    .padding(0.dp,10.dp,10.dp,10.dp)
+                    .padding(0.dp, 10.dp, 10.dp, 10.dp)
                     .fillMaxHeight()
                     .width(200.dp),
                 horizontalAlignment = Alignment.End,
@@ -123,7 +120,8 @@ fun CourseCard(
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    textAlign = TextAlign.Right
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl)
                 )
 
                 Text(
@@ -133,8 +131,10 @@ fun CourseCard(
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    textAlign = TextAlign.Right
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl)
                 )
+
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
                 Text(
@@ -150,7 +150,8 @@ fun CourseCard(
                     fontSize = 6.sp,
                     fontFamily = iranSans,
                     color = Color.DarkGray,
-                    textAlign = TextAlign.Right
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl)
                 )
 
                 Text(
@@ -166,7 +167,8 @@ fun CourseCard(
                     fontSize = 6.sp,
                     fontFamily = iranSans,
                     color = Color.DarkGray,
-                    textAlign = TextAlign.Right
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl)
                 )
 
                 Text(
@@ -182,7 +184,8 @@ fun CourseCard(
                     fontSize = 6.sp,
                     fontFamily = iranSans,
                     color = Color.DarkGray,
-                    textAlign = TextAlign.Right
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl)
                 )
             }
         }
@@ -203,7 +206,8 @@ fun NewLabel() {
             color = Color.White,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            fontFamily = iranSans
+            fontFamily = iranSans,
+            style = TextStyle(textDirection = TextDirection.Rtl)
         )
     }
 }

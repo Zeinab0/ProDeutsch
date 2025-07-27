@@ -148,6 +148,9 @@ fun DarsDetails(
                                 fontFamily = iranSans,
                                 color = Color.Gray,
                                 textAlign = TextAlign.End,
+                                style = androidx.compose.ui.text.TextStyle(
+                                    textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                                )
                             )
                         }
 
@@ -239,6 +242,9 @@ fun LessonItemRowUI(item: CourseItem) {
                         fontFamily = iranSans,
                         color = Color.Gray,
                         textAlign = TextAlign.End,
+                        style = androidx.compose.ui.text.TextStyle(
+                            textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                        ),
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
