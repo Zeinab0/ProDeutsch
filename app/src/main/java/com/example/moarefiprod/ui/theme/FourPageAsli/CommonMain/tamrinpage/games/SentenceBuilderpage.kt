@@ -1,5 +1,4 @@
-package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceBuilder
-
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,38 +14,34 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Brush
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.StepProgressBar
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.WinnerBottomBox
-import com.example.moarefiprod.viewmodel.GameViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.google.firebase.auth.FirebaseAuth
-
-
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SentenceBuilderPage(
     navController: NavController,
+    courseId: String,
+    lessonId: String,
+    contentId: String,
+    gameId: String,
     viewModel: GameViewModel = viewModel()
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Ensure sentenceData is correctly observed
     val sentenceState by viewModel.sentenceData.collectAsState()
-
-    // Explicitly define type for mutableListOf to avoid ambiguity
     var selectedWords by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
@@ -54,22 +49,16 @@ fun SentenceBuilderPage(
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
 
-    LaunchedEffect(Unit) {
-        viewModel.loadSentenceGame("sentence_01")
+    LaunchedEffect(gameId) { // <--- تغییر یافته
+        viewModel.loadSentenceGame(courseId, lessonId, contentId, gameId) // <--- تغییر یافته
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Only render the game UI when sentenceState is not null
         sentenceState?.let { state ->
             val wordList = state.wordPool
             val question = state.question
-            // Crucial: Ensure correctSentence is aligned with how you want to compare it.
-            // If it's stored reversed in DB, you might need to reverse it here:
-            // val correctSentence = state.correctSentence.reversed().joinToString(" ")
-            // Otherwise, if DB is corrected, use directly:
-            val correctSentence = state.correctSentence
+            val correctSentence = state.correctSentence.joinToString(" ")
 
-            // Back Button - now inside sentenceState.let
             IconButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
@@ -92,7 +81,7 @@ fun SentenceBuilderPage(
             ) {
                 Spacer(modifier = Modifier.height(screenHeight * 0.1f))
 
-                StepProgressBar(currentStep = 1) // Assuming this is defined
+                StepProgressBar(currentStep = 0)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -132,7 +121,7 @@ fun SentenceBuilderPage(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            DottedLine( // Assuming this is defined
+                            DottedLine(
                                 width = screenWidth * 0.76f,
                                 modifier = Modifier.align(Alignment.Center)
                             )
@@ -146,8 +135,10 @@ fun SentenceBuilderPage(
                                     .absoluteOffset(x = 4.dp, y = (-14).dp)
                             )
 
-                            FlowRow( // Ensure ExperimentalLayoutApi if using this from Accompanist
+                            // FlowRow برای کلمات انتخاب‌شده با فاصله عمودی بیشتر
+                            FlowRow(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+                                verticalArrangement = Arrangement.spacedBy(20.dp), // افزایش فاصله عمودی بین خطوط
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = 40.dp)
@@ -160,7 +151,6 @@ fun SentenceBuilderPage(
                                             .background(Color(0xFFCDE8E5))
                                             .padding(horizontal = 8.dp, vertical = 2.dp)
                                             .clickable {
-                                                // Allows removing words by clicking them in the top line
                                                 selectedWords = selectedWords.toMutableList().apply { remove(word) }
                                             }
                                     ) {
@@ -175,7 +165,7 @@ fun SentenceBuilderPage(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(40.dp))
+                        Spacer(modifier = Modifier.height(40.dp)) // فاصله بین خطوط نقطه‌چین
 
                         DottedLine(width = screenWidth * 0.8f)
                     }
@@ -183,22 +173,19 @@ fun SentenceBuilderPage(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Selectable word options at the bottom
-                FlowRow( // Ensure ExperimentalLayoutApi if using this from Accompanist
+                FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     wordList.forEach { word ->
-                        ClickableTextWordBox( // Assuming this is defined
+                        ClickableTextWordBox(
                             word = word,
                             isSelected = selectedWords.contains(word),
                             onClick = {
                                 if (!selectedWords.contains(word)) {
                                     selectedWords = selectedWords.toMutableList().apply { add(word) }
                                 } else {
-                                    // If word is already selected (in the top line), clicking it here also removes it
-                                    // This provides a consistent behavior for toggling selection.
                                     selectedWords = selectedWords.toMutableList().apply { remove(word) }
                                 }
                             }
@@ -208,10 +195,9 @@ fun SentenceBuilderPage(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Submit Button
                 Button(
                     onClick = {
-                        val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentence.joinToString(" ")
+                        val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentence
                         isCorrect = isCurrentSentenceCorrect
                         showResultBox = true
                     },
@@ -229,29 +215,32 @@ fun SentenceBuilderPage(
                     Text("تایید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
                 }
             }
+        } ?: run {
+            // نمایش پیام خطا وقتی داده‌ها بارگذاری نشن
+            Text(
+                text = "داده‌ها بارگذاری نشد. لطفاً اتصال را بررسی کنید.",
+                color = Color.Red,
+                fontFamily = iranSans,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
 
-        // Result Box (WinnerBottomBox)
         if (showResultBox) {
-            // Note: correctSentence from SentenceState is a List<String>. Join it for WinnerBottomBox.
             val correctSentenceText = sentenceState?.correctSentence?.joinToString(" ") ?: ""
             val userSentenceText = selectedWords.joinToString(" ")
 
-            WinnerBottomBox(
+            Result(
                 correct = if (isCorrect == true) 1 else 0,
                 wrong = if (isCorrect == false) 1 else 0,
                 timeInSeconds = timeInSeconds,
+                showStats = true,
                 showTime = false,
-                showStats = false,
                 correctSentence = correctSentenceText,
                 userSentence = userSentenceText,
                 onNext = {
-                    // Reset game state for the next round
                     selectedWords = mutableListOf()
                     showResultBox = false
                     isCorrect = null
-                    // You might want to load a new sentence here:
-                    // viewModel.loadNextSentence() // Or navigate to next game
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -282,7 +271,7 @@ fun ClickableTextWordBox(word: String, isSelected: Boolean, onClick: () -> Unit)
 @Composable
 fun DottedLine(
     width: Dp,
-    modifier: Modifier = Modifier, // ✅ اضافه شد
+    modifier: Modifier = Modifier,
     color: Color = Color.Gray.copy(alpha = 0.4f)
 ) {
     Box(
@@ -305,9 +294,145 @@ fun DottedLine(
     )
 }
 
-
-@Preview(showBackground = true)
 @Composable
-fun SentenceBuilderPreview() {
-    SentenceBuilderPage(navController = rememberNavController())
+fun Result(
+    correct: Int = 0,
+    wrong: Int = 0,
+    timeInSeconds: Int = 0,
+    showStats: Boolean = true,
+    showTime: Boolean = true,
+    correctSentence: String? = null,
+    userSentence: String? = null,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val formattedTime = String.format("%02d:%02d", timeInSeconds / 60, timeInSeconds % 60)
+    val allCorrect = wrong == 0
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(screenHeight * 0.14f)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF4DA4A4), Color(0xFFBFEAE8))
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            )
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    ) {
+        if (showTime) {
+            Text(
+                text = formattedTime,
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 12.dp, top = 60.dp)
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = 8.dp),
+        ) {
+            if (allCorrect) {
+                Text(
+                    text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.End)
+                )
+            } else {
+                if (correctSentence != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.tik),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = correctSentence,
+                            fontFamily = iranSans,
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Left,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (userSentence != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.cross),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = userSentence,
+                            fontFamily = iranSans,
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Left,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(98.dp)
+                    .height(34.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF4D869C))
+                    .clickable { onNext() }
+                    .align(Alignment.End),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "بریم بعدی",
+                        fontFamily = iranSans,
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.nextbtn),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
 }

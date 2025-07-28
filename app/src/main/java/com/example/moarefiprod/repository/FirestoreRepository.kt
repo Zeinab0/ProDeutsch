@@ -1,4 +1,4 @@
-package com.example.moarefiprod.data
+package com.example.moarefiprod.repository
 
 import android.util.Log
 import com.example.moarefiprod.data.models.Course

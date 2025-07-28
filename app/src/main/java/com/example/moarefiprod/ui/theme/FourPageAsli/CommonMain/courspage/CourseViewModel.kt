@@ -3,7 +3,7 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.moarefiprod.data.FirestoreRepository
+import com.example.moarefiprod.repository.FirestoreRepository
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseLesson
@@ -151,11 +151,18 @@ class CourseViewModel(
                     .collection("Contents")
                     .get()
                     .await()
-                    .toObjects(CourseItem::class.java)
-                _selectedLessonItems.value = itemDocs // به‌روزرسانی StateFlow
-                Log.d("CourseViewModel", "Contents loaded for lesson $lessonId: $itemDocs")
+                val items = itemDocs.map { doc ->
+                    doc.toObject(CourseItem::class.java).copy(
+                        id = doc.id, // ست کردن id داکیومنت
+                        // اگه توی دیتابیس فیلد gameId داری، اینو فعال کن
+                        // gameId = doc.getString("gameId") // ست کردن gameId اگه وجود داره
+                    )
+                }
+                _selectedLessonItems.value = items // به‌روزرسانی StateFlow
+                Log.d("CourseViewModel", "Contents loaded for lesson $lessonId: $items")
             } catch (e: Exception) {
                 Log.e("CourseViewModel", "Error loading Contents for lesson $lessonId: ${e.message}")
+                _errorMessage.value = e.message // اگه StateFlow برای خطا داری، اینو فعال کن
             }
         }
     }

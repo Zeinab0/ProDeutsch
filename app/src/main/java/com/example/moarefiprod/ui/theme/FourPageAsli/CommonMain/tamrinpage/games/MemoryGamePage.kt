@@ -1,5 +1,4 @@
-package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.memorygames
-
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -10,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx .compose.material3.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,28 +17,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.StepProgressBar
 import kotlinx.coroutines.delay
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.moarefiprod.viewmodel.GameViewModel
 import com.example.moarefiprod.repository.saveGameResultToFirestore
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.WinnerBottomBox
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.google.firebase.auth.FirebaseAuth
-import androidx.compose.material3.Text
 
 @Composable
-fun WordMatchPage(
+fun MemoryGamePage(
     navController: NavController,
     gameId: String = "matchingGame_001",
     viewModel: GameViewModel = viewModel()
@@ -103,7 +97,6 @@ fun WordMatchPage(
         }
     }
 
-    // بررسی پایان بازی و ذخیره نتیجه
     LaunchedEffect(usedFarsiWords.value.size) {
         val total = wordPairs.size
         if (usedFarsiWords.value.size == total && gameStarted.value && !showResultBox) {
@@ -119,7 +112,6 @@ fun WordMatchPage(
         }
     }
 
-    // بررسی انتخاب کاربر
     LaunchedEffect(selectedLeft, selectedRight) {
         if (selectedLeft != null && selectedRight != null) {
             val isCorrect = wordPairs.any {
@@ -194,7 +186,6 @@ fun WordMatchPage(
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // لیست فارسی
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f),
@@ -219,7 +210,6 @@ fun WordMatchPage(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // لیست آلمانی
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f),
@@ -244,7 +234,7 @@ fun WordMatchPage(
         }
 
         if (showResultBox) {
-            WinnerBottomBox(
+            Match(
                 correct = correctPairs.size,
                 wrong = errorCountMap.values.count { it >= 3 },
                 timeInSeconds = timeInSeconds,
@@ -300,8 +290,106 @@ fun WordItemWithState(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun WordMatchScreenPreview() {
-    WordMatchPage(navController = rememberNavController())
+fun Match(
+    correct: Int = 0,
+    wrong: Int = 0,
+    timeInSeconds: Int = 0,
+    showStats: Boolean = true,
+    showTime: Boolean = true,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val formattedTime = String.format("%02d:%02d", timeInSeconds / 60, timeInSeconds % 60)
+    val allCorrect = wrong == 0
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(screenHeight * 0.14f)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF4DA4A4), Color(0xFFBFEAE8))
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            )
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    ) {
+        if (showTime) {
+            Text(
+                text = formattedTime,
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 12.dp, top = 60.dp)
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = 8.dp),
+        ) {
+            if (allCorrect) {
+                Text(
+                    text = "عالیییییی\n ^_^ همه جفتا رو پیدا کردی",
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.End)
+                )
+            } else {
+                if (showStats) {
+                    Text(
+                        text = "درست: $correct     اشتباه: $wrong",
+                        fontFamily = iranSans,
+                        color = Color.Black,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(98.dp)
+                    .height(34.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF4D869C))
+                    .clickable { onNext() }
+                    .align(Alignment.End),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "بعدی",
+                        fontFamily = iranSans,
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.nextbtn),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
 }

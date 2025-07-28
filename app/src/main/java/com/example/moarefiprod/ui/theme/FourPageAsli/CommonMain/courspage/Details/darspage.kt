@@ -166,7 +166,7 @@ fun DarsDetails(
                                     5 -> R.drawable.num_05
                                     6 -> R.drawable.num_06
                                     7 -> R.drawable.num_07
-                                    else -> R.drawable.num_01 // پیش‌فرض
+                                    else -> R.drawable.num_01
                                 }
                             ),
                             contentDescription = "Lesson Number",
@@ -181,10 +181,16 @@ fun DarsDetails(
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f),
-                        contentPadding = PaddingValues(bottom = screenHeight * 0.02f) // اضافه کردن پدینگ پایین
+                        contentPadding = PaddingValues(bottom = screenHeight * 0.02f)
                     ) {
                         items(lessonItems) { item ->
-                            LessonItemRowUI(item = item)
+                            // تغییر 1: ارسال courseId و lessonId به LessonItemRowUI
+                            LessonItemRowUI(
+                                item = item,
+                                navController = navController,
+                                courseId = courseId,
+                                lessonId = lessonId
+                            )
                         }
                     }
                 }
@@ -194,14 +200,30 @@ fun DarsDetails(
 }
 
 @Composable
-fun LessonItemRowUI(item: CourseItem) {
+fun LessonItemRowUI(
+    item: CourseItem,
+    navController: NavController,
+    courseId: String,
+    lessonId: String
+) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardShape = RoundedCornerShape(16.dp)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* TODO: Handle click to open item content later */ }
+            .clickable {
+                if (item.type == CourseItemType.QUIZ_SET) {
+                    val contentId = item.id // استفاده از id واقعی که از دیتابیس اومده
+                    val gameId = item.gameId ?: "sentence_builder_1" // اگه gameId خالی بود، پیش‌فرض بذار
+                    if (contentId.isNotEmpty()) {
+                        Log.d("LessonItemRowUI", "Navigating to game with courseId: $courseId, lessonId: $lessonId, contentId: $contentId, gameId: $gameId")
+                        navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId")
+                    } else {
+                        Log.e("LessonItemRowUI", "Content ID is empty for item: ${item.title}")
+                    }
+                }
+            }
             .shadow(
                 elevation = 6.dp,
                 shape = cardShape,
@@ -254,7 +276,7 @@ fun LessonItemRowUI(item: CourseItem) {
                 val iconRes = when (item.type) {
                     CourseItemType.VIDEO -> R.drawable.video
                     CourseItemType.DOCUMENT -> R.drawable.document
-                    CourseItemType.QUIZ1, CourseItemType.QUIZ2, CourseItemType.QUIZ3, CourseItemType.FINAL_EXAM -> R.drawable.exam
+                    CourseItemType.QUIZ1, CourseItemType.QUIZ2, CourseItemType.QUIZ3, CourseItemType.FINAL_EXAM, CourseItemType.QUIZ_SET -> R.drawable.exam
                     CourseItemType.WORDS -> R.drawable.words
                 }
                 Icon(
