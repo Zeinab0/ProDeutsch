@@ -7,6 +7,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +29,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.example.moarefiprod.data.FirestoreRepository
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.data.models.CourseLesson
@@ -62,7 +67,9 @@ import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailWrapper
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.getMovieById
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Date
@@ -194,20 +201,13 @@ class MainActivity : ComponentActivity() {
                 composable("MovieScreen") {
                     MovieScreen(navController = navController)
                 }
+
                 composable("movie_detail/{movieId}") { backStackEntry ->
                     val movieId = backStackEntry.arguments?.getString("movieId") ?: return@composable
-
-                    // فراخوانی دیتای همون فیلم
                     var movie by remember { mutableStateOf<Movie?>(null) }
 
                     LaunchedEffect(movieId) {
-                        FirebaseFirestore.getInstance()
-                            .collection("movies")
-                            .document(movieId)
-                            .get()
-                            .addOnSuccessListener {
-                                movie = it.toObject(Movie::class.java)
-                            }
+                        movie = getMovieById(movieId)
                     }
 
                     movie?.let {
@@ -216,10 +216,22 @@ class MainActivity : ComponentActivity() {
                             level = it.level,
                             price = it.price,
                             description = it.description,
+                            videoUrl = it.videoUrl,
                             onBack = { navController.popBackStack() }
                         )
+                    } ?: Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
+
+                composable("movie_detail/{id}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                    MovieDetailWrapper(id = id, onBack = { navController.popBackStack() })
+                }
+
                 // بخش مربوط به فیلم
 
 

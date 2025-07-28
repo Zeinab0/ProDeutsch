@@ -12,7 +12,9 @@ data class Movie(
     val level: String = "",
     val duration: String = "",
     val price: String = "",
-    val imageUrl: String = ""
+    val imageUrl: String = "",
+    val videoUrl: String = ""
+
 )
 
 
@@ -23,13 +25,6 @@ fun getMoviesFromFirestore(
         .collection("movies")
         .get()
 
-//        .addOnSuccessListener { snapshot ->
-//            val movies = snapshot.documents.mapNotNull { it.toObject(Movie::class.java)?.copy(id = it.id) }
-//            onResult(movies)
-//        }
-//        .addOnFailureListener {
-//            onResult(emptyList()) // یا هندل ارور
-//        }
         .addOnSuccessListener { snapshot ->
             val movies = snapshot.documents.mapNotNull {
                 val movie = it.toObject(Movie::class.java)

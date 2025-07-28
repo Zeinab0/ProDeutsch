@@ -248,7 +248,10 @@ fun MovieScreen(navController: NavController) {
                         title = movie.title,
                         level = movie.level,
                         duration = movie.duration,
-                        price = movie.price
+                        price = movie.price,
+                        modifier = Modifier.clickable {
+                            navController.navigate("movie_detail/${movie.id}")
+                        }
                     )
                 }
             }
@@ -287,8 +290,7 @@ fun MovieCard(
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF1EFEF)),
         modifier = modifier
             .width(cardWidth)
-            .height(cardHeight)
-            .clickable {  },
+            .height(cardHeight),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -377,8 +379,10 @@ fun VideoCard(
     level: String,
     duration: String,
     price: String,
-    imageRes: Int? = null // برای placeholder
-) {
+    imageRes: Int? = null ,// برای placeholder
+    modifier: Modifier = Modifier,
+
+    ) {
     BoxWithConstraints(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -386,8 +390,7 @@ fun VideoCard(
         val cardHeight = width * 1.2f // 👈 نسبت به عرض کارت (200.dp تقریبی = 0.85 * 235.dp)
 
         Card(
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
+            modifier = modifier // 👈 باید اینجا از modifier استفاده بشه
                 .fillMaxWidth()
                 .height(cardHeight)
                 .shadow(
