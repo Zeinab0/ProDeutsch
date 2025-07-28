@@ -31,7 +31,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.moarefiprod.data.FirestoreRepository
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.data.models.CourseLesson
 import com.example.moarefiprod.ui.SignUpScreen
