@@ -81,7 +81,7 @@ fun SentenceBuilderPage(
             ) {
                 Spacer(modifier = Modifier.height(screenHeight * 0.1f))
 
-                StepProgressBar(currentStep = 0)
+                StepProgressBar(currentStep = 1)
 
                 Spacer(modifier = Modifier.height(24.dp))
 

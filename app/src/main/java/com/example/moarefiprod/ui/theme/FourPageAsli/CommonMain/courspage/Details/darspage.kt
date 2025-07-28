@@ -184,7 +184,6 @@ fun DarsDetails(
                         contentPadding = PaddingValues(bottom = screenHeight * 0.02f)
                     ) {
                         items(lessonItems) { item ->
-                            // تغییر 1: ارسال courseId و lessonId به LessonItemRowUI
                             LessonItemRowUI(
                                 item = item,
                                 navController = navController,
@@ -214,15 +213,19 @@ fun LessonItemRowUI(
             .fillMaxWidth()
             .clickable {
                 if (item.type == CourseItemType.QUIZ_SET) {
-                    val contentId = item.id // استفاده از id واقعی که از دیتابیس اومده
-                    val gameId = item.gameId ?: "sentence_builder_1" // اگه gameId خالی بود، پیش‌فرض بذار
+                    val contentId = item.id
+                    val gameId = item.gameId ?: "memory_game_2" // شروع با memory_game_2
                     if (contentId.isNotEmpty()) {
-                        Log.d("LessonItemRowUI", "Navigating to game with courseId: $courseId, lessonId: $lessonId, contentId: $contentId, gameId: $gameId")
-                        navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId")
-                    } else {
-                        Log.e("LessonItemRowUI", "Content ID is empty for item: ${item.title}")
+                        navController.navigate("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=0") // شروع با memory_game و index 0
                     }
                 }
+//                if (item.type == CourseItemType.QUIZ_SET) {
+//                    val contentId = item.id
+//                    val gameId = item.gameId ?: "sentence_builder_1" // شروع با بازی اول
+//                    if (contentId.isNotEmpty()) {
+//                        navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
+//                    }
+//                }
             }
             .shadow(
                 elevation = 6.dp,

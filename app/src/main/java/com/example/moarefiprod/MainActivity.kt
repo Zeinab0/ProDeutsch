@@ -56,6 +56,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MemoryGamePage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceBuilderPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
@@ -100,7 +101,6 @@ class MainActivity : ComponentActivity() {
 
             // جمع‌آوری StateFlow به‌صورت State
             val allCourses by viewModel.allCourses.collectAsState()
-
 
             NavHost(navController = navController, startDestination = "firstLogo") {
                 composable("firstLogo") {
@@ -185,7 +185,6 @@ class MainActivity : ComponentActivity() {
                     AudioTestScreen(navController, level = level, exerciseId = exerciseId)
                 }
 
-
                 // بخش مربوط به فیلم
                 composable("MovieScreen") {
                     MovieScreen(navController = navController)
@@ -218,7 +217,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 // بخش مربوط به فیلم
-
 
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)
@@ -278,7 +276,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable("profile") {
-                    ProfileScreen(navController = navController, userViewModel = userViewModel,)
+                    ProfileScreen(navController = navController, userViewModel = userViewModel)
                 }
 
                 composable("change_password") {
@@ -341,17 +339,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // در MainActivity.kt، داخل NavHost
                 composable(
-                    route = "sentenceBuilder/{courseId}/{lessonId}/{contentId}/{gameId}", // <--- مسیر جدید با چهار آرگومان
-                    arguments = listOf( // <--- لیست آرگومان‌های جدید
+                    route = "sentenceBuilder/{courseId}/{lessonId}/{contentId}/{gameId}",
+                    arguments = listOf(
                         navArgument("courseId") { type = NavType.StringType },
                         navArgument("lessonId") { type = NavType.StringType },
                         navArgument("contentId") { type = NavType.StringType },
                         navArgument("gameId") { type = NavType.StringType }
                     )
                 ) { backStackEntry ->
-                    // دریافت آرگومان‌ها از مسیر
                     val courseId = backStackEntry.arguments?.getString("courseId")
                     val lessonId = backStackEntry.arguments?.getString("lessonId")
                     val contentId = backStackEntry.arguments?.getString("contentId")
@@ -359,17 +355,15 @@ class MainActivity : ComponentActivity() {
 
                     Log.d("SentenceBuilderNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
 
-                    // بررسی اینکه همه آرگومان‌ها معتبر هستند
                     if (courseId != null && lessonId != null && contentId != null && gameId != null) {
                         SentenceBuilderPage(
                             navController = navController,
-                            courseId = courseId,    // <--- ارسال courseId
-                            lessonId = lessonId,    // <--- ارسال lessonId
-                            contentId = contentId,  // <--- ارسال contentId
-                            gameId = gameId         // <--- ارسال gameId
+                            courseId = courseId,
+                            lessonId = lessonId,
+                            contentId = contentId,
+                            gameId = gameId
                         )
                     } else {
-                        // در صورت ناقص بودن آرگومان‌ها، پیام خطا نمایش داده و به عقب برمی‌گردیم
                         Text(
                             "خطا: شناسه های لازم برای بازی یافت نشد.",
                             color = Color.Red,
@@ -381,6 +375,42 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                composable(
+                    route = "memoryGame/{courseId}/{lessonId}/{contentId}/{gameId}",
+                    arguments = listOf(
+                        navArgument("courseId") { type = NavType.StringType },
+                        navArgument("lessonId") { type = NavType.StringType },
+                        navArgument("contentId") { type = NavType.StringType },
+                        navArgument("gameId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId")
+                    val lessonId = backStackEntry.arguments?.getString("lessonId")
+                    val contentId = backStackEntry.arguments?.getString("contentId")
+                    val gameId = backStackEntry.arguments?.getString("gameId")
+
+                    Log.d("MemoryGameNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
+
+                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
+                        MemoryGamePage(
+                            navController = navController,
+                            courseId = courseId,
+                            lessonId = lessonId,
+                            contentId = contentId,
+                            gameId = gameId,
+                            viewModel = viewModel()
+                        )
+                    } else {
+                        Text(
+                            "خطا: شناسه های لازم برای بازی یافت نشد.",
+                            color = Color.Red,
+                            fontFamily = iranSans
+                        )
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
+                    }
+                }
             }
         }
     }

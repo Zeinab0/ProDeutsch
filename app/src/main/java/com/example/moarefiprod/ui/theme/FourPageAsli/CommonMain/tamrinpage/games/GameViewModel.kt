@@ -26,11 +26,20 @@ class GameViewModel : ViewModel() {
     val sentenceData: StateFlow<SentenceGameData?> = _sentenceData.asStateFlow()
 
     // ⬇️ بازی حافظه (Match)
-    fun loadMemoryGame(gameId: String) {
-        db.collection("games").document(gameId)
+    fun loadMemoryGame(courseId: String, lessonId: String, contentId: String, gameId: String) {
+        Log.d("FirebaseDebug", "📄 Attempting to load memory game with path: Courses/$courseId/Lessons/$lessonId/Contents/$contentId/games/$gameId")
+        db.collection("Courses")
+            .document(courseId)
+            .collection("Lessons")
+            .document(lessonId)
+            .collection("Contents")
+            .document(contentId)
+            .collection("games")
+            .document(gameId)
             .get()
             .addOnSuccessListener { document ->
-                if (document.exists()) {
+                if (document != null && document.exists()) {
+                    Log.d("FirebaseDebug", "📥 Loaded document data: ${document.data}")
                     val list = document["pairs"] as? List<Map<String, String>>
                     val originalPairs = list?.map {
                         WordPair(
@@ -49,10 +58,16 @@ class GameViewModel : ViewModel() {
                         )
                     }
                     _displayPairs.value = displayList
+                } else {
+                    Log.e("FirebaseDebug", "Document does not exist for gameId: $gameId at path Courses/$courseId/Lessons/$lessonId/Contents/$contentId/games/$gameId")
+                    _wordPairs.value = emptyList()
+                    _displayPairs.value = emptyList()
                 }
             }
-            .addOnFailureListener {
-                Log.e("FirebaseGame", "Failed to fetch: ${it.message}")
+            .addOnFailureListener { e ->
+                Log.e("FirebaseDebug", "Failed to load memory game for gameId: $gameId, error: ${e.message}")
+                _wordPairs.value = emptyList()
+                _displayPairs.value = emptyList()
             }
     }
 
@@ -60,9 +75,9 @@ class GameViewModel : ViewModel() {
         Log.d("FirebaseDebug", "📄 Attempting to load sentence game with path: Courses/$courseId/Lessons/$lessonId/Contents/$contentId/games/$gameId")
         db.collection("Courses")
             .document(courseId)
-            .collection("Lessons") // تغییر به "Lessons" (با "s" بزرگ)
+            .collection("Lessons")
             .document(lessonId)
-            .collection("Contents") // تغییر به "Contents" (با "s" بزرگ)
+            .collection("Contents")
             .document(contentId)
             .collection("games")
             .document(gameId)
