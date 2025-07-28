@@ -8,7 +8,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -26,9 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
-import com.example.moarefiprod.data.FirestoreRepository
-import com.example.moarefiprod.data.models.Course
-import com.example.moarefiprod.data.models.CourseLesson
 import com.example.moarefiprod.ui.SignUpScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.MyCoursesScreen
@@ -60,12 +56,12 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceBuilderPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.util.Date
 
 val iranSans = FontFamily(
     Font(R.font.iransans_bold, FontWeight.Bold),
@@ -343,6 +339,48 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+
+                // در MainActivity.kt، داخل NavHost
+                composable(
+                    route = "sentenceBuilder/{courseId}/{lessonId}/{contentId}/{gameId}", // <--- مسیر جدید با چهار آرگومان
+                    arguments = listOf( // <--- لیست آرگومان‌های جدید
+                        navArgument("courseId") { type = NavType.StringType },
+                        navArgument("lessonId") { type = NavType.StringType },
+                        navArgument("contentId") { type = NavType.StringType },
+                        navArgument("gameId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    // دریافت آرگومان‌ها از مسیر
+                    val courseId = backStackEntry.arguments?.getString("courseId")
+                    val lessonId = backStackEntry.arguments?.getString("lessonId")
+                    val contentId = backStackEntry.arguments?.getString("contentId")
+                    val gameId = backStackEntry.arguments?.getString("gameId")
+
+                    Log.d("SentenceBuilderNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
+
+                    // بررسی اینکه همه آرگومان‌ها معتبر هستند
+                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
+                        SentenceBuilderPage(
+                            navController = navController,
+                            courseId = courseId,    // <--- ارسال courseId
+                            lessonId = lessonId,    // <--- ارسال lessonId
+                            contentId = contentId,  // <--- ارسال contentId
+                            gameId = gameId         // <--- ارسال gameId
+                        )
+                    } else {
+                        // در صورت ناقص بودن آرگومان‌ها، پیام خطا نمایش داده و به عقب برمی‌گردیم
+                        Text(
+                            "خطا: شناسه های لازم برای بازی یافت نشد.",
+                            color = Color.Red,
+                            fontFamily = iranSans
+                        )
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
+                    }
+                }
+
+
             }
         }
     }

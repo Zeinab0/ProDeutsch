@@ -15,17 +15,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.data.models.Course
-import com.example.moarefiprod.data.models.CourseItem
-import com.example.moarefiprod.data.models.CourseLesson
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Details.CourseHeaderSection
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Details.CourseInfoSection
 

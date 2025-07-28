@@ -45,11 +45,13 @@ data class CourseItem(
     val duration: Int = 0,
     val url: String = "",
     @PropertyName("order") val order: Int = 0,
-    val lessonId: String? = null // فیلد جدید برای ربط به درس
+    val lessonId: String? = null, // فیلد جدید برای ربط به درس
+    val courseId: String? = null,
+    val gameId: String? = null
 ) : Parcelable
 
 enum class CourseItemType {
-    VIDEO, DOCUMENT, QUIZ1, QUIZ2, QUIZ3, FINAL_EXAM, WORDS;
+    VIDEO, DOCUMENT, QUIZ1, QUIZ2, QUIZ3,QUIZ_SET, FINAL_EXAM, WORDS;
 
     companion object {
         fun fromString(type: String): CourseItemType? {
