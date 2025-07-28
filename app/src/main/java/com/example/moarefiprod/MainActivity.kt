@@ -60,7 +60,11 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Date
 
 val iranSans = FontFamily(
@@ -184,6 +188,40 @@ class MainActivity : ComponentActivity() {
 
                     AudioTestScreen(navController, level = level, exerciseId = exerciseId)
                 }
+
+
+                // بخش مربوط به فیلم
+                composable("MovieScreen") {
+                    MovieScreen(navController = navController)
+                }
+                composable("movie_detail/{movieId}") { backStackEntry ->
+                    val movieId = backStackEntry.arguments?.getString("movieId") ?: return@composable
+
+                    // فراخوانی دیتای همون فیلم
+                    var movie by remember { mutableStateOf<Movie?>(null) }
+
+                    LaunchedEffect(movieId) {
+                        FirebaseFirestore.getInstance()
+                            .collection("movies")
+                            .document(movieId)
+                            .get()
+                            .addOnSuccessListener {
+                                movie = it.toObject(Movie::class.java)
+                            }
+                    }
+
+                    movie?.let {
+                        MovieDetailScreen(
+                            title = it.title,
+                            level = it.level,
+                            price = it.price,
+                            description = it.description,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                }
+                // بخش مربوط به فیلم
+
 
                 composable("my_flashcards") {
                     MyFlashCardScreen(navController = navController, words = dummyWords)
