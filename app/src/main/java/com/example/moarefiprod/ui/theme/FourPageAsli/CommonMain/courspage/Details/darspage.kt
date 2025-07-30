@@ -212,20 +212,31 @@ fun LessonItemRowUI(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                if (item.type == CourseItemType.QUIZ_SET) {
-                    val contentId = item.id
-                    val gameId = item.gameId ?: "memory_game_2" // شروع با memory_game_2
-                    if (contentId.isNotEmpty()) {
-                        navController.navigate("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=0") // شروع با memory_game و index 0
+                when (item.type) {
+                    CourseItemType.QUIZ_SET -> {
+                        val contentId = item.id
+                        val gameId = item.gameId
+                        if (contentId.isNotEmpty() && gameId != null) {
+                            when (gameId) {
+                                "memory_game_2" -> {
+                                    navController.navigate("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
+                                }
+                                "sentence_builder_1" -> {
+                                    navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
+                                }
+                                "text_pic_3" -> {
+                                    navController.navigate("textPic/$courseId/$lessonId/$contentId/$gameId")
+                                }
+                                else -> {
+                                    Log.w("LessonItemRowUI", "Unknown gameId: $gameId")
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        // برای نوع‌های دیگه فعلاً کاری نمی‌کنیم
                     }
                 }
-//                if (item.type == CourseItemType.QUIZ_SET) {
-//                    val contentId = item.id
-//                    val gameId = item.gameId ?: "sentence_builder_1" // شروع با بازی اول
-//                    if (contentId.isNotEmpty()) {
-//                        navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
-//                    }
-//                }
             }
             .shadow(
                 elevation = 6.dp,
