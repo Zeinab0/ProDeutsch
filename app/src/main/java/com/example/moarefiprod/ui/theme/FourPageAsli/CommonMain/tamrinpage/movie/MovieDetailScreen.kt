@@ -293,17 +293,3 @@ fun VideoPlayer(
         )
     }
 }
-
-suspend fun getMovieById(movieId: String): Movie? {
-    return try {
-        val snapshot = FirebaseFirestore.getInstance()
-            .collection("movies")
-            .document(movieId)
-            .get()
-            .await()
-
-        snapshot.toObject(Movie::class.java)
-    } catch (e: Exception) {
-        null
-    }
-}
