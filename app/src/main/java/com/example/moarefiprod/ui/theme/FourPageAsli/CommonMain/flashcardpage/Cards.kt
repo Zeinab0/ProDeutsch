@@ -17,6 +17,7 @@ enum class WordStatus {
 }
 
 data class Word(
+    val id: String = "",
     val text: String = "",
     val translation: String = "",
     val status: WordStatus = WordStatus.NEW

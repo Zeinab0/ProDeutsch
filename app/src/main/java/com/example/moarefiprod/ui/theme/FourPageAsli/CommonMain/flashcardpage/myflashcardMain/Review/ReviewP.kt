@@ -15,6 +15,7 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 
 @Composable
@@ -31,9 +32,9 @@ fun ReviewPage(
     var isFlipped by remember { mutableStateOf(false) }
     var currentIndex by remember { mutableStateOf(0) }
     var tempWordList by remember { mutableStateOf(words.toMutableList()) }
-    val updatedStatuses = remember { mutableStateMapOf<Word, WordStatus>() }
 
     val currentWord = tempWordList.getOrNull(currentIndex)
+    val updatedStatuses = remember { mutableStateMapOf<String, WordStatus>() }
 
     // ⏱ تایمر
     LaunchedEffect(Unit) {
@@ -47,9 +48,8 @@ fun ReviewPage(
     LaunchedEffect(currentWord) {
         if (currentWord == null && words.isNotEmpty()) {
             val finalWords = words.map { word ->
-                updatedStatuses[word]?.let { word.copy(status = it) } ?: word
+                updatedStatuses[word.text]?.let { word.copy(status = it) } ?: word
             }
-
             onReviewFinished(finalWords)
             navController.popBackStack()
         }
@@ -124,17 +124,17 @@ fun ReviewPage(
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             ActionButton("نمیدانم", Color(0xFFF7A400)) {
-                                updatedStatuses[currentWord] = WordStatus.IDK
+                                updatedStatuses[currentWord.text] = WordStatus.IDK
                                 isFlipped = false
                                 currentIndex++
                             }
                             ActionButton("غلط", Color(0xFFE53935)) {
-                                updatedStatuses[currentWord] = WordStatus.WRONG
+                                updatedStatuses[currentWord.text] = WordStatus.WRONG
                                 isFlipped = false
                                 currentIndex++
                             }
                             ActionButton("درست", Color(0xFF43A047)) {
-                                updatedStatuses[currentWord] = WordStatus.CORRECT
+                                updatedStatuses[currentWord.text] = WordStatus.CORRECT
                                 isFlipped = false
                                 currentIndex++
                             }
@@ -194,4 +194,16 @@ fun formatTime(seconds: Int): String {
     val mins = seconds / 60
     val secs = seconds % 60
     return String.format("%02d:%02d", mins, secs)
+}
+
+fun updateWordStatusInFirestore(cardId: String, word: Word) {
+    val db = FirebaseFirestore.getInstance()
+    val wordId = word.id
+
+    db.collection("flashcards")
+        .document(cardId)
+        .collection("words")
+        .document(wordId)
+        .update("status", word.status.name)
+
 }

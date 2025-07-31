@@ -61,6 +61,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.updateWordStatusInFirestore
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MemoryGamePage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MultipleChoicePage
@@ -332,8 +333,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-
-
                 // بخش مربوط به داستان
 
 
@@ -344,44 +343,50 @@ class MainActivity : ComponentActivity() {
                     WordProgressPage(navController = navController)
                 }
 
-//                composable("word_list_page") {
-//                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
-//
-//                    WordListPage(
-//                        words = dummyWords,
-//                        selectedView = currentView,
-//                        onViewChange = { currentView = it },
-//                        navController = navController
-//                    )
-//                }
+                composable("word_list_page") {
+                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
+
+                    val parentEntry = remember(it) {
+                        navController.getBackStackEntry("word_progress_page")
+                    }
+
+                    val allWords = parentEntry.savedStateHandle.get<List<Word>>("all_words") ?: emptyList()
+
+                    WordListPage(
+                        words = allWords,
+                        selectedView = currentView,
+                        onViewChange = { currentView = it },
+                        navController = navController
+                    )
+                }
+
                 composable("review_page") { entry ->
                     val parentEntry = remember(entry) {
                         navController.getBackStackEntry("word_progress_page")
                     }
 
-                    val reviewWords = parentEntry
-                        .savedStateHandle
-                        ?.get<List<Word>>("review_words")
+                    val reviewWords = parentEntry.savedStateHandle.get<List<Word>>("review_words")
+                    val cardId = parentEntry.savedStateHandle.get<String>("review_card_id")
 
-//                    if (!reviewWords.isNullOrEmpty()) {
-//                        ReviewPage(
-//                            words = reviewWords,
-//                            navController = navController,
-//                            onReviewFinished = { updatedWords ->
-//                                for (updated in updatedWords) {
-//                                    val index = dummyWords.indexOfFirst { it.german == updated.german }
-//                                    if (index != -1) {
-//                                        dummyWords[index] = updated
-//                                    }
-//                                }
-//                            }
-//                        )
-//                    } else {
-//                        LaunchedEffect(Unit) {
-//                            navController.popBackStack()
-//                        }
-//                    }
+                    if (!reviewWords.isNullOrEmpty() && !cardId.isNullOrEmpty()) {
+                        ReviewPage(
+                            words = reviewWords,
+                            navController = navController,
+                            onReviewFinished = { updatedWords ->
+                                for (updated in updatedWords) {
+                                    updateWordStatusInFirestore(cardId, updated)
+                                }
+                            }
+                        )
+                    } else {
+                        // اگر چیزی نبود، برگرد به صفحه قبل
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
+                    }
                 }
+
+
                 composable("tamrin_page_route") {
                     courspage(
                         onShowDialog = {},

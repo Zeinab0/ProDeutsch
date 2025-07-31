@@ -237,7 +237,8 @@ fun WordProgressPage(navController: NavController) {
                 .clickable {
                     navController.currentBackStackEntry
                         ?.savedStateHandle
-                        ?.set("filter_statuses", selectedStatuses.toList())
+                        ?.set("all_words", allWords)
+
                     navController.navigate("word_list_page")
                 }
         ) {
@@ -291,9 +292,11 @@ fun WordProgressPage(navController: NavController) {
                 navController.currentBackStackEntry
                     ?.savedStateHandle
                     ?.set("review_words", reviewWords.toList())
-
+                navController.currentBackStackEntry?.savedStateHandle?.set("review_words", reviewWords)
+                navController.currentBackStackEntry?.savedStateHandle?.set("review_card_id", cardId)
                 navController.navigate("review_page")
             },
+
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF90CECE)),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
@@ -320,9 +323,10 @@ fun fetchWordsForCard(cardId: String, onResult: (List<Word>) -> Unit) {
             val words = result.mapNotNull { doc ->
                 try {
                     Word(
+                        id = doc.id, // ← اینه documentId مثل "Flughafen"
                         text = doc.getString("text") ?: "",
                         translation = doc.getString("translation") ?: "",
-                        status = when (doc.getString("status")) {
+                        status = when ((doc.getString("status") ?: "").uppercase()) {
                             "CORRECT" -> WordStatus.CORRECT
                             "WRONG" -> WordStatus.WRONG
                             "IDK" -> WordStatus.IDK
