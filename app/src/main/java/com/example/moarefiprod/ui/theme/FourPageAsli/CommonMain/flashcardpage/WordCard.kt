@@ -1,6 +1,5 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,25 +24,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.data.models.Course
 
 @Composable
-fun WordCard(course: Course) {
+fun WordCard(card: Cards) {
     val configuration = LocalConfiguration.current
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
 
     val cardWidth = screenWidth * 0.27f
     val cardHeight = screenHeight * 0.18f
     val imageHeight = cardHeight * 0.32f
-    val buttonHeight = cardHeight * 0.2f
+    val buttonHeight = cardHeight * 0.12f
     val fontSizeTitle = screenWidth * 0.03f
     val fontSizeButton = screenWidth * 0.025f
 
@@ -53,7 +50,7 @@ fun WordCard(course: Course) {
             .height(cardHeight),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(5.dp),
-        shape = RoundedCornerShape(0.dp) // ❌ بدون گوشه گرد
+        shape = RoundedCornerShape(0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -62,46 +59,33 @@ fun WordCard(course: Course) {
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // عنوان
             Text(
-                text = course.title,
+                text = card.title,
                 fontSize = fontSizeTitle.value.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = iranSans,
                 textAlign = TextAlign.Center
             )
 
-            // تصویر
             AsyncImage(
-                model = course.imageUrl,
+                model = card.image,
                 contentDescription = "Course Image",
                 modifier = Modifier
                     .width(cardWidth * 0.85f)
                     .height(imageHeight)
-                    .background(Color(0xFF983434))
+                    .background(Color(0xFF7C7C7C))
                     .clip(RectangleShape),
                 contentScale = ContentScale.Crop
             )
-//            Image(
-//                painter = painterResource(id = course.image),
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .width(cardWidth * 0.85f)
-//                    .height(imageHeight)
-//                    .background(Color(0xFF983434))
-//                    .clip(RectangleShape), // برش دقیق طبق قاب
-//                contentScale = ContentScale.Crop // ❗ برش بزنه تا فیت بشه داخل اندازه
-//            )
 
-            // دکمه ادامه یادگیری
             Button(
                 onClick = { /* TODO */ },
                 contentPadding = PaddingValues(0.dp),
-                shape = RoundedCornerShape(0.dp), // ❌ بدون گوشه گرد
+                shape = RoundedCornerShape(4.dp),
                 modifier = Modifier
                     .width(cardWidth * 0.65f)
                     .height(buttonHeight)
-                    .padding(top = 5.dp),
+                    .padding( end = 2.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFCDE8E5))
             ) {
                 Text(

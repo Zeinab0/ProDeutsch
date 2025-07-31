@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.NewLabel
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun flashcardpage(navController: NavController){
@@ -46,20 +48,30 @@ fun flashcardpage(navController: NavController){
     var selectedFilter by remember { mutableStateOf("همه") } // ✅ مقدار اولیه
 
 
-    val myCourses = listOf(
-        Course("یادگیری کلمات در رستوران", "...", "...", "...", "...", 0, R.drawable.cours1),
-        Course("یادگیری کلمات سطح C1", "...", "...", "...", "...", 0, R.drawable.cours1),
-        Course("یادگیری کلمات در فرودگاه", "...", "...", "...", "...", 0, R.drawable.cours1),
-        Course("یادگیری کلمات در فرودگاه", "...", "...", "...", "...", 0, R.drawable.cours1),
+    var allCards by remember { mutableStateOf<List<Cards>>(emptyList()) }
 
-    )
-    val sampleCards = listOf(
-        Cards("A1 آموزش آلمانی سطح", "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!",  "۱۰ ساعت و ۳۰ دقیقه", "۱۲ جلسه + ۲۴ آزمون", 120, R.drawable.cours1),
-        Cards("A2 آموزش آلمانی سطح", "ادامه مسیر یادگیری آلمانی با نکات بیشتر", "۹ ساعت", "۱۰ جلسه + تمرین", 0, R.drawable.cours1),
-        Cards("B1 آموزش آلمانی سطح", "آمادگی برای مکالمه‌های روزمره و آزمون‌ها",  "۱۱ ساعت", "۱۴ جلسه + پروژه", 200, R.drawable.cours1 ,true),
-        Cards("B2 آموزش آلمانی سطح", "مکالمه روان و درک عمیق‌تر",  "۱۳ ساعت", "۱۵ جلسه + تمرین تعاملی", 250, R.drawable.cours1),
-        Cards("B2 آموزش آلمانی سطح", "مکالمه روان و درک عمیق‌تر",  "۱۳ ساعت", "۱۵ جلسه + تمرین تعاملی", 250, R.drawable.cours1,true),
-    )
+    LaunchedEffect(Unit) {
+        fetchCardsFromFirebase {
+            allCards = it
+        }
+    }
+
+// جدا کردن لیست مورد نیاز برای WordCard از Cards
+    val wordCards = allCards.filter { it.count > 0 } // یا هر شرطی که مد نظرته
+
+
+    var cards by remember { mutableStateOf<List<Cards>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        fetchCardsFromFirebase {
+            cards = it
+            println("🔥 ${it.size} کارت لود شد")
+            it.forEach { card ->
+                println("📦 ${card.title} | ${card.image}")
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,16 +93,16 @@ fun flashcardpage(navController: NavController){
             modifier = Modifier
                 .fillMaxWidth()
                 .height(125.dp),
-//            .background(Color(0xFFB63131)),
             reverseLayout = true,
             contentPadding = PaddingValues(horizontal = 0.dp),
             horizontalArrangement = Arrangement.spacedBy(15.dp)
-
         ) {
-            items(myCourses) { course ->
-                WordCard(course)
+            items(wordCards) { card ->
+                WordCard(card)
             }
         }
+
+
         Text(
             text = "...موارد بیشتر",
             fontSize = 10.sp,
@@ -134,10 +146,11 @@ fun flashcardpage(navController: NavController){
             }
         }
         val filteredCards = when (selectedFilter) {
-            "رایگان" -> sampleCards.filter { it.price == 0 }
-            "جدید" -> sampleCards.filter { it.isNew }
-            else -> sampleCards
+            "رایگان" -> cards.filter { it.price == "رایگان" }
+            "جدید" -> cards.filter { it.isNew }
+            else -> cards
         }
+
 
         LazyColumn(
             modifier = Modifier
@@ -162,4 +175,29 @@ fun flashcardpage(navController: NavController){
 
 
 
+}
+fun fetchCardsFromFirebase(onResult: (List<Cards>) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("flashcards").get()
+        .addOnSuccessListener { result ->
+            val cardsList = result.mapNotNull { doc ->
+                try {
+                    Cards(
+                        id = doc.id, // 🆕 اینو اضافه کن
+                        title = doc.getString("title") ?: "",
+                        description = doc.getString("description") ?: "",
+                        count = doc.getLong("count")?.toInt() ?: 0,
+                        price = doc.getString("price") ?: "نامشخص",
+                        image = doc.getString("image") ?: "",
+                        isNew = doc.getBoolean("isNew") ?: false
+                    )
+                } catch (e: Exception) {
+                    null // اگر داده ناقص بود، ردش کن
+                }
+            }
+            onResult(cardsList)
+        }
+        .addOnFailureListener {
+            onResult(emptyList()) // یا هندل ارور
+        }
 }

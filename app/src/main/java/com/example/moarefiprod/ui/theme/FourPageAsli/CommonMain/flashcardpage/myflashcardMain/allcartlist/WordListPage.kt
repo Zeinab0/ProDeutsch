@@ -34,8 +34,8 @@ import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Word
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
 
 
 @Composable
@@ -123,7 +123,7 @@ fun WordListPage(
                             horizontalAlignment = Alignment.Start
                             ) {
                                 Text(
-                                    text = word.persian,
+                                    text = word.translation,
                                     fontFamily = iranSans,
                                     fontSize = 16.sp,
                                     textAlign = TextAlign.Start
@@ -145,7 +145,7 @@ fun WordListPage(
                                 horizontalAlignment = Alignment.End
                             ) {
                                 Text(
-                                    text = word.german,
+                                    text = word.text,
                                     fontFamily = iranSans,
                                     fontSize = 16.sp,
                                     textAlign = TextAlign.End

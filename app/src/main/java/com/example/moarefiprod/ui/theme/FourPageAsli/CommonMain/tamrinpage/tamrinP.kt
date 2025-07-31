@@ -60,10 +60,10 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController) {
     )
 
     val allCards = listOf(
-        Cards("A1 آموزش آلمانی سطح", "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", "۱۰ ساعت و ۳۰ دقیقه", "۱۲ جلسه + ۲۴ آزمون", 120, R.drawable.cours1, true),
-        Cards("A2 آموزش آلمانی سطح", "ادامه مسیر یادگیری آلمانی با نکات بیشتر", "۹ ساعت", "۱۰ جلسه + تمرین", 0, R.drawable.cours1, true),
-        Cards("B1 آموزش آلمانی سطح", "آمادگی برای مکالمه‌های روزمره و آزمون‌ها", "۱۱ ساعت", "۱۴ جلسه + پروژه", 200, R.drawable.cours1, true)
-    )
+        Cards("a1_2", "A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", 1, "۱۲ جلسه", "cours1"),
+        Cards("a2_2", "A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", 1, "۱۰ جلسه", "cours1"),
+        Cards("b1", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 1, "۱۴ جلسه", "cours1"),
+        )
 
     val newCourses = allCourses.filter { it.isNew }
     val newCards = allCards.filter { it.isNew }

@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,23 +42,48 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Cards
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.viewmodel.FlashcardViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun WordProgressPage(words: List<Word>, navController: NavController) {
+fun WordProgressPage(navController: NavController) {
     var selectedStatuses by remember { mutableStateOf(setOf<WordStatus>()) }
-    val viewModel: FlashcardViewModel = viewModel()
-
-    // ✅ لیست جدید از review_page (اگه باشه) یا لیست اصلی
-    val updatedWords = navController.currentBackStackEntry
+    val cardId = navController.previousBackStackEntry
         ?.savedStateHandle
-        ?.get<List<Word>>("updated_words")
+        ?.get<String>("card_id") // الان این میشه: "sample1"
 
-    val allWords = updatedWords ?: words
+    var words by remember { mutableStateOf<List<Word>>(emptyList()) }
+    var cardTitle by remember { mutableStateOf("بدون عنوان") }
+
+    LaunchedEffect(cardId) {
+        cardId?.let { id ->
+            // 🟢 گرفتن عنوان کارت از Firestore
+            FirebaseFirestore.getInstance()
+                .collection("flashcards")
+                .document(id)
+                .get()
+                .addOnSuccessListener { doc ->
+                    val title = doc.getString("title")
+                    if (title != null) {
+                        cardTitle = title
+                    }
+                }
+
+            // 🟢 گرفتن لیست کلمات همان فلش‌کارت
+            fetchWordsForCard(id) { loadedWords ->
+                words = loadedWords
+            }
+        }
+    }
 
 
-    val total = allWords.size
-    val correctCount = allWords.count { it.status == WordStatus.CORRECT }
+
+
+    val allWords = words
+
     val wrongCount = allWords.count { it.status == WordStatus.WRONG }
     val idkCount = allWords.count { it.status == WordStatus.IDK }
     val newCount = allWords.count { it.status == WordStatus.NEW }
@@ -65,11 +91,14 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
     val filteredWords = if (selectedStatuses.isEmpty()) allWords
     else allWords.filter { it.status in selectedStatuses }
 
-    val correctPercentage = if (total > 0) (correctCount.toFloat() / total * 100).toInt() else 0
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+
+    val correctCount = words.count { it.status == WordStatus.CORRECT }
+    val total = words.size
+    val correctPercentage = if (total > 0) (correctCount * 100 / total) else 0
 
     Column(
         modifier = Modifier
@@ -110,7 +139,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
         }
 
         Text(
-            text = "یادگیری کلمات در فرودگاه",
+            text = cardTitle,
             fontSize = (screenWidth * 0.04f).value.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = iranSans,
@@ -122,9 +151,10 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
                 .padding(horizontal = 16.dp)
         )
 
+
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 🟢 بخش وضعیت
+        // 🟢 وضعیت و درصد
         Box(
             modifier = Modifier
                 .padding(horizontal = 20.dp)
@@ -157,6 +187,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
             )
         }
 
+
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
@@ -170,7 +201,6 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
             )
         }
 
-        // 📊 نمایش نمودار با Pager (وضعیت یا هفتگی)
         ChartPager(
             correct = correctCount,
             wrong = wrongCount,
@@ -187,7 +217,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
             },
             weeklyData = listOf(
                 "جمعه" to 25,
-                "پنج شنبه" to 10,
+                "پنج‌شنبه" to 10,
                 "چهارشنبه" to 18,
                 "سه‌شنبه" to 32,
                 "دوشنبه" to 22,
@@ -198,7 +228,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
 
         Spacer(modifier = Modifier.height(22.dp))
 
-        // 🃏 عنوان کارت‌ها و درصد
+        // 🃏 تعداد کارت‌ها
         Box(
             modifier = Modifier
                 .padding(horizontal = 20.dp)
@@ -253,7 +283,7 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
         Button(
             onClick = {
                 val reviewWords = if (selectedStatuses.isEmpty()) {
-                    allWords // وقتی هیچ وضعیتی انتخاب نشده، همه کلمات رو بفرست
+                    allWords
                 } else {
                     allWords.filter { it.status in selectedStatuses }
                 }
@@ -275,6 +305,38 @@ fun WordProgressPage(words: List<Word>, navController: NavController) {
             Spacer(Modifier.width(8.dp))
             Text("مرور (${filteredWords.size} کلمه)", fontFamily = iranSans)
         }
-
     }
 }
+
+
+fun fetchWordsForCard(cardId: String, onResult: (List<Word>) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+
+    db.collection("flashcards")
+        .document(cardId)
+        .collection("words")
+        .get()
+        .addOnSuccessListener { result ->
+            val words = result.mapNotNull { doc ->
+                try {
+                    Word(
+                        text = doc.getString("text") ?: "",
+                        translation = doc.getString("translation") ?: "",
+                        status = when (doc.getString("status")) {
+                            "CORRECT" -> WordStatus.CORRECT
+                            "WRONG" -> WordStatus.WRONG
+                            "IDK" -> WordStatus.IDK
+                            else -> WordStatus.NEW
+                        }
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            onResult(words)
+        }
+        .addOnFailureListener {
+            onResult(emptyList())
+        }
+}
+

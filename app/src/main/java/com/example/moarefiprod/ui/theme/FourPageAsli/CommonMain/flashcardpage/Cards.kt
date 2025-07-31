@@ -1,13 +1,23 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage
+import com.google.firebase.firestore.FirebaseFirestore
 
 data class Cards(
+    val id: String = "", // 🆕 اضافه شده
     val title: String,
     val description: String,
-    val zaman: String,
-    val teadad: String,
-
-    val price: Int,
-    val image: Int,
+    val count: Int,
+    val price: String,
+    val image: String,
     val isNew: Boolean = false // 🔥 اضافه کن برای تشخیص جدید بودن
+)
 
+
+enum class WordStatus {
+    NEW, CORRECT, WRONG, IDK
+}
+
+data class Word(
+    val text: String = "",
+    val translation: String = "",
+    val status: WordStatus = WordStatus.NEW
 )

@@ -16,21 +16,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.moarefiprod.iranSans
 
 @Composable
 fun flashCard(cards: Cards, navController: NavController) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val cardHeight = screenWidth * 0.3f // ارتفاع متناسب با عرض صفحه
+    val cardHeight = screenWidth * 0.3f
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
 
@@ -46,7 +48,7 @@ fun flashCard(cards: Cards, navController: NavController) {
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = cards.image),
+                painter = rememberAsyncImagePainter(cards.image),
                 contentDescription = "Course Image",
                 modifier = Modifier
                     .fillMaxHeight()
@@ -63,23 +65,26 @@ fun flashCard(cards: Cards, navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-
                 Text(
-                    text = when (cards.price) {
-                        -1 -> ""
-                        0 -> "رایگان"
-                        else -> "هزار تومان ${cards.price}"
-                    },
+                    text = cards.price,
                     fontSize = 10.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
-                    color = if (cards.price == 0) Color(0xFF2E7D32) else Color(0xFF000000), // سبز برای رایگان
-                    textAlign = TextAlign.Right
+                    color = if (cards.price == "رایگان") Color(0xFF2E7D32) else Color(0xFF000000),
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(
+                        textDirection = TextDirection.Rtl
+                    )
                 )
 
-
                 Button(
-                    onClick = { navController.navigate("word_progress_page") },
+                    onClick = {
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("card_id", cards.id) // نه title
+                        navController.navigate("word_progress_page")
+
+                    },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -87,7 +92,6 @@ fun flashCard(cards: Cards, navController: NavController) {
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C))
                 ) {
-
                     Text(
                         text = "شروع دوره",
                         modifier = Modifier
@@ -98,69 +102,58 @@ fun flashCard(cards: Cards, navController: NavController) {
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
+
                     )
                 }
             }
 
             Column(
                 modifier = Modifier
-                    .padding(0.dp,10.dp,10.dp,10.dp)
+                    .padding(0.dp, 10.dp, 10.dp, 10.dp)
                     .fillMaxHeight()
                     .width(200.dp),
-//                    .background(Color(0xFF9B3131)),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = cards.title,
-                    fontSize = 12.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    textAlign = TextAlign.Right
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(
+                        textDirection = TextDirection.Rtl
+                    )
                 )
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = cards.description,
-                    fontSize = 10.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    textAlign = TextAlign.Right
+//                    textAlign = TextAlign.Right,
+                    style = TextStyle(
+                        textDirection = TextDirection.Rtl
+                    )
                 )
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = iranSans)) {
-                            append("مدت زمان دوره: ")
+                            append("تعداد کلمات:   ")
                         }
                         withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(cards.teadad)
+                            append("${cards.count}")
                         }
                     },
-                    fontSize = 6.sp,
+                    fontSize = 10.sp,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Right
                 )
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = iranSans)) {
-                            append("تعداد کلمات: ")
-                        }
-                        withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(cards.teadad)
-                        }
-                    },
-                    fontSize = 6.sp,
-                    color = Color.DarkGray,
-                    textAlign = TextAlign.Right
-                )
-
-
             }
         }
     }

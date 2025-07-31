@@ -35,6 +35,8 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Ca
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.NewLabel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.flashCard
 import androidx.compose.foundation.lazy.items
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
 
 
 @Composable
@@ -52,13 +54,15 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
     var selectedStatuses by remember { mutableStateOf(setOf<WordStatus>()) }
 
     val purchasedCourses = listOf(
-        Cards("A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", "۱۰ ساعت", "۱۲ جلسه", -1, R.drawable.cours1),
-        Cards("A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", "۹ ساعت", "۱۰ جلسه", -1, R.drawable.cours1),
-        Cards("A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", "۱۰ ساعت", "۱۲ جلسه", -1, R.drawable.cours1),
-        Cards("A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", "۹ ساعت", "۱۰ جلسه", -1, R.drawable.cours1),
-        Cards("B1 آموزش آلمانی سطح", "شروع مکالمات روان", "۱۱ ساعت", "۱۴ جلسه", -1, R.drawable.cours1),
-        Cards("B1 آموزش آلمانی سطح", "شروع مکالمات روان", "۱۱ ساعت", "۱۴ جلسه", -1, R.drawable.cours1),
+        Cards("a1", "A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", 20, "۱۲ جلسه", "cours1"),
+        Cards("a2", "A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", 2, "۱۰ جلسه", "cours1"),
+        Cards("a1_2", "A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", 1, "۱۲ جلسه", "cours1"),
+        Cards("a2_2", "A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", 1, "۱۰ جلسه", "cours1"),
+        Cards("b1", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 1, "۱۴ جلسه", "cours1"),
+        Cards("b1_2", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 12, "۱۴ جلسه", "cours1"),
     )
+
+
 
     Column(
         modifier = Modifier

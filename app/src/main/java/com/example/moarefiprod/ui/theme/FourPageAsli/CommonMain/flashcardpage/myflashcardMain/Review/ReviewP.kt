@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Word
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
 import kotlinx.coroutines.delay
 
 @Composable
@@ -103,14 +103,14 @@ fun ReviewPage(
                     ) {
                         if (isFlipped) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(currentWord.german, fontSize = 20.sp, fontFamily = iranSans)
+                                Text(currentWord.text, fontSize = 20.sp, fontFamily = iranSans)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Divider(color = Color.Black, thickness = 1.dp)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(currentWord.persian, fontSize = 20.sp, fontFamily = iranSans)
+                                Text(currentWord.translation, fontSize = 20.sp, fontFamily = iranSans)
                             }
                         } else {
-                            Text(currentWord.german, fontSize = 20.sp, fontFamily = iranSans)
+                            Text(currentWord.text, fontSize = 20.sp, fontFamily = iranSans)
                         }
                     }
 

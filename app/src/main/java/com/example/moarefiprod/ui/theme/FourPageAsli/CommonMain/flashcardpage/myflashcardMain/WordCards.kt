@@ -26,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.iranSans
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
 
 @Composable
 fun WordCards(words: List<Word>) {
@@ -89,7 +91,7 @@ fun WordCardItem(word: Word) {
 
             // ✅ کلمه آلمانی - وسط کارت
             Text(
-                text = word.german,
+                text = word.text,
                 fontSize = 18.sp,
                 fontFamily = iranSans,
                 fontWeight = FontWeight.Bold,
@@ -110,7 +112,7 @@ fun WordCardItem(word: Word) {
 
             // ✅ کلمه فارسی
             Text(
-                text = word.persian,
+                text = word.translation,
                 fontSize = 14.sp,
                 color = Color.Gray,
                 fontFamily = iranSans

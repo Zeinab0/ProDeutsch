@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 
 @Composable
 fun WordListView(words: List<Word>) {
@@ -35,13 +35,13 @@ fun WordListView(words: List<Word>) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = word.german,
+                    text = word.text,
                     fontFamily = iranSans,
                     fontSize = 16.sp,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = word.persian,
+                    text = word.translation,
                     fontFamily = iranSans,
                     fontSize = 16.sp,
                     modifier = Modifier.weight(1f),

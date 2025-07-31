@@ -38,9 +38,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.details.DarsDetails
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.ReviewPage
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordProgressPage
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordStatus
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordViewType
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.hamburgerbutton.AboutUsScreen
@@ -62,6 +60,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Advertisement2
 import com.example.moarefiprod.ui.theme.logofirst.Advertisement3
 import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MemoryGamePage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MultipleChoicePage
@@ -92,18 +91,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-            val dummyWords = remember {
-                mutableStateListOf(
-                    Word("سیب", "Apfel", WordStatus.CORRECT),
-                    Word("زود", "Früh", WordStatus.WRONG),
-                    Word("سلام", "Hallo", WordStatus.IDK),
-                    Word("خداحافظ", "Tschüss", WordStatus.NEW),
-                    Word("زینب", "Apfel", WordStatus.CORRECT),
-                    Word("لپتاپ", "Früh", WordStatus.CORRECT),
-                    Word("تپه", "Hallo", WordStatus.CORRECT),
-                    Word("خدا", "Tschüss", WordStatus.NEW),
-                )
-            }
+//            val dummyWords = remember {
+//                mutableStateListOf(
+//                    Word("سیب", "Apfel", WordStatus.CORRECT),
+//                    Word("زود", "Früh", WordStatus.WRONG),
+//                    Word("سلام", "Hallo", WordStatus.IDK),
+//                    Word("خداحافظ", "Tschüss", WordStatus.NEW),
+//                    Word("زینب", "Apfel", WordStatus.CORRECT),
+//                    Word("لپتاپ", "Früh", WordStatus.CORRECT),
+//                    Word("تپه", "Hallo", WordStatus.CORRECT),
+//                    Word("خدا", "Tschüss", WordStatus.NEW),
+//                )
+//            }
 
             val viewModel: CourseViewModel = viewModel()
             val userViewModel: UserProfileViewModel = viewModel()
@@ -338,29 +337,23 @@ class MainActivity : ComponentActivity() {
                 // بخش مربوط به داستان
 
 
-                composable("my_flashcards") {
-                    MyFlashCardScreen(navController = navController, words = dummyWords)
-                }
+//                composable("my_flashcards") {
+//                    MyFlashCardScreen(navController = navController, words = dummyWords)
+//                }
                 composable("word_progress_page") {
-                    val updatedWords = navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.get<List<Word>>("updated_words")
-
-                    WordProgressPage(
-                        words = updatedWords ?: dummyWords,
-                        navController = navController
-                    )
+                    WordProgressPage(navController = navController)
                 }
-                composable("word_list_page") {
-                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
 
-                    WordListPage(
-                        words = dummyWords,
-                        selectedView = currentView,
-                        onViewChange = { currentView = it },
-                        navController = navController
-                    )
-                }
+//                composable("word_list_page") {
+//                    var currentView by remember { mutableStateOf(WordViewType.CARD) }
+//
+//                    WordListPage(
+//                        words = dummyWords,
+//                        selectedView = currentView,
+//                        onViewChange = { currentView = it },
+//                        navController = navController
+//                    )
+//                }
                 composable("review_page") { entry ->
                     val parentEntry = remember(entry) {
                         navController.getBackStackEntry("word_progress_page")
@@ -370,24 +363,24 @@ class MainActivity : ComponentActivity() {
                         .savedStateHandle
                         ?.get<List<Word>>("review_words")
 
-                    if (!reviewWords.isNullOrEmpty()) {
-                        ReviewPage(
-                            words = reviewWords,
-                            navController = navController,
-                            onReviewFinished = { updatedWords ->
-                                for (updated in updatedWords) {
-                                    val index = dummyWords.indexOfFirst { it.german == updated.german }
-                                    if (index != -1) {
-                                        dummyWords[index] = updated
-                                    }
-                                }
-                            }
-                        )
-                    } else {
-                        LaunchedEffect(Unit) {
-                            navController.popBackStack()
-                        }
-                    }
+//                    if (!reviewWords.isNullOrEmpty()) {
+//                        ReviewPage(
+//                            words = reviewWords,
+//                            navController = navController,
+//                            onReviewFinished = { updatedWords ->
+//                                for (updated in updatedWords) {
+//                                    val index = dummyWords.indexOfFirst { it.german == updated.german }
+//                                    if (index != -1) {
+//                                        dummyWords[index] = updated
+//                                    }
+//                                }
+//                            }
+//                        )
+//                    } else {
+//                        LaunchedEffect(Unit) {
+//                            navController.popBackStack()
+//                        }
+//                    }
                 }
                 composable("tamrin_page_route") {
                     courspage(
