@@ -60,7 +60,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MemoryGamePage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MultipleChoicePage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceBuilderPage
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.TextPicPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.TextPicPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
@@ -439,41 +439,47 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-//                composable(
-//                    route = "textPic/{courseId}/{lessonId}/{contentId}/{gameId}",
-//                    arguments = listOf(
-//                        navArgument("courseId") { type = NavType.StringType },
-//                        navArgument("lessonId") { type = NavType.StringType },
-//                        navArgument("contentId") { type = NavType.StringType },
-//                        navArgument("gameId") { type = NavType.StringType }
-//                    )
-//                ) { backStackEntry ->
-//                    val courseId = backStackEntry.arguments?.getString("courseId")
-//                    val lessonId = backStackEntry.arguments?.getString("lessonId")
-//                    val contentId = backStackEntry.arguments?.getString("contentId")
-//                    val gameId = backStackEntry.arguments?.getString("gameId")
-//
-//                    Log.d("TextPicNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
-//
-//                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
-//                        TextPicPage(
-//                            navController = navController,
-//                            courseId = courseId,
-//                            lessonId = lessonId,
-//                            contentId = contentId,
-//                            gameId = gameId
-//                        )
-//                    } else {
-//                        Text(
-//                            "خطا: شناسه های لازم برای بازی یافت نشد.",
-//                            color = Color.Red,
-//                            fontFamily = iranSans
-//                        )
-//                        LaunchedEffect(Unit) {
-//                            navController.popBackStack()
-//                        }
-//                    }
-//                }
+                composable(
+                    route = "textPic/{courseId}/{lessonId}/{contentId}/{gameId}", // حذف gameIndex از مسیر
+                    arguments = listOf(
+                        navArgument("courseId") { type = NavType.StringType },
+                        navArgument("lessonId") { type = NavType.StringType },
+                        navArgument("contentId") { type = NavType.StringType },
+                        navArgument("gameId") { type = NavType.StringType }
+                        // navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 } // حذف این خط
+                    )
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+                    val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
+                    val contentId = backStackEntry.arguments?.getString("contentId") ?: ""
+                    val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
+                    // val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // حذف این خط
+
+                    Log.d("TextPicNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
+                    // Log.d("TextPicNav", "Received: gameIndex=$gameIndex") // حذف این خط
+
+                    if (courseId.isNotEmpty() && lessonId.isNotEmpty() && contentId.isNotEmpty() && gameId.isNotEmpty()) {
+                        TextPicPage(
+                            navController = navController,
+                            courseId = courseId,
+                            lessonId = lessonId,
+                            contentId = contentId,
+                            gameId = gameId,
+                            viewModel = gameViewModel // پاس دادن GameViewModel مشترک
+                            // gameIndex = gameIndex // حذف این خط
+                        )
+                    } else {
+                        Text(
+                            "خطا: شناسه‌های لازم برای بازی یافت نشد.",
+                            color = Color.Red,
+                            fontFamily = iranSans
+                        )
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
+                    }
+                }
+
             }
         }
     }

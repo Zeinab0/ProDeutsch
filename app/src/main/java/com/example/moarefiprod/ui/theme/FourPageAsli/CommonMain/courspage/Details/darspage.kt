@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +42,7 @@ import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseItemType
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
 
 @Composable
 fun DarsDetails(
@@ -54,12 +57,15 @@ fun DarsDetails(
     val isLoading by courseViewModel.isLoading.collectAsState()
     val errorMessage by courseViewModel.errorMessage.collectAsState()
 
+    val gameViewModel: GameViewModel = viewModel()
+
     val currentLesson = remember(lessons, lessonId) {
         lessons.find { it.id == lessonId }
     }
     LaunchedEffect(courseId, lessonId) {
         courseViewModel.loadSelectedCourseDetailsAndLessons(courseId)
         courseViewModel.loadLessonItems(courseId, lessonId)
+        gameViewModel.initializeGames(courseId, lessonId, lessonItems.firstOrNull { it.type == CourseItemType.QUIZ_SET }?.id ?: "")
         Log.d("DarsDetails", "lessonItems: $lessonItems")
     }
 
@@ -188,7 +194,8 @@ fun DarsDetails(
                                 item = item,
                                 navController = navController,
                                 courseId = courseId,
-                                lessonId = lessonId
+                                lessonId = lessonId,
+                                gameViewModel = gameViewModel // پاس دادن ViewModel
                             )
                         }
                     }
@@ -203,10 +210,20 @@ fun LessonItemRowUI(
     item: CourseItem,
     navController: NavController,
     courseId: String,
-    lessonId: String
+    lessonId: String,
+    gameViewModel: GameViewModel = viewModel()
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardShape = RoundedCornerShape(16.dp)
+
+    // لود اولیه gameIds
+    LaunchedEffect(courseId, lessonId, item.id) {
+        gameViewModel.initializeGames(courseId, lessonId, item.id)
+        Log.d("LessonItemRowUI", "Initialized games for contentId: ${item.id}, gameIds: ${gameViewModel.gameIds.value}")
+    }
+
+    // مدیریت ایندکس فعلی بازی
+    var currentGameIndex by remember { mutableStateOf(0) }
 
     Box(
         modifier = Modifier
@@ -215,21 +232,37 @@ fun LessonItemRowUI(
                 when (item.type) {
                     CourseItemType.QUIZ_SET -> {
                         val contentId = item.id
-                        val gameId = item.gameId
+                        val gameId = gameViewModel.getNextGameId(currentGameIndex)
                         if (contentId.isNotEmpty() && gameId != null) {
                             when (gameId) {
                                 "memory_game_2" -> {
-                                    navController.navigate("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
+                                    navController.navigate("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=$currentGameIndex") {
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                                 "sentence_builder_1" -> {
-                                    navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
+                                    navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId?gameIndex=$currentGameIndex") {
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                                 "text_pic_3" -> {
-                                    navController.navigate("textPic/$courseId/$lessonId/$contentId/$gameId")
+                                    navController.navigate("textPic/$courseId/$lessonId/$contentId/$gameId?gameIndex=$currentGameIndex") {
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                                 else -> {
                                     Log.w("LessonItemRowUI", "Unknown gameId: $gameId")
                                 }
+                            }
+                            // افزایش ایندکس برای بازی بعدی
+                            currentGameIndex++
+                        } else {
+                            Log.e("LessonItemRowUI", "Invalid contentId or gameId: contentId='$contentId', gameId=$gameId")
+                            if (gameId == null) {
+                                currentGameIndex = 0 // ریست ایندکس اگه به آخر لیست رسیدیم
                             }
                         }
                     }

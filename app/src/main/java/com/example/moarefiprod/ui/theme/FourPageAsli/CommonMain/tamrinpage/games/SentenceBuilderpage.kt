@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +27,8 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -49,8 +52,8 @@ fun SentenceBuilderPage(
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
 
-    LaunchedEffect(gameId) { // <--- تغییر یافته
-        viewModel.loadSentenceGame(courseId, lessonId, contentId, gameId) // <--- تغییر یافته
+    LaunchedEffect(gameId) {
+        viewModel.loadSentenceGame(courseId, lessonId, contentId, gameId)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -135,10 +138,9 @@ fun SentenceBuilderPage(
                                     .absoluteOffset(x = 4.dp, y = (-14).dp)
                             )
 
-                            // FlowRow برای کلمات انتخاب‌شده با فاصله عمودی بیشتر
                             FlowRow(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
-                                verticalArrangement = Arrangement.spacedBy(20.dp), // افزایش فاصله عمودی بین خطوط
+                                verticalArrangement = Arrangement.spacedBy(20.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = 40.dp)
@@ -165,7 +167,7 @@ fun SentenceBuilderPage(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(40.dp)) // فاصله بین خطوط نقطه‌چین
+                        Spacer(modifier = Modifier.height(40.dp))
 
                         DottedLine(width = screenWidth * 0.8f)
                     }
@@ -216,7 +218,6 @@ fun SentenceBuilderPage(
                 }
             }
         } ?: run {
-            // نمایش پیام خطا وقتی داده‌ها بارگذاری نشن
             Text(
                 text = "داده‌ها بارگذاری نشد. لطفاً اتصال را بررسی کنید.",
                 color = Color.Red,
@@ -229,19 +230,51 @@ fun SentenceBuilderPage(
             val correctSentenceText = sentenceState?.correctSentence?.joinToString(" ") ?: ""
             val userSentenceText = selectedWords.joinToString(" ")
 
+            val scope = rememberCoroutineScope()
             Result(
                 correct = if (isCorrect == true) 1 else 0,
                 wrong = if (isCorrect == false) 1 else 0,
                 timeInSeconds = timeInSeconds,
                 showStats = true,
                 showTime = false,
-                correctSentence = correctSentenceText,
+                correctSentence = correctSentenceText, // پاس دادن correctSentence
                 userSentence = userSentenceText,
+
+                // در SentenceBuilderPage، داخل onNext از Result
+                // در SentenceBuilderPage، داخل onNext از Result
                 onNext = {
+                    Log.d("SentenceBuilderNav", "Starting navigation from SentenceBuilderPage...")
+                    val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentenceText
+                    viewModel.recordAnswer(isCurrentSentenceCorrect)
                     selectedWords = mutableListOf()
                     showResultBox = false
                     isCorrect = null
+                    // scope.launch { // این رو بردارید اگر delay رو هم برمیدارید
+                    // delay(500) // این خط رو کامنت یا حذف کنید
+                    val routeToNavigate = "textPic/$courseId/$lessonId/$contentId/text_pic_3?gameIndex=2"
+                    Log.d("SentenceBuilderNav", "Navigating to: $routeToNavigate") // این رو باید ببینید
+                    navController.navigate(routeToNavigate)
+                    // } // این رو بردارید اگر delay رو هم برمیدارید
                 },
+//                onNext = {
+//                    val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentenceText // استفاده از correctSentenceText
+//                    viewModel.recordAnswer(isCurrentSentenceCorrect)
+//                    selectedWords = mutableListOf()
+//                    showResultBox = false
+//                    isCorrect = null
+////                    scope.launch {
+////                        delay(500) // تاخیر 500 میلی‌ثانیه
+////                        navController.navigate("textPic/$courseId/$lessonId/$contentId/text_pic_3?gameIndex=2") // می‌ره به TextPicPage
+////                    }
+//                    // در SentenceBuilderPage، داخل onNext از Result
+//                    scope.launch {
+//                        delay(500)
+//                        val routeToNavigate = "textPic/$courseId/$lessonId/$contentId/text_pic_3?gameIndex=2"
+//                        Log.d("SentenceBuilderNav", "Navigating to: $routeToNavigate")
+//                        Log.d("SentenceBuilderNav", "Current courseId: $courseId, lessonId: $lessonId, contentId: $contentId, gameId: text_pic_3")
+//                        navController.navigate(routeToNavigate)
+//                    }
+//                },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 0.dp)
@@ -301,7 +334,7 @@ fun Result(
     timeInSeconds: Int = 0,
     showStats: Boolean = true,
     showTime: Boolean = true,
-    correctSentence: String? = null,
+    correctSentence: String? = null, // اضافه کردن این پارامتر
     userSentence: String? = null,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
