@@ -7,6 +7,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,6 +28,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.ui.SignUpScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.MyCoursesScreen
@@ -60,8 +66,13 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.Story
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryDetailScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryReadingScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 val iranSans = FontFamily(
     Font(R.font.iransans_bold, FontWeight.Bold),
@@ -218,6 +229,117 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 // بخش مربوط به فیلم
+
+
+                // بخش مربوط به داستان
+                composable("StoryScreen") {
+                    StoryScreen(navController = navController)
+                }
+                composable("story_detail/{storyId}") { backStackEntry ->
+                    val storyId = backStackEntry.arguments?.getString("storyId") ?: return@composable
+
+                    var story by remember { mutableStateOf<Story?>(null) }
+
+                    LaunchedEffect(storyId) {
+                        FirebaseFirestore.getInstance()
+                            .collection("stories") // اسم کالکشن درست باشه
+                            .document(storyId)
+                            .get()
+                            .addOnSuccessListener {
+                                story = it.toObject(Story::class.java)?.copy(id = it.id)
+                            }
+
+                    }
+
+                    story?.let {
+                        StoryDetailScreen(
+                            id = it.id,
+                            title = it.title,
+                            author = it.author,
+                            price = it.price,
+                            summary = it.summary,
+                            imageUrl = it.imageUrl,
+                            duration = it.duration,
+                            onBack = { navController.popBackStack() },
+                            navController = navController
+                        )
+                    } ?: Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                composable(
+                    route = "reading_screen/{storyId}?isPurchased={isPurchased}",
+                    arguments = listOf(
+                        navArgument("storyId") { type = NavType.StringType },
+                        navArgument("isPurchased") { type = NavType.BoolType; defaultValue = false }
+                    )
+                ) {  backStackEntry ->
+                    val storyId = backStackEntry.arguments?.getString("storyId") ?: return@composable
+                    val isPurchased = backStackEntry.arguments?.getBoolean("isPurchased") ?: false
+                    val user = FirebaseAuth.getInstance().currentUser
+                    val userId = user?.uid ?: return@composable
+
+                    var story by remember { mutableStateOf<Story?>(null) }
+                    var scrollOffset by remember { mutableStateOf(0) }
+                    var scrollIndex by remember { mutableStateOf(0) }
+
+                    LaunchedEffect(storyId) {
+                        val db = FirebaseFirestore.getInstance()
+
+                        // 📚 دریافت داستان
+                        val doc = db.collection("stories").document(storyId).get().await()
+                        story = doc.toObject(Story::class.java)?.copy(id = storyId)
+
+                        // 📌 دریافت اطلاعات مطالعه قبلی
+                        val progressDoc = db.collection("users")
+                            .document(userId)
+                            .collection("reading_progress")
+                            .document(storyId)
+                            .get()
+                            .await()
+
+                        scrollIndex = progressDoc.getLong("scrollIndex")?.toInt() ?: 0
+                        scrollOffset = progressDoc.getLong("scrollOffset")?.toInt() ?: 0
+                    }
+
+                    when {
+                        story != null && !story!!.content.isNullOrBlank() -> {
+                            StoryReadingScreen(
+                                title = story!!.title,
+                                content = story!!.content,
+                                isPurchased = isPurchased,
+                                storyId = storyId,
+                                userId = userId,
+                                initialScrollOffset = scrollOffset,
+                                onBack = { navController.popBackStack() }
+                            )
+
+                        }
+                        story != null -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "❗ محتوای داستان موجود نیست.",
+                                    color = Color.Red,
+                                    fontSize = 16.sp,
+                                    fontFamily = iranSans
+                                )
+                            }
+                        }
+                        else -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+                }
+
+
+
+                // بخش مربوط به داستان
 
 
                 composable("my_flashcards") {
