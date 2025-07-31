@@ -131,13 +131,15 @@ fun GrammarPage(navController: NavController) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(end = 18.dp, top = 15.dp),
-                            textAlign = TextAlign.Right
+                            textAlign = TextAlign.Right,
+                            style = androidx.compose.ui.text.TextStyle(
+                                textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
+                            )
                         )
                     }
                 }
             }
         }
-
     }
 
     if (showDialog && selectedTopic != null) {
@@ -214,7 +216,7 @@ fun GrammarPage(navController: NavController) {
                                 .background(Color(0xFF7AB2B2))
                                 .height(45.dp)
                                 .clickable {
-                                    // TODO: رفتن به صفحه بازی با topicId → selectedTopic?.id
+                                    navController.navigate("multipleChoice/${selectedTopic?.id}/0")
                                     showDialog = false
                                 },
                             contentAlignment = Alignment.Center

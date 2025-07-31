@@ -184,7 +184,6 @@ fun DarsDetails(
                         contentPadding = PaddingValues(bottom = screenHeight * 0.02f)
                     ) {
                         items(lessonItems) { item ->
-                            // تغییر 1: ارسال courseId و lessonId به LessonItemRowUI
                             LessonItemRowUI(
                                 item = item,
                                 navController = navController,
@@ -213,14 +212,29 @@ fun LessonItemRowUI(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                if (item.type == CourseItemType.QUIZ_SET) {
-                    val contentId = item.id // استفاده از id واقعی که از دیتابیس اومده
-                    val gameId = item.gameId ?: "sentence_builder_1" // اگه gameId خالی بود، پیش‌فرض بذار
-                    if (contentId.isNotEmpty()) {
-                        Log.d("LessonItemRowUI", "Navigating to game with courseId: $courseId, lessonId: $lessonId, contentId: $contentId, gameId: $gameId")
-                        navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId")
-                    } else {
-                        Log.e("LessonItemRowUI", "Content ID is empty for item: ${item.title}")
+                when (item.type) {
+                    CourseItemType.QUIZ_SET -> {
+                        val contentId = item.id
+                        val gameId = item.gameId
+                        if (contentId.isNotEmpty() && gameId != null) {
+                            when (gameId) {
+                                "memory_game_2" -> {
+                                    navController.navigate("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
+                                }
+                                "sentence_builder_1" -> {
+                                    navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId?gameIndex=0")
+                                }
+                                "text_pic_3" -> {
+                                    navController.navigate("textPic/$courseId/$lessonId/$contentId/$gameId")
+                                }
+                                else -> {
+                                    Log.w("LessonItemRowUI", "Unknown gameId: $gameId")
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        // برای نوع‌های دیگه فعلاً کاری نمی‌کنیم
                     }
                 }
             }

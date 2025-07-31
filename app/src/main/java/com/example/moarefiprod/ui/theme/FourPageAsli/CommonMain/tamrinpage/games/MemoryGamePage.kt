@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,35 +32,45 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moarefiprod.repository.saveGameResultToFirestore
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 @Composable
 fun MemoryGamePage(
     navController: NavController,
-    gameId: String = "matchingGame_001",
+    courseId: String,
+    lessonId: String,
+    contentId: String,
+    gameId: String = "memory_game_2",
     viewModel: GameViewModel = viewModel()
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    val wordPairs = viewModel.wordPairs.collectAsState().value
+    val wordPairs by viewModel.wordPairs.collectAsState()
     val displayGermanWords = remember { mutableStateListOf<String>() }
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
 
     LaunchedEffect(Unit) {
-        viewModel.loadMemoryGame(gameId)
+        Log.d("MemoryGamePage", "Loading game with courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
+        viewModel.loadMemoryGame(courseId, lessonId, contentId, gameId)
+        Log.d("MemoryGamePage", "WordPairs after load: $wordPairs")
     }
 
     LaunchedEffect(wordPairs) {
         if (wordPairs.isNotEmpty()) {
+            Log.d("MemoryGamePage", "Shuffling German words: ${wordPairs.map { it.germanWord }}")
             displayGermanWords.clear()
             displayGermanWords.addAll(wordPairs.map { it.germanWord }.shuffled())
+        } else {
+            Log.e("MemoryGamePage", "No word pairs loaded for gameId=$gameId")
         }
     }
 
     var showResultBox by remember { mutableStateOf(false) }
     var timeInSeconds by remember { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(showResultBox) {
         if (!showResultBox) {
@@ -82,6 +93,17 @@ fun MemoryGamePage(
             val correct = correctPairs.map { it.first }.toSet()
             val wrong = errorCountMap.filter { it.value >= 3 }.keys
             (correct + wrong).toSet()
+        }
+    }
+
+    // NEW: Define wrongGermanWords based on errorCountMap
+    val wrongGermanWords = remember {
+        derivedStateOf {
+            val farsiWordsWrong = errorCountMap.filter { it.value >= 3 }.keys
+            wordPairs
+                .filter { it.farsiWord in farsiWordsWrong }
+                .map { it.germanWord }
+                .toSet()
         }
     }
 
@@ -193,15 +215,15 @@ fun MemoryGamePage(
                 ) {
                     wordPairs.forEach { pair ->
                         val isMatched = correctPairs.any { it.first == pair.farsiWord }
-                        val isWrong = (errorCountMap[pair.farsiWord] ?: 0) >= 3
+                        val isWrongFarsi = (errorCountMap[pair.farsiWord] ?: 0) >= 3
 
                         WordItemWithState(
                             word = pair.farsiWord,
                             isSelected = selectedLeft == pair.farsiWord,
                             isMatched = isMatched,
-                            isWrong = isWrong,
+                            isWrong = isWrongFarsi, // Pass the correct 'isWrong' for Farsi
                             onClick = {
-                                if (!isMatched && !isWrong) selectedLeft = pair.farsiWord
+                                if (!isMatched && !isWrongFarsi) selectedLeft = pair.farsiWord
                             },
                             screenWidth = screenWidth
                         )
@@ -217,14 +239,16 @@ fun MemoryGamePage(
                 ) {
                     displayGermanWords.forEach { germanWord ->
                         val isMatched = correctPairs.any { it.second == germanWord }
+                        // NEW: Determine if this German word should be marked as wrong
+                        val isWrongGerman = wrongGermanWords.value.contains(germanWord)
 
                         WordItemWithState(
                             word = germanWord,
                             isSelected = selectedRight == germanWord,
                             isMatched = isMatched,
-                            isWrong = false,
+                            isWrong = isWrongGerman, // Pass the new 'isWrongGerman' status
                             onClick = {
-                                if (!isMatched) selectedRight = germanWord
+                                if (!isMatched && !isWrongGerman) selectedRight = germanWord
                             },
                             screenWidth = screenWidth
                         )
@@ -238,7 +262,13 @@ fun MemoryGamePage(
                 correct = correctPairs.size,
                 wrong = errorCountMap.values.count { it >= 3 },
                 timeInSeconds = timeInSeconds,
-                onNext = { navController.popBackStack() },
+                onNext = {
+                    scope.launch {
+                        delay(500) // تاخیر 500 میلی‌ثانیه
+                        navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/sentence_builder_1?gameIndex=1") // می‌ره به sentenceBuilder
+                    }
+                }
+                ,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 0.dp)
@@ -252,27 +282,29 @@ fun WordItemWithState(
     word: String,
     isSelected: Boolean,
     isMatched: Boolean,
-    isWrong: Boolean,
+    isWrong: Boolean, // این متغیر حالا هم برای فارسی و هم برای آلمانی استفاده می‌شود
     onClick: () -> Unit,
     screenWidth: Dp
 ) {
     val backgroundColor = when {
         isMatched -> Color.White
+        isWrong -> Color(0xFF90CECE) // وقتی اشتباه است، رنگ پس‌زمینه این می‌شود
         isSelected -> Color(0xFF90CECE)
         else -> Color(0xFFF1FFFF)
     }
 
-    val borderColor = if (isWrong) Color.Red else Color(0xFF90CECE)
+    val borderColor = if (isWrong) Color.Red else Color(0xFF90CECE) // کادر دور آن قرمز می‌ماند
     val textColor = when {
         isMatched -> Color(0xFF56B096)
         isSelected -> Color.White
+        isWrong -> Color.White // اگر می‌خواهید متن هم در حالت اشتباه سفید شود
         else -> Color.Black
     }
 
     Box(
         modifier = Modifier
-            .width(155.dp)
-            .height(60.dp)
+            .width(145.dp)
+            .height(55.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(backgroundColor)
             .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(10.dp))
@@ -281,7 +313,7 @@ fun WordItemWithState(
     ) {
         Text(
             text = word,
-            fontSize = (screenWidth * 0.04f).value.sp,
+            fontSize = (screenWidth * 0.035f).value.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = iranSans,
             color = textColor,
@@ -348,7 +380,7 @@ fun Match(
             } else {
                 if (showStats) {
                     Text(
-                        text = "درست: $correct     اشتباه: $wrong",
+                        text = "تعداد درست: $correct    تعداد اشتباه: $wrong",
                         fontFamily = iranSans,
                         color = Color.Black,
                         textAlign = TextAlign.Right,
@@ -376,14 +408,14 @@ fun Match(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "بعدی",
+                        text = "بریم بعدی",
                         fontFamily = iranSans,
                         color = Color.White,
                         fontSize = 14.sp
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
-                        painter = painterResource(id = R.drawable.nextbtn),
+                        painter = painterResource(id = R.drawable.backbtn),
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
