@@ -458,20 +458,22 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable(
-                    route = "sentenceBuilder/{courseId}/{lessonId}/{contentId}/{gameId}",
+                    route = "sentenceBuilder/{courseId}/{lessonId}/{contentId}/{gameId}?gameIndex={gameIndex}", // اضافه کردن gameIndex
                     arguments = listOf(
                         navArgument("courseId") { type = NavType.StringType },
                         navArgument("lessonId") { type = NavType.StringType },
                         navArgument("contentId") { type = NavType.StringType },
-                        navArgument("gameId") { type = NavType.StringType }
+                        navArgument("gameId") { type = NavType.StringType },
+                        navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 } // مقدار پیش‌فرض
                     )
                 ) { backStackEntry ->
                     val courseId = backStackEntry.arguments?.getString("courseId")
                     val lessonId = backStackEntry.arguments?.getString("lessonId")
                     val contentId = backStackEntry.arguments?.getString("contentId")
                     val gameId = backStackEntry.arguments?.getString("gameId")
+                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // دریافت gameIndex
 
-                    Log.d("SentenceBuilderNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
+                    Log.d("SentenceBuilderNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
 
                     if (courseId != null && lessonId != null && contentId != null && gameId != null) {
                         SentenceBuilderPage(
@@ -479,7 +481,8 @@ class MainActivity : ComponentActivity() {
                             courseId = courseId,
                             lessonId = lessonId,
                             contentId = contentId,
-                            gameId = gameId
+                            gameId = gameId,
+                            gameIndex = gameIndex // پاس دادن gameIndex
                         )
                     } else {
                         Text(
@@ -494,20 +497,22 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable(
-                    route = "memoryGame/{courseId}/{lessonId}/{contentId}/{gameId}",
+                    route = "memoryGame/{courseId}/{lessonId}/{contentId}/{gameId}?gameIndex={gameIndex}", // اضافه کردن gameIndex
                     arguments = listOf(
                         navArgument("courseId") { type = NavType.StringType },
                         navArgument("lessonId") { type = NavType.StringType },
                         navArgument("contentId") { type = NavType.StringType },
-                        navArgument("gameId") { type = NavType.StringType }
+                        navArgument("gameId") { type = NavType.StringType },
+                        navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 } // مقدار پیش‌فرض
                     )
                 ) { backStackEntry ->
                     val courseId = backStackEntry.arguments?.getString("courseId")
                     val lessonId = backStackEntry.arguments?.getString("lessonId")
                     val contentId = backStackEntry.arguments?.getString("contentId")
                     val gameId = backStackEntry.arguments?.getString("gameId")
+                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // دریافت gameIndex
 
-                    Log.d("MemoryGameNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
+                    Log.d("MemoryGameNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
 
                     if (courseId != null && lessonId != null && contentId != null && gameId != null) {
                         MemoryGamePage(
@@ -516,6 +521,7 @@ class MainActivity : ComponentActivity() {
                             lessonId = lessonId,
                             contentId = contentId,
                             gameId = gameId,
+                            gameIndex = gameIndex, // پاس دادن gameIndex
                             viewModel = viewModel()
                         )
                     } else {
@@ -546,7 +552,7 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             topicId = topicId,
                             gameIndex = gameIndex,
-                            viewModel = gameViewModel // انتقال ViewModel از NavHost
+                            viewModel = gameViewModel
                         )
                     } else {
                         Text(
@@ -560,23 +566,22 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable(
-                    route = "textPic/{courseId}/{lessonId}/{contentId}/{gameId}", // حذف gameIndex از مسیر
+                    route = "textPic/{courseId}/{lessonId}/{contentId}/{gameId}?gameIndex={gameIndex}",
                     arguments = listOf(
                         navArgument("courseId") { type = NavType.StringType },
                         navArgument("lessonId") { type = NavType.StringType },
                         navArgument("contentId") { type = NavType.StringType },
-                        navArgument("gameId") { type = NavType.StringType }
-                        // navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 } // حذف این خط
+                        navArgument("gameId") { type = NavType.StringType },
+                        navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 }
                     )
                 ) { backStackEntry ->
                     val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
                     val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
                     val contentId = backStackEntry.arguments?.getString("contentId") ?: ""
                     val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
-                    // val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // حذف این خط
+                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0
 
-                    Log.d("TextPicNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
-                    // Log.d("TextPicNav", "Received: gameIndex=$gameIndex") // حذف این خط
+                    Log.d("TextPicNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
 
                     if (courseId.isNotEmpty() && lessonId.isNotEmpty() && contentId.isNotEmpty() && gameId.isNotEmpty()) {
                         TextPicPage(
@@ -585,8 +590,8 @@ class MainActivity : ComponentActivity() {
                             lessonId = lessonId,
                             contentId = contentId,
                             gameId = gameId,
-                            viewModel = gameViewModel // پاس دادن GameViewModel مشترک
-                            // gameIndex = gameIndex // حذف این خط
+                            gameIndex = gameIndex,
+                            viewModel = gameViewModel
                         )
                     } else {
                         Text(
@@ -599,7 +604,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-
             }
         }
     }

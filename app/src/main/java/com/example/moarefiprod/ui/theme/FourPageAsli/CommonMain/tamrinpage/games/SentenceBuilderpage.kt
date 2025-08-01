@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
@@ -38,6 +39,7 @@ fun SentenceBuilderPage(
     lessonId: String,
     contentId: String,
     gameId: String,
+    gameIndex: Int,
     viewModel: GameViewModel = viewModel()
 ) {
     val configuration = LocalConfiguration.current
@@ -51,6 +53,14 @@ fun SentenceBuilderPage(
     var timeInSeconds by remember { mutableStateOf(0) }
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
+    val totalTimeInSeconds by viewModel.totalTimeInSeconds.collectAsState()
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000L)
+            timeInSeconds++
+        }
+    }
 
     LaunchedEffect(gameId) {
         viewModel.loadSentenceGame(courseId, lessonId, contentId, gameId)
@@ -62,20 +72,6 @@ fun SentenceBuilderPage(
             val question = state.question
             val correctSentence = state.correctSentence.joinToString(" ")
 
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier
-                    .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
-                    .align(Alignment.TopStart)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.backbtn),
-                    contentDescription = "Back",
-                    tint = Color.Black,
-                    modifier = Modifier.size(screenWidth * 0.09f)
-                )
-            }
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -84,7 +80,7 @@ fun SentenceBuilderPage(
             ) {
                 Spacer(modifier = Modifier.height(screenHeight * 0.1f))
 
-                StepProgressBar(currentStep = 1)
+                StepProgressBar(currentStep = gameIndex)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -202,6 +198,16 @@ fun SentenceBuilderPage(
                         val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentence
                         isCorrect = isCurrentSentenceCorrect
                         showResultBox = true
+                        if (isCurrentSentenceCorrect) {
+                            viewModel.incrementCorrect(1)
+                        } else {
+                            viewModel.incrementWrong(1)
+                        }
+                        viewModel.recordMemoryGameResult(
+                            correct = if (isCurrentSentenceCorrect) 1 else 0,
+                            wrong = if (!isCurrentSentenceCorrect) 1 else 0,
+                            timeInSeconds = timeInSeconds
+                        )
                     },
                     modifier = Modifier
                         .align(Alignment.End)
@@ -226,58 +232,56 @@ fun SentenceBuilderPage(
             )
         }
 
+        var showFinalDialog by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
         if (showResultBox) {
             val correctSentenceText = sentenceState?.correctSentence?.joinToString(" ") ?: ""
             val userSentenceText = selectedWords.joinToString(" ")
 
-            val scope = rememberCoroutineScope()
             Result(
                 correct = if (isCorrect == true) 1 else 0,
                 wrong = if (isCorrect == false) 1 else 0,
                 timeInSeconds = timeInSeconds,
                 showStats = true,
                 showTime = false,
-                correctSentence = correctSentenceText, // پاس دادن correctSentence
+                correctSentence = correctSentenceText,
                 userSentence = userSentenceText,
-
-                // در SentenceBuilderPage، داخل onNext از Result
-                // در SentenceBuilderPage، داخل onNext از Result
                 onNext = {
-                    Log.d("SentenceBuilderNav", "Starting navigation from SentenceBuilderPage...")
                     val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentenceText
                     viewModel.recordAnswer(isCurrentSentenceCorrect)
                     selectedWords = mutableListOf()
                     showResultBox = false
                     isCorrect = null
-                    // scope.launch { // این رو بردارید اگر delay رو هم برمیدارید
-                    // delay(500) // این خط رو کامنت یا حذف کنید
-                    val routeToNavigate = "textPic/$courseId/$lessonId/$contentId/text_pic_3?gameIndex=2"
-                    Log.d("SentenceBuilderNav", "Navigating to: $routeToNavigate") // این رو باید ببینید
-                    navController.navigate(routeToNavigate)
-                    // } // این رو بردارید اگر delay رو هم برمیدارید
+                    val nextGameId = viewModel.getNextGameId(gameIndex + 1)
+                    if (nextGameId != null) {
+                        scope.launch {
+                            navController.navigate("$nextGameId/$courseId/$lessonId/$contentId?gameIndex=${gameIndex + 1}") {
+                                popUpTo("$gameId/$courseId/$lessonId/$contentId?gameIndex=$gameIndex") { inclusive = true }
+                            }
+                        }
+                    } else {
+                        showFinalDialog = true
+                    }
                 },
-//                onNext = {
-//                    val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentenceText // استفاده از correctSentenceText
-//                    viewModel.recordAnswer(isCurrentSentenceCorrect)
-//                    selectedWords = mutableListOf()
-//                    showResultBox = false
-//                    isCorrect = null
-////                    scope.launch {
-////                        delay(500) // تاخیر 500 میلی‌ثانیه
-////                        navController.navigate("textPic/$courseId/$lessonId/$contentId/text_pic_3?gameIndex=2") // می‌ره به TextPicPage
-////                    }
-//                    // در SentenceBuilderPage، داخل onNext از Result
-//                    scope.launch {
-//                        delay(500)
-//                        val routeToNavigate = "textPic/$courseId/$lessonId/$contentId/text_pic_3?gameIndex=2"
-//                        Log.d("SentenceBuilderNav", "Navigating to: $routeToNavigate")
-//                        Log.d("SentenceBuilderNav", "Current courseId: $courseId, lessonId: $lessonId, contentId: $contentId, gameId: text_pic_3")
-//                        navController.navigate(routeToNavigate)
-//                    }
-//                },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 0.dp)
+            )
+        }
+
+        if (showFinalDialog) {
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds,
+                onDismiss = {
+                    showFinalDialog = false
+                    navController.navigate("darsDetails/$courseId/$lessonId") {
+                        popUpTo("$gameId/$courseId/$lessonId/$contentId?gameIndex=$gameIndex") { inclusive = true }
+                    }
+                }
             )
         }
     }
@@ -334,7 +338,7 @@ fun Result(
     timeInSeconds: Int = 0,
     showStats: Boolean = true,
     showTime: Boolean = true,
-    correctSentence: String? = null, // اضافه کردن این پارامتر
+    correctSentence: String? = null,
     userSentence: String? = null,
     onNext: () -> Unit,
     modifier: Modifier = Modifier

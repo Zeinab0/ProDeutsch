@@ -62,11 +62,25 @@ fun DarsDetails(
     val currentLesson = remember(lessons, lessonId) {
         lessons.find { it.id == lessonId }
     }
-    LaunchedEffect(courseId, lessonId) {
+
+    LaunchedEffect(courseId, lessonId, lessonItems) {
+        // فقط لود داده‌ها، بدون فراخوانی زودهنگام initializeGames
         courseViewModel.loadSelectedCourseDetailsAndLessons(courseId)
         courseViewModel.loadLessonItems(courseId, lessonId)
-        gameViewModel.initializeGames(courseId, lessonId, lessonItems.firstOrNull { it.type == CourseItemType.QUIZ_SET }?.id ?: "")
-        Log.d("DarsDetails", "lessonItems: $lessonItems")
+        Log.d("DarsDetails", "lessonItems loaded: $lessonItems")
+
+        // فقط وقتی lessonItems غیرخالیه و QUIZ_SET داره، initializeGames رو فراخوانی کن
+        if (lessonItems.isNotEmpty()) {
+            val quizContentId = lessonItems.firstOrNull { it.type == CourseItemType.QUIZ_SET }?.id
+            if (quizContentId != null) {
+                Log.d("DarsDetails", "Initializing games with contentId: $quizContentId")
+                gameViewModel.initializeGames(courseId, lessonId, quizContentId)
+            } else {
+                Log.e("DarsDetails", "No QUIZ_SET found in lessonItems: $lessonItems")
+            }
+        } else {
+            Log.d("DarsDetails", "Waiting for lessonItems to load...")
+        }
     }
 
     val configuration = LocalConfiguration.current
@@ -195,7 +209,7 @@ fun DarsDetails(
                                 navController = navController,
                                 courseId = courseId,
                                 lessonId = lessonId,
-                                gameViewModel = gameViewModel // پاس دادن ViewModel
+                                gameViewModel = gameViewModel
                             )
                         }
                     }

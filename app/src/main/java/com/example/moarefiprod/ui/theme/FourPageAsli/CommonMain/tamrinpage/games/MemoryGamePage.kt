@@ -7,8 +7,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -21,18 +22,23 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
-import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moarefiprod.R
 import com.example.moarefiprod.repository.saveGameResultToFirestore
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
 
 @Composable
 fun MemoryGamePage(
@@ -41,6 +47,7 @@ fun MemoryGamePage(
     lessonId: String,
     contentId: String,
     gameId: String = "memory_game_2",
+    gameIndex: Int,
     viewModel: GameViewModel = viewModel()
 ) {
     val configuration = LocalConfiguration.current
@@ -49,37 +56,48 @@ fun MemoryGamePage(
 
     val wordPairs by viewModel.wordPairs.collectAsState()
     val displayGermanWords = remember { mutableStateListOf<String>() }
+    var isDataLoaded by remember { mutableStateOf(false) }
+    val gameIds by viewModel.gameIds.collectAsState()
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
 
+    val totalTimeInSeconds by viewModel.totalTimeInSeconds.collectAsStateWithLifecycle()
+
+    var timeInSeconds by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
-        Log.d("MemoryGamePage", "Loading game with courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
+        while (true) {
+            delay(1000L)
+            timeInSeconds++
+        }
+    }
+
+    LaunchedEffect(gameId) {
+        if (gameIndex == 0) {
+            Log.d("MemoryGamePage", "Initializing games with courseId=$courseId, lessonId=$lessonId, contentId=$contentId")
+            viewModel.initializeGames(courseId, lessonId, contentId)
+        }
+
+        Log.d("MemoryGamePage", "Loading game with gameId=$gameId")
         viewModel.loadMemoryGame(courseId, lessonId, contentId, gameId)
-        Log.d("MemoryGamePage", "WordPairs after load: $wordPairs")
     }
 
     LaunchedEffect(wordPairs) {
         if (wordPairs.isNotEmpty()) {
+            isDataLoaded = true
             Log.d("MemoryGamePage", "Shuffling German words: ${wordPairs.map { it.germanWord }}")
             displayGermanWords.clear()
             displayGermanWords.addAll(wordPairs.map { it.germanWord }.shuffled())
         } else {
+            isDataLoaded = false
             Log.e("MemoryGamePage", "No word pairs loaded for gameId=$gameId")
         }
     }
 
-    var showResultBox by remember { mutableStateOf(false) }
-    var timeInSeconds by remember { mutableStateOf(0) }
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(showResultBox) {
-        if (!showResultBox) {
-            while (true) {
-                delay(1000)
-                if (showResultBox) break
-                timeInSeconds++
-            }
+    if (!isDataLoaded) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("در حال بارگذاری...", fontFamily = iranSans)
         }
+        return
     }
 
     var selectedLeft by remember { mutableStateOf<String?>(null) }
@@ -96,7 +114,6 @@ fun MemoryGamePage(
         }
     }
 
-    // NEW: Define wrongGermanWords based on errorCountMap
     val wrongGermanWords = remember {
         derivedStateOf {
             val farsiWordsWrong = errorCountMap.filter { it.value >= 3 }.keys
@@ -119,20 +136,7 @@ fun MemoryGamePage(
         }
     }
 
-    LaunchedEffect(usedFarsiWords.value.size) {
-        val total = wordPairs.size
-        if (usedFarsiWords.value.size == total && gameStarted.value && !showResultBox) {
-            showResultBox = true
-            if (userId != "unknown") {
-                saveGameResultToFirestore(
-                    userId = userId,
-                    gameId = gameId,
-                    correct = correctPairs.size,
-                    wrong = errorCountMap.values.count { it >= 3 }
-                )
-            }
-        }
-    }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(selectedLeft, selectedRight) {
         if (selectedLeft != null && selectedRight != null) {
@@ -152,21 +156,10 @@ fun MemoryGamePage(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        IconButton(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier
-                .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
-                .align(Alignment.TopStart)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.backbtn),
-                contentDescription = "Back",
-                tint = Color.Black,
-                modifier = Modifier.size(screenWidth * 0.09f)
-            )
-        }
+    var showError by remember { mutableStateOf(false) }
+    var showFinalDialog by remember { mutableStateOf(false) }
 
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -184,7 +177,7 @@ fun MemoryGamePage(
                     .padding(top = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                StepProgressBar(currentStep = 0)
+                StepProgressBar(currentStep = gameIndex)
             }
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -221,7 +214,7 @@ fun MemoryGamePage(
                             word = pair.farsiWord,
                             isSelected = selectedLeft == pair.farsiWord,
                             isMatched = isMatched,
-                            isWrong = isWrongFarsi, // Pass the correct 'isWrong' for Farsi
+                            isWrong = isWrongFarsi,
                             onClick = {
                                 if (!isMatched && !isWrongFarsi) selectedLeft = pair.farsiWord
                             },
@@ -239,14 +232,13 @@ fun MemoryGamePage(
                 ) {
                     displayGermanWords.forEach { germanWord ->
                         val isMatched = correctPairs.any { it.second == germanWord }
-                        // NEW: Determine if this German word should be marked as wrong
                         val isWrongGerman = wrongGermanWords.value.contains(germanWord)
 
                         WordItemWithState(
                             word = germanWord,
                             isSelected = selectedRight == germanWord,
                             isMatched = isMatched,
-                            isWrong = isWrongGerman, // Pass the new 'isWrongGerman' status
+                            isWrong = isWrongGerman,
                             onClick = {
                                 if (!isMatched && !isWrongGerman) selectedRight = germanWord
                             },
@@ -255,23 +247,93 @@ fun MemoryGamePage(
                     }
                 }
             }
+
+            if (showError) {
+                Text(
+                    text = "لطفا تمام جفت‌ها رو تکمیل کنید و بعد تأیید بزنید",
+                    color = Color.Red,
+                    fontFamily = iranSans,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
+            }
         }
 
-        if (showResultBox) {
-            Match(
-                correct = correctPairs.size,
-                wrong = errorCountMap.values.count { it >= 3 },
-                timeInSeconds = timeInSeconds,
-                onNext = {
-                    scope.launch {
-                        delay(500) // تاخیر 500 میلی‌ثانیه
-                        navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/sentence_builder_1?gameIndex=1") // می‌ره به sentenceBuilder
+        Button(
+            onClick = {
+                if (allUsedUp.value) {
+                    val correct = correctPairs.size
+                    val wrong = errorCountMap.values.count { it >= 3 }
+                    if (userId != "unknown") {
+                        saveGameResultToFirestore(
+                            userId = userId,
+                            gameId = gameId,
+                            correct = correct,
+                            wrong = wrong
+                        )
+                    }
+                    viewModel.recordMemoryGameResult(correct, wrong, timeInSeconds)
+
+                    // لاگ برای دیباگ
+                    Log.d("MemoryGamePage", "Current gameIndex: $gameIndex, gameIds: $gameIds")
+                    val (nextGameRoute, nextGameId) = viewModel.getNextGameRouteAndId(gameIndex + 1)
+                    Log.d("MemoryGamePage", "Next game - Route: $nextGameRoute, ID: $nextGameId, Next Index: ${gameIndex + 1}")
+
+                    if (nextGameRoute != null && nextGameId != null) {
+                        scope.launch {
+                            try {
+                                navController.navigate("$nextGameRoute/$courseId/$lessonId/$contentId/$nextGameId?gameIndex=${gameIndex + 1}")
+                                Log.d("MemoryGamePage", "Navigated to $nextGameRoute with gameId=$nextGameId")
+                            } catch (e: Exception) {
+                                Log.e("NavigationError", "Failed to navigate to next game: ${e.message}")
+                            }
+                        }
+                    } else {
+                        Log.d("MemoryGamePage", "No next game found, showing ResultDialog")
+                        showFinalDialog = true
+                    }
+                    showError = false
+                } else {
+                    showError = true
+                }
+            },
+            modifier = Modifier
+                .offset(
+                    x = screenWidth - (screenWidth * 0.20f) - 30.dp,
+                    y = screenHeight * 0.2f
+                )
+                .width(screenWidth * 0.20f)
+                .height(40.dp)
+                .zIndex(1f),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF4D869C),
+                contentColor = Color.White
+            )
+        ) {
+            Text("تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+        }
+
+        if (showFinalDialog) {
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds,
+                onDismiss = {
+                    showFinalDialog = false
+                    try {
+                        navController.navigate("darsDetails/$courseId/$lessonId") {
+                            popUpTo("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=$gameIndex") { inclusive = true }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("NavigationError", "Failed to navigate to darsDetails: ${e.message}")
                     }
                 }
-                ,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 0.dp)
             )
         }
     }
@@ -282,22 +344,22 @@ fun WordItemWithState(
     word: String,
     isSelected: Boolean,
     isMatched: Boolean,
-    isWrong: Boolean, // این متغیر حالا هم برای فارسی و هم برای آلمانی استفاده می‌شود
+    isWrong: Boolean,
     onClick: () -> Unit,
     screenWidth: Dp
 ) {
     val backgroundColor = when {
         isMatched -> Color.White
-        isWrong -> Color(0xFF90CECE) // وقتی اشتباه است، رنگ پس‌زمینه این می‌شود
+        isWrong -> Color(0xFF90CECE)
         isSelected -> Color(0xFF90CECE)
         else -> Color(0xFFF1FFFF)
     }
 
-    val borderColor = if (isWrong) Color.Red else Color(0xFF90CECE) // کادر دور آن قرمز می‌ماند
+    val borderColor = if (isWrong) Color.Red else Color(0xFF90CECE)
     val textColor = when {
         isMatched -> Color(0xFF56B096)
         isSelected -> Color.White
-        isWrong -> Color.White // اگر می‌خواهید متن هم در حالت اشتباه سفید شود
+        isWrong -> Color.White
         else -> Color.Black
     }
 

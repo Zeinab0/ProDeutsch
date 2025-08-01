@@ -2,7 +2,7 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.game
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope // اضافه کردن این import
+import androidx.lifecycle.viewModelScope
 import com.example.moarefiprod.data.MultipleChoice
 import com.example.moarefiprod.data.SentenceGameData
 import com.example.moarefiprod.data.TextPicData
@@ -13,7 +13,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch // اضافه کردن این import
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class GameViewModel : ViewModel() {
@@ -37,11 +37,11 @@ class GameViewModel : ViewModel() {
     private val _sentenceData = MutableStateFlow<SentenceGameData?>(null)
     val sentenceData: StateFlow<SentenceGameData?> = _sentenceData.asStateFlow()
 
-    // StateFlows موجود برای امتیازات کلی (اینها برای جمع‌آوری امتیازات در طول یک مجموعه بازی مفید هستند)
-    private val _correctAnswers = MutableStateFlow(0) // این برای Correct کلی
+    // StateFlows موجود برای امتیازات کلی
+    private val _correctAnswers = MutableStateFlow(0)
     val correctAnswers: StateFlow<Int> = _correctAnswers.asStateFlow()
 
-    private val _wrongAnswers = MutableStateFlow(0) // این برای Wrong کلی
+    private val _wrongAnswers = MutableStateFlow(0)
     val wrongAnswers: StateFlow<Int> = _wrongAnswers.asStateFlow()
 
     private val _totalQuestions = MutableStateFlow(0)
@@ -53,19 +53,22 @@ class GameViewModel : ViewModel() {
     private val _gameIds = MutableStateFlow<List<String>>(emptyList())
     val gameIds: StateFlow<List<String>> = _gameIds.asStateFlow()
 
-    // --- StateFlows جدید برای TextPicPage ---
+    // StateFlows جدید برای TextPicPage
     private val _textPicData = MutableStateFlow<TextPicData?>(null)
     val textPicData: StateFlow<TextPicData?> = _textPicData.asStateFlow()
 
     private val _textPicSelectedWords = MutableStateFlow<Set<String>>(emptySet())
     val textPicSelectedWords: StateFlow<Set<String>> = _textPicSelectedWords.asStateFlow()
 
-    private val _textPicCorrectCount = MutableStateFlow(0) // درست برای این بازی TextPic
+    private val _textPicCorrectCount = MutableStateFlow(0)
     val textPicCorrectCount: StateFlow<Int> = _textPicCorrectCount.asStateFlow()
 
-    private val _textPicWrongCount = MutableStateFlow(0) // غلط برای این بازی TextPic
+    private val _textPicWrongCount = MutableStateFlow(0)
     val textPicWrongCount: StateFlow<Int> = _textPicWrongCount.asStateFlow()
-    // -------------------------------------
+
+    // StateFlow برای زمان کل
+    private val _totalTimeInSeconds = MutableStateFlow(0)
+    val totalTimeInSeconds: StateFlow<Int> = _totalTimeInSeconds.asStateFlow()
 
     fun recordAnswer(isCorrect: Boolean) {
         if (isCorrect) {
@@ -93,7 +96,7 @@ class GameViewModel : ViewModel() {
         Log.d("GameViewModel", "Scores reset. Correct: ${_correctAnswers.value}, Wrong: ${_wrongAnswers.value}")
     }
 
-    // --- توابع مدیریت وضعیت برای TextPicPage ---
+    // توابع مدیریت وضعیت برای TextPicPage
     fun toggleTextPicWordSelection(word: String) {
         _textPicSelectedWords.value = if (_textPicSelectedWords.value.contains(word)) {
             _textPicSelectedWords.value - word
@@ -121,21 +124,22 @@ class GameViewModel : ViewModel() {
         _textPicCorrectCount.value = correct
         _textPicWrongCount.value = wrong
         Log.d("GameViewModel", "TextPic answers checked. Correct: $correct, Wrong: $wrong")
-
-        // اینجا می‌توانید امتیازات این بازی را به امتیازات کلی اضافه کنید (اگر می‌خواهید)
-        // incrementCorrect(correct)
-        // incrementWrong(wrong)
     }
 
     fun resetTextPicGame() {
         _textPicSelectedWords.value = emptySet()
         _textPicCorrectCount.value = 0
         _textPicWrongCount.value = 0
-        // _textPicData.value = null // شاید نخواهید داده را پاک کنید، فقط برای اطمینان
         Log.d("GameViewModel", "TextPic game reset.")
     }
-    // -----------------------------------------
 
+    // متد جدید برای ثبت نتیجه بازی حافظه (با اضافه کردن زمان)
+    fun recordMemoryGameResult(correct: Int, wrong: Int, timeInSeconds: Int) {
+        incrementCorrect(correct)
+        incrementWrong(wrong)
+        _totalTimeInSeconds.value += timeInSeconds
+        Log.d("GameViewModel", "Recorded Memory Game result. Correct: $correct, Wrong: $wrong, Time: $timeInSeconds, Total Time: ${_totalTimeInSeconds.value}")
+    }
 
     private var loadedTopicId: String? = null
     private var loadedGameId: String? = null
@@ -169,11 +173,12 @@ class GameViewModel : ViewModel() {
 
     suspend fun initializeGames(courseId: String, lessonId: String, contentId: String) {
         if (loadedCourseId == courseId && loadedLessonId == lessonId && loadedContentId == contentId && _totalGames.value > 0) {
-            Log.d("GameViewModel", "Using cached games: ${_totalGames.value}")
+            Log.d("GameViewModel", "Using cached games: ${_totalGames.value}, IDs: ${_gameIds.value}")
             return
         }
 
         try {
+            Log.d("GameViewModel", "Fetching games for courseId=$courseId, lessonId=$lessonId, contentId=$contentId")
             val documents = db.collection("Courses")
                 .document(courseId)
                 .collection("Lessons")
@@ -183,6 +188,7 @@ class GameViewModel : ViewModel() {
                 .collection("games")
                 .get().await()
             val gameIds = documents.documents.map { it.id }
+            Log.d("GameViewModel", "Raw documents: ${documents.documents.map { it.id to it.data }}")
             _gameIds.value = gameIds
             _totalGames.value = gameIds.size
             loadedCourseId = courseId
@@ -193,6 +199,10 @@ class GameViewModel : ViewModel() {
             _totalGames.value = 0
             _gameIds.value = emptyList()
             Log.e("GameViewModel", "Error loading games: ${e.message}")
+            // برای تست موقت، لیست gameIds رو دستی پر می‌کنیم
+            _gameIds.value = listOf("memory_game_2", "sentence_builder_1", "text_pic_3")
+            _totalGames.value = _gameIds.value.size
+            Log.d("GameViewModel", "Using fallback gameIds: ${_gameIds.value}")
         }
     }
 
@@ -220,6 +230,21 @@ class GameViewModel : ViewModel() {
             "sentence_builder_1" -> loadSentenceGame(courseId, lessonId, contentId, gameId)
             "text_pic_3" -> loadTextPicGame(courseId, lessonId, contentId, gameId)
             else -> Log.w("GameViewModel", "Unknown gameId: $gameId")
+        }
+    }
+
+    fun getNextGameRouteAndId(currentIndex: Int): Pair<String?, String?> {
+        val nextGameId = getNextGameId(currentIndex)
+        return if (nextGameId != null) {
+            val nextRoute = when (nextGameId) {
+                "memory_game_2" -> "memoryGame"
+                "sentence_builder_1" -> "sentenceBuilder"
+                "text_pic_3" -> "textPic"
+                else -> null
+            }
+            Pair(nextRoute, nextGameId)
+        } else {
+            Pair(null, null)
         }
     }
 
@@ -256,13 +281,9 @@ class GameViewModel : ViewModel() {
             }
     }
 
-    // متد loadTextPicGame که قبلا هم بود، اما حالا textPicData را به‌روز می‌کند
-    // و باید اطمینان حاصل کنیم که StateFlowهای مربوط به TextPic برای این بازی خاص،
-    // هنگام بارگذاری مجدد (برای شروع یک دور جدید) ریست شوند.
     fun loadTextPicGame(courseId: String, lessonId: String, contentId: String, gameId: String) {
-        // ریست کردن وضعیت TextPic برای شروع یک بازی جدید
-        resetTextPicGame() // اضافه شدن این خط برای ریست کردن وضعیت فعلی بازی TextPic
-        viewModelScope.launch { // استفاده از viewModelScope برای Coroutine در ViewModel
+        resetTextPicGame()
+        viewModelScope.launch {
             try {
                 val document = db.collection("Courses")
                     .document(courseId)
@@ -276,15 +297,18 @@ class GameViewModel : ViewModel() {
 
                 if (document != null && document.exists()) {
                     val imageUrl = document.getString("imageUrl") ?: ""
-                    val words = document.get("words") as? List<Map<String, Any>> ?: emptyList()
-                    val wordList = words.map { word ->
+                    val title = document.getString("title") ?: "کلمات درست رو پیدا کن"
+                    val order = document.getLong("order")?.toInt() ?: 0
+                    val type = document.getString("type") ?: "TEXT_PIC"
+                    val wordsData = document.get("words") as? List<Map<String, Any>> ?: emptyList()
+                    val wordList = wordsData.map { word ->
                         TextPicWord(
                             word = word["word"] as? String ?: "",
                             isCorrect = word["isCorrect"] as? Boolean ?: false
                         )
                     }
-                    _textPicData.value = TextPicData(imageUrl, wordList)
-                    Log.d("GameViewModel", "Loaded textPic: imageUrl=$imageUrl, words=$wordList")
+                    _textPicData.value = TextPicData(imageUrl, title, order, type, wordList)
+                    Log.d("GameViewModel", "Loaded textPic: imageUrl=$imageUrl, title=$title, words=$wordList")
                 } else {
                     _textPicData.value = null
                     Log.e("GameViewModel", "Document does not exist for gameId: $gameId")
