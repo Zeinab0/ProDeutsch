@@ -20,50 +20,51 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Brush
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 import kotlinx.coroutines.delay
 
+
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
+
 @Composable
 fun MultipleChoicePage(
     navController: NavController,
     topicId: String,
+    gameId: String,
     gameIndex: Int,
-    viewModel: GameViewModel = viewModel(key = "GameViewModel_$topicId")
-) {
+    totalGames: Int, // ⬅️ جدید
+    viewModel: GrammerGameViewModel
+){
+    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    val totalQuestions by viewModel.totalQuestions.collectAsState()
-    val correctCount by viewModel.correctAnswers.collectAsState()
-    val wrongCount by viewModel.wrongAnswers.collectAsState()
-    val mcqData by viewModel.selectOption.collectAsState()
+    val totalQuestions by grammarViewModel.totalQuestions.collectAsState()
+    val correctCount by grammarViewModel.correctAnswers.collectAsState()
+    val wrongCount by grammarViewModel.wrongAnswers.collectAsState()
+    val mcqData by grammarViewModel.selectOption.collectAsState()
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var showResultBox by remember { mutableStateOf(false) }
     var showFinalResultDialog by remember { mutableStateOf(false) }
 
-    val gameId = "multiple_choice_quiz_article_1"
 
     LaunchedEffect(gameIndex) {
-        Log.d("MultipleChoicePage", "LaunchedEffect triggered for gameIndex: $gameIndex, ViewModel: ${viewModel.hashCode()}")
-        viewModel.initializeTotalQuestions(topicId, gameId)
+        grammarViewModel.initializeTotalQuestions(topicId)
 
-        while (viewModel.totalQuestions.value == 0) {
+        while (grammarViewModel.totalQuestions.value == 0) {
             delay(100)
-            Log.d("MultipleChoicePage", "Waiting for totalQuestions to load: ${viewModel.totalQuestions.value}")
         }
 
         if (gameIndex == 0) {
-            Log.d("MultipleChoicePage", "Resetting scores for first question")
-            viewModel.resetScores()
+            grammarViewModel.resetScores()
         }
 
-        Log.d("MultipleChoicePage", "Loading multiple choice game for index: $gameIndex")
-        viewModel.loadMultipleChoiceGame(topicId, gameId, gameIndex)
+        grammarViewModel.loadMultipleChoiceGame(topicId, gameId, gameIndex)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -98,6 +99,7 @@ fun MultipleChoicePage(
                 ) {
                     StepProgressBar(currentStep = gameIndex)
                 }
+
                 Spacer(modifier = Modifier.height(80.dp))
 
                 Row(
@@ -113,7 +115,7 @@ fun MultipleChoicePage(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = data.question,
+                        text = data.questionText,
                         fontSize = 14.sp,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Bold
@@ -125,11 +127,11 @@ fun MultipleChoicePage(
                 data.options.forEachIndexed { index, option ->
                     val backgroundColor = when {
                         !showResultBox && selectedIndex == index -> Color(0xFF4D869C)
-                        showResultBox && index == data.correctIndex -> Color(0xFF14CB00)
-                        showResultBox && index == selectedIndex && selectedIndex != data.correctIndex -> Color(0xFFFF3B3B)
+                        showResultBox && index == data.correctAnswerIndex -> Color(0xFF14CB00)
+                        showResultBox && index == selectedIndex && selectedIndex != data.correctAnswerIndex -> Color(0xFFFF3B3B)
                         else -> Color(0xFFCDE8E5)
                     }
-                    val textColor = if (showResultBox && index == data.correctIndex) Color.White else Color.Black
+                    val textColor = if (showResultBox && index == data.correctAnswerIndex) Color.White else Color.Black
 
                     Box(
                         modifier = Modifier
@@ -159,45 +161,52 @@ fun MultipleChoicePage(
             }
 
             if (showResultBox) {
+                val index = selectedIndex
                 ChoiceResultBox(
-                    correct = if (selectedIndex == data.correctIndex) 1 else 0,
-                    wrong = if (selectedIndex != data.correctIndex) 1 else 0,
-                    correctSentence = data.question.replace("________", data.options[data.correctIndex]),
-                    userSentence = if (selectedIndex != data.correctIndex) data.question.replace("________", data.options[selectedIndex ?: -1]) else "",
+                    correct = if (index == data.correctAnswerIndex) 1 else 0,
+                    wrong = if (index != data.correctAnswerIndex) 1 else 0,
+                    correctSentence = data.questionText.replace("________", data.options[data.correctAnswerIndex]),
+                    userSentence = if (
+                        index != null &&
+                        index != data.correctAnswerIndex &&
+                        index in data.options.indices
+                    ) {
+                        data.questionText .replace("________", data.options[index])
+                    } else {
+                        ""
+                    },
                     translation = data.translation,
                     gameIndex = gameIndex,
-                    totalQuestions = totalQuestions,
+                    totalGames = totalGames, // ⬅️ اینو اضافه کن
                     onNext = {
-                        Log.d("MultipleChoicePage", "Moving to next question. Current correct: ${viewModel.correctAnswers.value}, wrong: ${viewModel.wrongAnswers.value}")
+                        Log.d(
+                            "MultipleChoicePage",
+                            "Moving to next question. Current correct: ${viewModel.correctAnswers.value}, wrong: ${viewModel.wrongAnswers.value}"
+                        )
                         selectedIndex = null
                         showResultBox = false
 
-                        if (gameIndex + 1 < totalQuestions) {
-                            Log.d("MultipleChoicePage", "Navigating to next question: ${gameIndex + 1}")
-                            navController.navigate("multipleChoice/$topicId/${gameIndex + 1}") {
-                                popUpTo("multipleChoice/$topicId/$gameIndex") { inclusive = true }
-                            }
+                        if (gameIndex + 1 < totalGames) {
+                            navController.navigate("GameHost/$topicId/${gameIndex + 1}")
                         } else {
-                            Log.d("MultipleChoicePage", "Showing final result dialog. Final correct: ${viewModel.correctAnswers.value}, wrong: ${viewModel.wrongAnswers.value}")
                             showFinalResultDialog = true
                         }
+
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 0.dp)
                 )
             }
+
         }
 
         Button(
             onClick = {
                 if (selectedIndex != null && !showResultBox) {
-                    val isCorrect = mcqData?.correctIndex == selectedIndex
-                    viewModel.recordAnswer(isCorrect)
-                    Log.d("MultipleChoicePage", "Answer recorded. Correct: ${viewModel.correctAnswers.value}, Wrong: ${viewModel.wrongAnswers.value}")
+                    val isCorrect = mcqData?.correctAnswerIndex == selectedIndex
+                    grammarViewModel.recordAnswer(isCorrect)
                     showResultBox = true
-                } else {
-                    Log.d("MultipleChoicePage", "Confirm button clicked but no option selected or result box already shown")
                 }
             },
             modifier = Modifier
@@ -220,7 +229,11 @@ fun MultipleChoicePage(
     }
 
     if (showFinalResultDialog) {
-        Log.d("MultipleChoicePage", "Displaying final result dialog. Total questions: $totalQuestions, Correct: $correctCount, Wrong: $wrongCount")
+        Log.d(
+            "MultipleChoicePage",
+            "Displaying final result dialog. Total questions: $totalQuestions, Correct: $correctCount, Wrong: $wrongCount"
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -289,12 +302,13 @@ fun MultipleChoicePage(
                             .fillMaxWidth()
                             .wrapContentWidth(Alignment.End)
                     )
+
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
-                            .evenShadow(radius = 25f, cornerRadius = 20f)
+                            .evenShadow(radius = 25f, cornerRadius = 20f) // ظاهر درست از نسخه اول
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color(0xFF7AB2B2))
                             .height(45.dp)
@@ -306,13 +320,19 @@ fun MultipleChoicePage(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("تأیید", color = Color.White, fontFamily = iranSans)
+                        Text(
+                            text = "تأیید",
+                            color = Color.White,
+                            fontFamily = iranSans
+                        )
                     }
                 }
             }
         }
     }
+
 }
+
 
 @Composable
 fun ChoiceResultBox(
@@ -322,10 +342,11 @@ fun ChoiceResultBox(
     userSentence: String? = null,
     translation: String? = null,
     gameIndex: Int,
-    totalQuestions: Int,
+    totalGames: Int,     // ⬅️ این رو اضافه کن
     onNext: () -> Unit,
     modifier: Modifier = Modifier
-) {
+)
+{
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
     Box(
@@ -412,6 +433,8 @@ fun ChoiceResultBox(
             }
         }
 
+        val isLastGame = gameIndex + 1 == totalGames
+
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -428,13 +451,13 @@ fun ChoiceResultBox(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = if (gameIndex + 1 == totalQuestions) "تمام" else "بریم بعدی",
+                    text = if (isLastGame) "تمام" else "بریم بعدی",
                     fontFamily = iranSans,
                     color = Color.White,
                     fontSize = 12.sp
                 )
 
-                if (gameIndex + 1 != totalQuestions) {
+                if (!isLastGame) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         painter = painterResource(id = R.drawable.nextbtn),
@@ -445,5 +468,6 @@ fun ChoiceResultBox(
                 }
             }
         }
+
     }
 }

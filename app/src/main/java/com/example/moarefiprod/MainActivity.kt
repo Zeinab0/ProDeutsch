@@ -67,6 +67,10 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MultipleChoicePage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceBuilderPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.TextPicPage
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GameHost
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GameMeta
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammarGame
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
@@ -457,44 +461,44 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                composable(
-                    route = "sentenceBuilder/{courseId}/{lessonId}/{contentId}/{gameId}?gameIndex={gameIndex}", // اضافه کردن gameIndex
-                    arguments = listOf(
-                        navArgument("courseId") { type = NavType.StringType },
-                        navArgument("lessonId") { type = NavType.StringType },
-                        navArgument("contentId") { type = NavType.StringType },
-                        navArgument("gameId") { type = NavType.StringType },
-                        navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 } // مقدار پیش‌فرض
-                    )
-                ) { backStackEntry ->
-                    val courseId = backStackEntry.arguments?.getString("courseId")
-                    val lessonId = backStackEntry.arguments?.getString("lessonId")
-                    val contentId = backStackEntry.arguments?.getString("contentId")
-                    val gameId = backStackEntry.arguments?.getString("gameId")
-                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // دریافت gameIndex
-
-                    Log.d("SentenceBuilderNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
-
-                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
-                        SentenceBuilderPage(
-                            navController = navController,
-                            courseId = courseId,
-                            lessonId = lessonId,
-                            contentId = contentId,
-                            gameId = gameId,
-                            gameIndex = gameIndex // پاس دادن gameIndex
-                        )
-                    } else {
-                        Text(
-                            "خطا: شناسه های لازم برای بازی یافت نشد.",
-                            color = Color.Red,
-                            fontFamily = iranSans
-                        )
-                        LaunchedEffect(Unit) {
-                            navController.popBackStack()
-                        }
-                    }
-                }
+//                composable(
+//                    route = "sentenceBuilder/{courseId}/{lessonId}/{contentId}/{gameId}?gameIndex={gameIndex}", // اضافه کردن gameIndex
+//                    arguments = listOf(
+//                        navArgument("courseId") { type = NavType.StringType },
+//                        navArgument("lessonId") { type = NavType.StringType },
+//                        navArgument("contentId") { type = NavType.StringType },
+//                        navArgument("gameId") { type = NavType.StringType },
+//                        navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 } // مقدار پیش‌فرض
+//                    )
+//                ) { backStackEntry ->
+//                    val courseId = backStackEntry.arguments?.getString("courseId")
+//                    val lessonId = backStackEntry.arguments?.getString("lessonId")
+//                    val contentId = backStackEntry.arguments?.getString("contentId")
+//                    val gameId = backStackEntry.arguments?.getString("gameId")
+//                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // دریافت gameIndex
+//
+//                    Log.d("SentenceBuilderNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
+//
+//                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
+//                        SentenceBuilderPage(
+//                            navController = navController,
+//                            courseId = courseId,
+//                            lessonId = lessonId,
+//                            contentId = contentId,
+//                            gameId = gameId,
+//                            gameIndex = gameIndex // پاس دادن gameIndex
+//                        )
+//                    } else {
+//                        Text(
+//                            "خطا: شناسه های لازم برای بازی یافت نشد.",
+//                            color = Color.Red,
+//                            fontFamily = iranSans
+//                        )
+//                        LaunchedEffect(Unit) {
+//                            navController.popBackStack()
+//                        }
+//                    }
+//                }
 
                 composable(
                     route = "memoryGame/{courseId}/{lessonId}/{contentId}/{gameId}?gameIndex={gameIndex}", // اضافه کردن gameIndex
@@ -535,75 +539,24 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                composable(
-                    route = "multipleChoice/{topicId}/{gameIndex}",
-                    arguments = listOf(
-                        navArgument("topicId") { type = NavType.StringType },
-                        navArgument("gameIndex") { type = NavType.IntType }
+                //بازی های مربوط به گرامر
+
+                composable("GameHost/{topicId}/{gameIndex}") { backStackEntry ->
+                    val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+                    val gameIndex = backStackEntry.arguments?.getString("gameIndex")?.toInt() ?: 0
+
+                    GameHost(
+                        navController = navController,
+                        topicId = topicId,
+                        gameIndex = gameIndex
                     )
-                ) { backStackEntry ->
-                    val topicId = backStackEntry.arguments?.getString("topicId")
-                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0
-
-                    Log.d("MultipleChoiceNav", "Received: topicId=$topicId, gameIndex=$gameIndex")
-
-                    if (topicId != null) {
-                        MultipleChoicePage(
-                            navController = navController,
-                            topicId = topicId,
-                            gameIndex = gameIndex,
-                            viewModel = gameViewModel
-                        )
-                    } else {
-                        Text(
-                            "خطا: شناسه مبحث گرامر یافت نشد.",
-                            color = Color.Red,
-                            fontFamily = iranSans
-                        )
-                        LaunchedEffect(Unit) {
-                            navController.popBackStack()
-                        }
-                    }
                 }
-                composable(
-                    route = "textPic/{courseId}/{lessonId}/{contentId}/{gameId}?gameIndex={gameIndex}",
-                    arguments = listOf(
-                        navArgument("courseId") { type = NavType.StringType },
-                        navArgument("lessonId") { type = NavType.StringType },
-                        navArgument("contentId") { type = NavType.StringType },
-                        navArgument("gameId") { type = NavType.StringType },
-                        navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 }
-                    )
-                ) { backStackEntry ->
-                    val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
-                    val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
-                    val contentId = backStackEntry.arguments?.getString("contentId") ?: ""
-                    val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
-                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0
 
-                    Log.d("TextPicNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
 
-                    if (courseId.isNotEmpty() && lessonId.isNotEmpty() && contentId.isNotEmpty() && gameId.isNotEmpty()) {
-                        TextPicPage(
-                            navController = navController,
-                            courseId = courseId,
-                            lessonId = lessonId,
-                            contentId = contentId,
-                            gameId = gameId,
-                            gameIndex = gameIndex,
-                            viewModel = gameViewModel
-                        )
-                    } else {
-                        Text(
-                            "خطا: شناسه‌های لازم برای بازی یافت نشد.",
-                            color = Color.Red,
-                            fontFamily = iranSans
-                        )
-                        LaunchedEffect(Unit) {
-                            navController.popBackStack()
-                        }
-                    }
-                }
+                //بازی های مربوط به گرامر
+
+
+
             }
         }
     }

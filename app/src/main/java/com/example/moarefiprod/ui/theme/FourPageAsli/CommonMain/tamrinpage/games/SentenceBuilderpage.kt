@@ -27,6 +27,7 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -40,20 +41,22 @@ fun SentenceBuilderPage(
     contentId: String,
     gameId: String,
     gameIndex: Int,
-    viewModel: GameViewModel = viewModel()
+    viewModel: BaseGameViewModel
 ) {
+    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    val sentenceState by viewModel.sentenceData.collectAsState()
+    val sentenceWords by grammarViewModel.sentenceWords.collectAsState()
+    val sentenceAnswer by grammarViewModel.sentenceAnswer.collectAsState()
+    val sentenceTitle by grammarViewModel.sentenceTitle.collectAsState()
     var selectedWords by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var timeInSeconds by remember { mutableStateOf(0) }
 
-    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
-    val totalTimeInSeconds by viewModel.totalTimeInSeconds.collectAsState()
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -62,16 +65,11 @@ fun SentenceBuilderPage(
         }
     }
 
-    LaunchedEffect(gameId) {
-        viewModel.loadSentenceGame(courseId, lessonId, contentId, gameId)
-    }
+    val correctSentence = sentenceAnswer
+    val wordList = sentenceWords
 
     Box(modifier = Modifier.fillMaxSize()) {
-        sentenceState?.let { state ->
-            val wordList = state.wordPool
-            val question = state.question
-            val correctSentence = state.correctSentence.joinToString(" ")
-
+        if (wordList.isNotEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -84,110 +82,50 @@ fun SentenceBuilderPage(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End,
+                Text(
+                    text = sentenceTitle,
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    fontSize = 16.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.1f))
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = " $question ",
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF000000),
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.chat),
-                        contentDescription = "chat",
-                        modifier = Modifier
-                            .size(56.dp)
-                            .padding(end = 12.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.12f))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(130.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            DottedLine(
-                                width = screenWidth * 0.76f,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-
-                            Image(
-                                painter = painterResource(id = R.drawable.pen),
-                                contentDescription = "pen",
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .align(Alignment.CenterStart)
-                                    .absoluteOffset(x = 4.dp, y = (-14).dp)
-                            )
-
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
-                                verticalArrangement = Arrangement.spacedBy(20.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 40.dp)
-                                    .align(Alignment.CenterStart)
-                            ) {
-                                selectedWords.forEach { word ->
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(Color(0xFFCDE8E5))
-                                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                                            .clickable {
-                                                selectedWords = selectedWords.toMutableList().apply { remove(word) }
-                                            }
-                                    ) {
-                                        Text(
-                                            text = word,
-                                            fontFamily = iranSans,
-                                            color = Color.Black,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
+                    selectedWords.forEach { word ->
+                        ClickableTextWordBox(
+                            word = word,
+                            isSelected = true,
+                            onClick = {
+                                selectedWords = selectedWords.toMutableList().apply { remove(word) }
                             }
-                        }
-
-                        Spacer(modifier = Modifier.height(40.dp))
-
-                        DottedLine(width = screenWidth * 0.8f)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     wordList.forEach { word ->
-                        ClickableTextWordBox(
-                            word = word,
-                            isSelected = selectedWords.contains(word),
-                            onClick = {
-                                if (!selectedWords.contains(word)) {
+                        if (!selectedWords.contains(word)) {
+                            ClickableTextWordBox(
+                                word = word,
+                                isSelected = false,
+                                onClick = {
                                     selectedWords = selectedWords.toMutableList().apply { add(word) }
-                                } else {
-                                    selectedWords = selectedWords.toMutableList().apply { remove(word) }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
 
@@ -195,97 +133,53 @@ fun SentenceBuilderPage(
 
                 Button(
                     onClick = {
-                        val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentence
-                        isCorrect = isCurrentSentenceCorrect
+                        val isCurrentCorrect = selectedWords.joinToString(" ") == correctSentence
+                        isCorrect = isCurrentCorrect
                         showResultBox = true
-                        if (isCurrentSentenceCorrect) {
-                            viewModel.incrementCorrect(1)
-                        } else {
-                            viewModel.incrementWrong(1)
-                        }
-                        viewModel.recordMemoryGameResult(
-                            correct = if (isCurrentSentenceCorrect) 1 else 0,
-                            wrong = if (!isCurrentSentenceCorrect) 1 else 0,
-                            timeInSeconds = timeInSeconds
-                        )
                     },
                     modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(end = 30.dp, bottom = screenHeight * 0.15f)
-                        .width(screenWidth * 0.20f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4D869C),
-                        contentColor = Color.White
-                    )
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 32.dp)
                 ) {
-                    Text("تایید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+                    Text("تأیید", fontFamily = iranSans)
                 }
             }
-        } ?: run {
+        } else {
             Text(
-                text = "داده‌ها بارگذاری نشد. لطفاً اتصال را بررسی کنید.",
+                text = "داده‌ای یافت نشد",
                 color = Color.Red,
                 fontFamily = iranSans,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
 
-        var showFinalDialog by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
         if (showResultBox) {
-            val correctSentenceText = sentenceState?.correctSentence?.joinToString(" ") ?: ""
-            val userSentenceText = selectedWords.joinToString(" ")
+            val userSentence = selectedWords.joinToString(" ")
 
             Result(
                 correct = if (isCorrect == true) 1 else 0,
                 wrong = if (isCorrect == false) 1 else 0,
                 timeInSeconds = timeInSeconds,
                 showStats = true,
-                showTime = false,
-                correctSentence = correctSentenceText,
-                userSentence = userSentenceText,
+                showTime = true,
+                correctSentence = correctSentence,
+                userSentence = userSentence,
                 onNext = {
-                    val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentenceText
-                    viewModel.recordAnswer(isCurrentSentenceCorrect)
                     selectedWords = mutableListOf()
                     showResultBox = false
                     isCorrect = null
-                    val nextGameId = viewModel.getNextGameId(gameIndex + 1)
-                    if (nextGameId != null) {
-                        scope.launch {
-                            navController.navigate("$nextGameId/$courseId/$lessonId/$contentId?gameIndex=${gameIndex + 1}") {
-                                popUpTo("$gameId/$courseId/$lessonId/$contentId?gameIndex=$gameIndex") { inclusive = true }
-                            }
-                        }
-                    } else {
-                        showFinalDialog = true
+                    navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
+                        popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
                     }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 0.dp)
-            )
-        }
-
-        if (showFinalDialog) {
-            ResultDialog(
-                navController = navController,
-                courseId = courseId,
-                lessonId = lessonId,
-                contentId = contentId,
-                timeInSeconds = totalTimeInSeconds,
-                onDismiss = {
-                    showFinalDialog = false
-                    navController.navigate("darsDetails/$courseId/$lessonId") {
-                        popUpTo("$gameId/$courseId/$lessonId/$contentId?gameIndex=$gameIndex") { inclusive = true }
-                    }
-                }
+                    .padding(bottom = 24.dp)
             )
         }
     }
 }
+
 
 @Composable
 fun ClickableTextWordBox(word: String, isSelected: Boolean, onClick: () -> Unit) {

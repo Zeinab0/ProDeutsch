@@ -25,15 +25,146 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+//@Composable
+//fun TextPicPage(
+//    navController: NavController,
+//    courseId: String,
+//    lessonId: String,
+//    contentId: String,
+//    gameId: String,
+//    gameIndex: Int,
+//    viewModel: BaseGameViewModel,
+//) {
+//    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
+//
+//    val configuration = LocalConfiguration.current
+//    val screenWidth = configuration.screenWidthDp.dp
+//    val screenHeight = configuration.screenHeightDp.dp
+//
+//    val textPicData by grammarViewModel.textPicData.collectAsState()
+//    var selectedWords by remember { mutableStateOf(mutableListOf<String>()) }
+//    var correctCount by remember { mutableStateOf(0) }
+//    var wrongCount by remember { mutableStateOf(0) }
+//    var timeInSeconds by remember { mutableStateOf(0) }
+//    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
+//
+//    val scope = rememberCoroutineScope()
+//    var showResultBox by remember { mutableStateOf(false) }
+//    var showFinalDialog by remember { mutableStateOf(false) }
+//
+//    LaunchedEffect(Unit) {
+//        while (true) {
+//            delay(1000L)
+//            timeInSeconds++
+//        }
+//    }
+//
+//    LaunchedEffect(gameId) {
+//        grammarViewModel.loadTextPicGameFromGrammar(courseId, gameId)
+//    }
+//
+//    textPicData?.let { data ->
+//        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+//            StepProgressBar(currentStep = gameIndex)
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            Text(
+//                text = data.title,
+//                fontSize = 16.sp,
+//                fontWeight = FontWeight.Bold,
+//                fontFamily = iranSans
+//            )
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            data.words.chunked(2).forEach { row ->
+//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+//                    row.forEach { word ->
+//                        val isSelected = selectedWords.contains(word.word)
+//                        Box(
+//                            modifier = Modifier
+//                                .padding(8.dp)
+//                                .clickable(enabled = !showResultBox) {
+//                                    if (isSelected) selectedWords.remove(word.word)
+//                                    else selectedWords.add(word.word)
+//                                }
+//                                .background(
+//                                    color = if (isSelected) Color(0xFF7AB2B2) else Color.LightGray,
+//                                    shape = RoundedCornerShape(8.dp)
+//                                )
+//                                .padding(12.dp)
+//                        ) {
+//                            Text(word.word, fontFamily = iranSans)
+//                        }
+//                    }
+//                }
+//            }
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            if (!showResultBox) {
+//                Button(onClick = {
+//                    showResultBox = true
+//                    correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
+//                    wrongCount = selectedWords.count { word ->
+//                        data.words.find { it.word == word }?.isCorrect == false
+//                    }
+//                    grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
+//                }) {
+//                    Text("تأیید", fontFamily = iranSans)
+//                }
+//            }
+//
+//            if (showResultBox) {
+//                Spacer(modifier = Modifier.height(16.dp))
+//                Text("تعداد درست: $correctCount", fontFamily = iranSans)
+//                Text("تعداد غلط: $wrongCount", fontFamily = iranSans)
+//
+//                Spacer(modifier = Modifier.height(16.dp))
+//                Button(onClick = {
+//                    val nextGameId = "game_${gameIndex + 1}"
+//                    navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
+//                        popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
+//                    }
+//                }) {
+//                    Text("برو به مرحله بعد", fontFamily = iranSans)
+//                }
+//            }
+//        }
+//    } ?: run {
+//        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//            Text("در حال بارگذاری...", fontFamily = iranSans)
+//        }
+//    }
+//
+//    if (showFinalDialog) {
+//        ResultDialog(
+//            navController = navController,
+//            courseId = courseId,
+//            lessonId = lessonId,
+//            contentId = contentId,
+//            timeInSeconds = totalTimeInSeconds,
+//            onDismiss = {
+//                showFinalDialog = false
+//                navController.navigate("grammar_page")
+//            }
+//        )
+//    }
+//}
+
 
 @Composable
 fun TextPicPage(
@@ -43,43 +174,44 @@ fun TextPicPage(
     contentId: String,
     gameId: String,
     gameIndex: Int,
-    viewModel: GameViewModel = viewModel()
+    viewModel: BaseGameViewModel,
 ) {
+    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    val textPicData by viewModel.textPicData.collectAsState()
-    val selectedWords by viewModel.textPicSelectedWords.collectAsState()
-    val correctCount by viewModel.textPicCorrectCount.collectAsState()
-    val wrongCount by viewModel.textPicWrongCount.collectAsState()
-    val totalGames by viewModel.totalGames.collectAsState()
+    val textPicData by grammarViewModel.textPicData.collectAsState()
+    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
 
+    var selectedWords by remember { mutableStateOf(mutableListOf<String>()) }
+    var correctCount by remember { mutableStateOf(0) }
+    var wrongCount by remember { mutableStateOf(0) }
     var timeInSeconds by remember { mutableStateOf(0) }
+
+    var showResultBox by remember { mutableStateOf(false) }
+    var showFinalDialog by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(Unit) {
         while (true) {
             delay(1000L)
             timeInSeconds++
         }
     }
-
-    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
-    val totalTimeInSeconds by viewModel.totalTimeInSeconds.collectAsState()
-
-    var showResultBox by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
     LaunchedEffect(gameId) {
-        Log.d("TextPicPage", "Loading game with courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId")
-        viewModel.initializeGames(courseId, lessonId, contentId)
-        viewModel.loadTextPicGame(courseId, lessonId, contentId, gameId)
+        grammarViewModel.loadTextPicGameFromGrammar(courseId, gameId)
     }
+
 
     val imageSectionHeight = screenHeight * 0.36f
     val overlapHeight = 40.dp
     val resultBoxHeight = screenHeight * 0.14f
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Step Progress
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -112,12 +244,7 @@ fun TextPicPage(
                     .offset(y = whiteBoxTopOffset)
                     .height(whiteBoxDynamicHeight)
                     .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
-                    .shadow(
-                        elevation = 22.dp,
-                        shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
-                        ambientColor = Color.Black,
-                        spotColor = Color.Black
-                    )
+                    .shadow(22.dp, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
                     .background(Color.White)
                     .zIndex(2f)
                     .padding(horizontal = screenWidth * 0.07f)
@@ -149,6 +276,7 @@ fun TextPicPage(
                             ) {
                                 rowWords.forEach { word ->
                                     val isSelected = selectedWords.contains(word.word)
+
                                     val backgroundBrush = if (showResultBox) {
                                         if (word.isCorrect) {
                                             if (isSelected) Brush.radialGradient(
@@ -176,11 +304,13 @@ fun TextPicPage(
                                             radius = 150f
                                         )
                                     }
+
                                     val borderColor = if (showResultBox) {
                                         if (word.isCorrect && isSelected) Color(0xFF14CB00)
                                         else if (!word.isCorrect && isSelected) Color(0xFFD32F2F)
                                         else Color.Transparent
                                     } else Color.Transparent
+
                                     val borderWidth = if (showResultBox && isSelected) 3.dp else 0.dp
                                     val textColor = if (showResultBox && isSelected) Color.White else Color.Black
 
@@ -190,9 +320,14 @@ fun TextPicPage(
                                             .height(74.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(brush = backgroundBrush)
-                                            .then(if (borderWidth > 0.dp) Modifier.border(BorderStroke(borderWidth, borderColor), RoundedCornerShape(10.dp)) else Modifier)
+                                            .then(
+                                                if (borderWidth > 0.dp)
+                                                    Modifier.border(BorderStroke(borderWidth, borderColor), RoundedCornerShape(10.dp))
+                                                else Modifier
+                                            )
                                             .clickable(enabled = !showResultBox) {
-                                                viewModel.toggleTextPicWordSelection(word.word)
+                                                if (isSelected) selectedWords.remove(word.word)
+                                                else selectedWords.add(word.word)
                                             }
                                             .padding(4.dp),
                                         contentAlignment = Alignment.Center
@@ -210,26 +345,74 @@ fun TextPicPage(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(24.dp))
+
+            if (!showResultBox) {
+                Button(onClick = {
+                    showResultBox = true
+                    correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
+                    wrongCount = selectedWords.count { word ->
+                        data.words.find { it.word == word }?.isCorrect == false
+                    }
+                    grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
+                }) {
+                    Text("تأیید", fontFamily = iranSans)
                 }
             }
 
-            val buttonWidth = screenWidth * 0.22f
-            val buttonHeight = 42.dp
-            val paddingRight = 44.dp
-            val paddingBottom = 54.dp
-            val calculatedOffsetX = screenWidth - buttonWidth - paddingRight
-            val calculatedOffsetY = screenHeight - buttonHeight - paddingBottom
+
+                }
+            }
+//            Spacer(modifier = Modifier.weight(1f))
+
+//            if (!showResultBox) {
+//                val buttonWidth = screenWidth * 0.22f
+//                val buttonHeight = 42.dp
+//                val paddingRight = 44.dp
+//                val paddingBottom = 54.dp
+//                val calculatedOffsetX = screenWidth - buttonWidth - paddingRight
+//                val calculatedOffsetY = screenHeight - buttonHeight - paddingBottom
+//
+//                Button(
+//                    onClick = {
+//                        showResultBox = true
+//                        correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
+//                        wrongCount = selectedWords.count { word ->
+//                            data.words.find { it.word == word }?.isCorrect == false
+//                        }
+//                        grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
+//                    },
+//                    modifier = Modifier
+//                        .offset(x = calculatedOffsetX, y = calculatedOffsetY)
+//                        .width(buttonWidth)
+//                        .height(buttonHeight),
+//                    shape = RoundedCornerShape(10.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color(0xFF4D869C),
+//                        contentColor = Color.White
+//                    ),
+//                    enabled = selectedWords.isNotEmpty()
+//                ) {
+//                    Text("تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+//                }
+//            }
 
             if (!showResultBox) {
+                val buttonWidth = screenWidth * 0.22f
+                val buttonHeight = 42.dp
+                val paddingRight = 44.dp
+                val paddingBottom = 54.dp
+                val calculatedOffsetX = screenWidth - buttonWidth - paddingRight
+                val calculatedOffsetY = screenHeight - buttonHeight - paddingBottom
+
                 Button(
                     onClick = {
-                        viewModel.checkTextPicAnswers()
                         showResultBox = true
-                        viewModel.recordMemoryGameResult(
-                            correct = correctCount,
-                            wrong = wrongCount,
-                            timeInSeconds = timeInSeconds
-                        )
+                        correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
+                        wrongCount = selectedWords.count { word ->
+                            data.words.find { it.word == word }?.isCorrect == false
+                        }
+                        grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
                     },
                     modifier = Modifier
                         .offset(x = calculatedOffsetX, y = calculatedOffsetY)
@@ -246,7 +429,7 @@ fun TextPicPage(
                 }
             }
 
-            var showFinalDialog by remember { mutableStateOf(false) }
+
             if (showResultBox) {
                 Box(
                     modifier = Modifier
@@ -290,6 +473,7 @@ fun TextPicPage(
                                 InfoRow("تعداد اشتباه", wrongCount)
                             }
                         }
+
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
@@ -299,17 +483,22 @@ fun TextPicPage(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFF4D869C))
                                 .clickable {
-                                    val nextGameId = viewModel.getNextGameId(gameIndex + 1)
-                                    if (nextGameId != null) {
-                                        scope.launch {
-                                            navController.navigate("$nextGameId/$courseId/$lessonId/$contentId?gameIndex=${gameIndex + 1}") {
-                                                popUpTo("$gameId/$courseId/$lessonId/$contentId?gameIndex=$gameIndex") { inclusive = true }
-                                            }
-                                        }
-                                    } else {
+                                    val nextGameId = "game_${gameIndex + 1}"
+
+                                    // اگر به پایان رسیده:
+                                    if (nextGameId == "game_END") {
                                         showFinalDialog = true
+                                    } else {
+                                        navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
+                                            popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
+                                        }
                                     }
-                                    viewModel.resetTextPicGame()
+
+                                    // ریست برای مرحله بعدی
+                                    selectedWords.clear()
+                                    showResultBox = false
+                                    correctCount = 0
+                                    wrongCount = 0
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -336,6 +525,7 @@ fun TextPicPage(
                 }
             }
 
+
             if (showFinalDialog) {
                 ResultDialog(
                     navController = navController,
@@ -345,15 +535,13 @@ fun TextPicPage(
                     timeInSeconds = totalTimeInSeconds,
                     onDismiss = {
                         showFinalDialog = false
-                        navController.navigate("darsDetails/$courseId/$lessonId") {
-                            popUpTo("$gameId/$courseId/$lessonId/$contentId?gameIndex=$gameIndex") { inclusive = true }
-                        }
+                        navController.navigate("grammar_page")
                     }
                 )
             }
         } ?: run {
             Text(
-                text = "داده‌ها بارگذاری نشد. لطفاً اتصال را بررسی کنید.",
+                text = "داده‌ها بارگذاری نشد.",
                 color = Color.Red,
                 fontFamily = iranSans,
                 modifier = Modifier.align(Alignment.Center)

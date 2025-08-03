@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page
 
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammarGame
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,29 @@ class GrammarRepository {
                     val item = doc.toObject(GrammarTopic::class.java)
                     item?.copy(id = doc.id) // ← ذخیره آیدی برای استفاده بعدی
                 } ?: emptyList()
+
+                trySend(list)
+            }
+
+        awaitClose { listener.remove() }
+    }
+    fun getGamesForTopic(topicId: String): Flow<List<GrammarGame>> = callbackFlow {
+        val listener = FirebaseFirestore.getInstance()
+            .collection("grammar_topics")
+            .document(topicId)
+            .collection("games")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val list = snapshot?.documents?.mapNotNull { doc ->
+                    val id = doc.id
+                    val type = doc.getString("type") ?: return@mapNotNull null
+                    val order = doc.getLong("order")?.toInt() ?: 0
+                    GrammarGame(id, type, order)
+                }?.sortedBy { it.order } ?: emptyList()
 
                 trySend(list)
             }

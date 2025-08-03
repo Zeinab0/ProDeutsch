@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -216,7 +217,8 @@ fun GrammarPage(navController: NavController) {
                                 .background(Color(0xFF7AB2B2))
                                 .height(45.dp)
                                 .clickable {
-                                    navController.navigate("multipleChoice/${selectedTopic?.id}/0")
+                                    Log.d("Navigation", "Navigating to grammarGameHost/${selectedTopic?.id}/0")
+                                    navController.navigate("GameHost/${selectedTopic!!.id}/0")
                                     showDialog = false
                                 },
                             contentAlignment = Alignment.Center

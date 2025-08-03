@@ -2,6 +2,7 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.gram
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammarGame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,16 @@ class GrammarViewModel : ViewModel() {
         viewModelScope.launch {
             repo.getGrammarTopics().collect {
                 _topics.value = it
+            }
+        }
+    }
+    private val _games = MutableStateFlow<List<GrammarGame>>(emptyList())
+    val games: StateFlow<List<GrammarGame>> = _games
+
+    fun loadGamesForTopic(topicId: String) {
+        viewModelScope.launch {
+            repo.getGamesForTopic(topicId).collect {
+                _games.value = it
             }
         }
     }

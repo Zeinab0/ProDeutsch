@@ -38,6 +38,7 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.repository.saveGameResultToFirestore
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -46,22 +47,21 @@ fun MemoryGamePage(
     courseId: String,
     lessonId: String,
     contentId: String,
-    gameId: String = "memory_game_2",
+    gameId: String,
     gameIndex: Int,
-    viewModel: GameViewModel = viewModel()
+    viewModel: BaseGameViewModel
 ) {
+    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    val wordPairs by viewModel.wordPairs.collectAsState()
+    val wordPairs by grammarViewModel.memoryCardPairs.collectAsState()
     val displayGermanWords = remember { mutableStateListOf<String>() }
     var isDataLoaded by remember { mutableStateOf(false) }
-    val gameIds by viewModel.gameIds.collectAsState()
 
-    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
-
-    val totalTimeInSeconds by viewModel.totalTimeInSeconds.collectAsStateWithLifecycle()
+    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
 
     var timeInSeconds by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
@@ -70,26 +70,18 @@ fun MemoryGamePage(
             timeInSeconds++
         }
     }
-
     LaunchedEffect(gameId) {
-        if (gameIndex == 0) {
-            Log.d("MemoryGamePage", "Initializing games with courseId=$courseId, lessonId=$lessonId, contentId=$contentId")
-            viewModel.initializeGames(courseId, lessonId, contentId)
-        }
-
-        Log.d("MemoryGamePage", "Loading game with gameId=$gameId")
-        viewModel.loadMemoryGame(courseId, lessonId, contentId, gameId)
+        grammarViewModel.loadMemoryGameFromGrammar(courseId, gameId)
     }
+
 
     LaunchedEffect(wordPairs) {
         if (wordPairs.isNotEmpty()) {
             isDataLoaded = true
-            Log.d("MemoryGamePage", "Shuffling German words: ${wordPairs.map { it.germanWord }}")
             displayGermanWords.clear()
             displayGermanWords.addAll(wordPairs.map { it.germanWord }.shuffled())
         } else {
             isDataLoaded = false
-            Log.e("MemoryGamePage", "No word pairs loaded for gameId=$gameId")
         }
     }
 
@@ -124,19 +116,11 @@ fun MemoryGamePage(
         }
     }
 
-    val gameStarted = remember {
-        derivedStateOf {
-            correctPairs.isNotEmpty() || errorCountMap.isNotEmpty()
-        }
-    }
-
     val allUsedUp = remember {
         derivedStateOf {
             wordPairs.isNotEmpty() && usedFarsiWords.value.size == wordPairs.size
         }
     }
-
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(selectedLeft, selectedRight) {
         if (selectedLeft != null && selectedRight != null) {
@@ -171,14 +155,7 @@ fun MemoryGamePage(
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                StepProgressBar(currentStep = gameIndex)
-            }
+            StepProgressBar(currentStep = gameIndex)
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -267,34 +244,21 @@ fun MemoryGamePage(
                 if (allUsedUp.value) {
                     val correct = correctPairs.size
                     val wrong = errorCountMap.values.count { it >= 3 }
-                    if (userId != "unknown") {
-                        saveGameResultToFirestore(
-                            userId = userId,
-                            gameId = gameId,
-                            correct = correct,
-                            wrong = wrong
-                        )
-                    }
-                    viewModel.recordMemoryGameResult(correct, wrong, timeInSeconds)
 
-                    // لاگ برای دیباگ
-                    Log.d("MemoryGamePage", "Current gameIndex: $gameIndex, gameIds: $gameIds")
-                    val (nextGameRoute, nextGameId) = viewModel.getNextGameRouteAndId(gameIndex + 1)
-                    Log.d("MemoryGamePage", "Next game - Route: $nextGameRoute, ID: $nextGameId, Next Index: ${gameIndex + 1}")
+                    grammarViewModel.recordMemoryGameResult(correct, wrong, timeInSeconds)
 
-                    if (nextGameRoute != null && nextGameId != null) {
-                        scope.launch {
-                            try {
-                                navController.navigate("$nextGameRoute/$courseId/$lessonId/$contentId/$nextGameId?gameIndex=${gameIndex + 1}")
-                                Log.d("MemoryGamePage", "Navigated to $nextGameRoute with gameId=$nextGameId")
-                            } catch (e: Exception) {
-                                Log.e("NavigationError", "Failed to navigate to next game: ${e.message}")
-                            }
+                    val nextGameId = grammarViewModel.getNextGameId(gameIndex + 1)
+
+                    if (gameIndex + 1 < grammarViewModel.gameListSize()) {
+                        navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
+                            popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
                         }
                     } else {
-                        Log.d("MemoryGamePage", "No next game found, showing ResultDialog")
                         showFinalDialog = true
                     }
+
+
+
                     showError = false
                 } else {
                     showError = true
@@ -317,6 +281,7 @@ fun MemoryGamePage(
             Text("تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
         }
 
+
         if (showFinalDialog) {
             ResultDialog(
                 navController = navController,
@@ -326,18 +291,13 @@ fun MemoryGamePage(
                 timeInSeconds = totalTimeInSeconds,
                 onDismiss = {
                     showFinalDialog = false
-                    try {
-                        navController.navigate("darsDetails/$courseId/$lessonId") {
-                            popUpTo("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=$gameIndex") { inclusive = true }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("NavigationError", "Failed to navigate to darsDetails: ${e.message}")
-                    }
+                    navController.navigate("grammar_page")
                 }
             )
         }
     }
 }
+
 
 @Composable
 fun WordItemWithState(
