@@ -13,6 +13,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.BaseGameViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moarefiprod.data.SentenceGameViewModel
 
 @Composable
 fun GameHost(
@@ -88,6 +89,7 @@ fun GameHost(
                 contentId = "",
                 gameId = currentGame.id,
                 gameIndex = gameIndex,
+                totalGames = grammarGames.size, // ⬅️ اضافه شده
                 viewModel = viewModel
             )
         }
@@ -102,23 +104,28 @@ fun GameHost(
                 contentId = "",
                 gameId = currentGame.id,
                 gameIndex = gameIndex,
+                totalGames = grammarGames.size, // ⬅️ اضافه شده
                 viewModel = viewModel
             )
         }
 
         "SENTENCE" -> {
             Log.d("GameHost", "Launching SENTENCE: ${currentGame.id}")
-            grammarViewModelCasted.loadSentenceGameFromGrammar(topicId, currentGame.id)
+            val sentenceGameViewModel: SentenceGameViewModel = viewModel()
+
             SentenceBuilderPage(
                 navController = navController,
-                courseId = topicId,
+                courseId = topicId, // article
                 lessonId = "",
                 contentId = "",
-                gameId = currentGame.id,
+                gameId = currentGame.id, // sentensebuilder
                 gameIndex = gameIndex,
-                viewModel = viewModel
+                totalGames = grammarGames.size,
+                viewModel = sentenceGameViewModel
             )
         }
+
+
 
         "MULTIPLE_CHOICE" -> {
             Log.d("GameHost", "Launching MULTIPLE_CHOICE: ${currentGame.id}")

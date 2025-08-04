@@ -1,6 +1,5 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,20 +16,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDirection
 import com.example.moarefiprod.R
+import com.example.moarefiprod.data.SentenceGameViewModel
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -41,21 +37,22 @@ fun SentenceBuilderPage(
     contentId: String,
     gameId: String,
     gameIndex: Int,
-    viewModel: BaseGameViewModel
+    totalGames: Int,
+    viewModel: SentenceGameViewModel
 ) {
-    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-
-    val sentenceWords by grammarViewModel.sentenceWords.collectAsState()
-    val sentenceAnswer by grammarViewModel.sentenceAnswer.collectAsState()
-    val sentenceTitle by grammarViewModel.sentenceTitle.collectAsState()
+    val sentenceState by viewModel.sentenceData.collectAsState()
+    val correctSentence = sentenceState?.correctSentence?.joinToString(" ") ?: ""
     var selectedWords by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var timeInSeconds by remember { mutableStateOf(0) }
+
+
+    val sentenceViewModel = viewModel as? SentenceGameViewModel ?: return
 
 
     LaunchedEffect(Unit) {
@@ -64,93 +61,239 @@ fun SentenceBuilderPage(
             timeInSeconds++
         }
     }
+    LaunchedEffect(gameId) {
+        viewModel.loadSentenceGame(courseId, gameId)
+    }
 
-    val correctSentence = sentenceAnswer
-    val wordList = sentenceWords
+
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (wordList.isNotEmpty()) {
-            Column(
+        // Header
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(
+                onClick = {navController.popBackStack()},
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(
+                        start = screenWidth * 0.03f,
+                        top = screenHeight * 0.05f
+                    )
+                    .align(Alignment.TopStart)
             ) {
-                Spacer(modifier = Modifier.height(screenHeight * 0.1f))
-
-                StepProgressBar(currentStep = gameIndex)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = sentenceTitle,
-                    fontFamily = iranSans,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    fontSize = 16.sp,
-                    modifier = Modifier.align(Alignment.Start)
+                Icon(
+                    painter = painterResource(id = R.drawable.backbtn),
+                    contentDescription = "Back",
+                    tint = Color.Black,
+                    modifier = Modifier.size(screenWidth * 0.09f)
                 )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = screenHeight * 0.13f,
+                    start = 16.dp, end = 16.dp)
+                .align(Alignment.TopCenter)
+                .zIndex(3f),
+            contentAlignment = Alignment.Center
+        ) {
+            StepProgressBar(
+                currentStep = gameIndex,
+                totalSteps = totalGames
+            )
+        }
+        // Header
 
-                Spacer(modifier = Modifier.height(screenHeight * 0.1f))
 
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth()
+        when {
+            sentenceState == null -> {
+                Text(
+                    text = "در حال بارگذاری...",
+                    color = Color.Gray,
+                    fontFamily = iranSans,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            sentenceState?.wordPool.isNullOrEmpty() -> {
+                Text(
+                    text = "داده‌ای یافت نشد",
+                    color = Color.Red,
+                    fontFamily = iranSans,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            else -> {
+                val state = sentenceState!!
+                val wordList = state.wordPool
+                val correctSentence = state.correctSentence.joinToString(" ")
+                val question = state.question
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            horizontal = 30.dp,
+                        ),
                 ) {
-                    selectedWords.forEach { word ->
-                        ClickableTextWordBox(
-                            word = word,
-                            isSelected = true,
-                            onClick = {
-                                selectedWords = selectedWords.toMutableList().apply { remove(word) }
-                            }
+
+                    Spacer(modifier = Modifier.weight(1f))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ){
+                        Text(
+                            text = question,
+                            fontFamily = iranSans,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            fontSize = 16.sp,
+                            style = TextStyle(
+                                textDirection = TextDirection.Rtl
+                            ),
+                            textAlign = TextAlign.Center
+
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.chat),
+                            contentDescription = "chat",
+                            modifier = Modifier
+                                .size(36.dp)
+                                .padding(end = 12.dp)
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
 
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    wordList.forEach { word ->
-                        if (!selectedWords.contains(word)) {
-                            ClickableTextWordBox(
-                                word = word,
-                                isSelected = false,
-                                onClick = {
-                                    selectedWords = selectedWords.toMutableList().apply { add(word) }
+                    Spacer(modifier = Modifier.height(screenHeight * 0.05f))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(screenHeight * 0.07f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                DottedLine(
+                                    width = screenWidth * 0.8f,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    selectedWords.forEach { word ->
+                                        ClickableTextWordBox(
+                                            word = word,
+                                            isSelected = true,
+                                            onClick = {
+                                                selectedWords = selectedWords.toMutableList().apply {
+                                                    remove(word)
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
-                            )
+                            }
+
+                            Spacer(modifier = Modifier.height(screenHeight * 0.05f))
+
+                            DottedLine(width = screenWidth * 0.8f)
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                // اینجا فقط کلماتی که در selectedWords نیستن رو نشون می‌دیم
+                                sentenceState?.wordPool?.forEach { word ->
+                                    if (!selectedWords.contains(word)) {
+                                        ClickableTextWordBox(
+                                            word = word,
+                                            isSelected = false,
+                                            onClick = {
+                                                selectedWords = selectedWords.toMutableList().apply {
+                                                    add(word)
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-                Button(
-                    onClick = {
-                        val isCurrentCorrect = selectedWords.joinToString(" ") == correctSentence
-                        isCorrect = isCurrentCorrect
-                        showResultBox = true
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 32.dp)
-                ) {
-                    Text("تأیید", fontFamily = iranSans)
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        wordList.forEach { word ->
+                            if (!selectedWords.contains(word)) {
+                                ClickableTextWordBox(
+                                    word = word,
+                                    isSelected = false,
+                                    onClick = {
+                                        selectedWords =
+                                            selectedWords.toMutableList().apply { add(word) }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+
+                    if (!showResultBox) {
+                        Button(
+                            onClick = {
+                                val isCurrentSentenceCorrect =
+                                    selectedWords.joinToString(" ") == correctSentence
+                                isCorrect = isCurrentSentenceCorrect
+                                showResultBox = true
+                                if (isCurrentSentenceCorrect) {
+                                    viewModel.incrementCorrect(1)
+                                } else {
+                                    viewModel.incrementWrong(1)
+                                }
+                                viewModel.recordMemoryGameResult(
+                                    correct = if (isCurrentSentenceCorrect) 1 else 0,
+                                    wrong = if (!isCurrentSentenceCorrect) 1 else 0,
+                                    timeInSeconds = timeInSeconds
+                                )
+                            },
+                            modifier = Modifier
+                                .align(Alignment.End)
+                                .padding( bottom = screenHeight * 0.19f)
+                                .width(screenWidth * 0.20f)
+                                .height(40.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF4D869C),
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("تایید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+                        }
+
+                    }
                 }
             }
-        } else {
-            Text(
-                text = "داده‌ای یافت نشد",
-                color = Color.Red,
-                fontFamily = iranSans,
-                modifier = Modifier.align(Alignment.Center)
-            )
         }
 
         if (showResultBox) {
@@ -164,6 +307,8 @@ fun SentenceBuilderPage(
                 showTime = true,
                 correctSentence = correctSentence,
                 userSentence = userSentence,
+                gameIndex = gameIndex,
+                totalGames = totalGames,
                 onNext = {
                     selectedWords = mutableListOf()
                     showResultBox = false
@@ -174,7 +319,6 @@ fun SentenceBuilderPage(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp)
             )
         }
     }
@@ -235,42 +379,26 @@ fun Result(
     correctSentence: String? = null,
     userSentence: String? = null,
     onNext: () -> Unit,
+    gameIndex: Int,
+    totalGames: Int,
     modifier: Modifier = Modifier
 ) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val formattedTime = String.format("%02d:%02d", timeInSeconds / 60, timeInSeconds % 60)
     val allCorrect = wrong == 0
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(screenHeight * 0.14f)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4DA4A4), Color(0xFFBFEAE8))
-                ),
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-            )
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-    ) {
-        if (showTime) {
-            Text(
-                text = formattedTime,
-                fontFamily = iranSans,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 12.dp, top = 60.dp)
-            )
-        }
-
+            .height(screenHeight * 0.19f)
+            .padding(horizontal = 20.dp, vertical = 30.dp)
+            .background(color = Color(0xFF90CECE),RoundedCornerShape(25.dp))
+            .padding(horizontal = 15.dp, vertical = 5.dp)
+    ){
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = 8.dp),
-        ) {
+                .offset(y = 8.dp)
+        ){
             if (allCorrect) {
                 Text(
                     text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
@@ -332,17 +460,20 @@ fun Result(
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
+
+            val isLastGame = gameIndex + 1 == totalGames
 
             Box(
                 modifier = Modifier
-                    .width(98.dp)
-                    .height(34.dp)
+                    .fillMaxWidth()
+                    .wrapContentWidth(Alignment.End) // ⬅️ دکمه را راست‌چین می‌کند
+                    .offset(y = (-14).dp)
+                    .width(90.dp)
+                    .height(30.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFF4D869C))
-                    .clickable { onNext() }
-                    .align(Alignment.End),
+                    .clickable { onNext() },
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -350,20 +481,24 @@ fun Result(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "بریم بعدی",
+                        text = if (isLastGame) "تمام" else "بریم بعدی",
                         fontFamily = iranSans,
                         color = Color.White,
-                        fontSize = 14.sp
+                        fontSize = 12.sp
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.nextbtn),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
+
+                    if (!isLastGame) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.nextbtn),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
                 }
             }
+
         }
     }
 }

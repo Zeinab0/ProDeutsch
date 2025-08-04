@@ -1,6 +1,5 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,146 +24,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-
-//@Composable
-//fun TextPicPage(
-//    navController: NavController,
-//    courseId: String,
-//    lessonId: String,
-//    contentId: String,
-//    gameId: String,
-//    gameIndex: Int,
-//    viewModel: BaseGameViewModel,
-//) {
-//    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
-//
-//    val configuration = LocalConfiguration.current
-//    val screenWidth = configuration.screenWidthDp.dp
-//    val screenHeight = configuration.screenHeightDp.dp
-//
-//    val textPicData by grammarViewModel.textPicData.collectAsState()
-//    var selectedWords by remember { mutableStateOf(mutableListOf<String>()) }
-//    var correctCount by remember { mutableStateOf(0) }
-//    var wrongCount by remember { mutableStateOf(0) }
-//    var timeInSeconds by remember { mutableStateOf(0) }
-//    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
-//
-//    val scope = rememberCoroutineScope()
-//    var showResultBox by remember { mutableStateOf(false) }
-//    var showFinalDialog by remember { mutableStateOf(false) }
-//
-//    LaunchedEffect(Unit) {
-//        while (true) {
-//            delay(1000L)
-//            timeInSeconds++
-//        }
-//    }
-//
-//    LaunchedEffect(gameId) {
-//        grammarViewModel.loadTextPicGameFromGrammar(courseId, gameId)
-//    }
-//
-//    textPicData?.let { data ->
-//        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-//            StepProgressBar(currentStep = gameIndex)
-//            Spacer(modifier = Modifier.height(16.dp))
-//
-//            Text(
-//                text = data.title,
-//                fontSize = 16.sp,
-//                fontWeight = FontWeight.Bold,
-//                fontFamily = iranSans
-//            )
-//
-//            Spacer(modifier = Modifier.height(24.dp))
-//
-//            data.words.chunked(2).forEach { row ->
-//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-//                    row.forEach { word ->
-//                        val isSelected = selectedWords.contains(word.word)
-//                        Box(
-//                            modifier = Modifier
-//                                .padding(8.dp)
-//                                .clickable(enabled = !showResultBox) {
-//                                    if (isSelected) selectedWords.remove(word.word)
-//                                    else selectedWords.add(word.word)
-//                                }
-//                                .background(
-//                                    color = if (isSelected) Color(0xFF7AB2B2) else Color.LightGray,
-//                                    shape = RoundedCornerShape(8.dp)
-//                                )
-//                                .padding(12.dp)
-//                        ) {
-//                            Text(word.word, fontFamily = iranSans)
-//                        }
-//                    }
-//                }
-//            }
-//
-//            Spacer(modifier = Modifier.height(24.dp))
-//
-//            if (!showResultBox) {
-//                Button(onClick = {
-//                    showResultBox = true
-//                    correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
-//                    wrongCount = selectedWords.count { word ->
-//                        data.words.find { it.word == word }?.isCorrect == false
-//                    }
-//                    grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
-//                }) {
-//                    Text("تأیید", fontFamily = iranSans)
-//                }
-//            }
-//
-//            if (showResultBox) {
-//                Spacer(modifier = Modifier.height(16.dp))
-//                Text("تعداد درست: $correctCount", fontFamily = iranSans)
-//                Text("تعداد غلط: $wrongCount", fontFamily = iranSans)
-//
-//                Spacer(modifier = Modifier.height(16.dp))
-//                Button(onClick = {
-//                    val nextGameId = "game_${gameIndex + 1}"
-//                    navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
-//                        popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
-//                    }
-//                }) {
-//                    Text("برو به مرحله بعد", fontFamily = iranSans)
-//                }
-//            }
-//        }
-//    } ?: run {
-//        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//            Text("در حال بارگذاری...", fontFamily = iranSans)
-//        }
-//    }
-//
-//    if (showFinalDialog) {
-//        ResultDialog(
-//            navController = navController,
-//            courseId = courseId,
-//            lessonId = lessonId,
-//            contentId = contentId,
-//            timeInSeconds = totalTimeInSeconds,
-//            onDismiss = {
-//                showFinalDialog = false
-//                navController.navigate("grammar_page")
-//            }
-//        )
-//    }
-//}
-
 
 @Composable
 fun TextPicPage(
@@ -174,26 +40,25 @@ fun TextPicPage(
     contentId: String,
     gameId: String,
     gameIndex: Int,
+    totalGames: Int,
     viewModel: BaseGameViewModel,
 ) {
     val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
-
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-
     val textPicData by grammarViewModel.textPicData.collectAsState()
     val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
-
     var selectedWords by remember { mutableStateOf(mutableListOf<String>()) }
     var correctCount by remember { mutableStateOf(0) }
     var wrongCount by remember { mutableStateOf(0) }
     var timeInSeconds by remember { mutableStateOf(0) }
-
     var showResultBox by remember { mutableStateOf(false) }
     var showFinalDialog by remember { mutableStateOf(false) }
+    val imageSectionHeight = screenHeight * 0.36f
+    val overlapHeight = 40.dp
+    val resultBoxHeight = screenHeight * 0.19f
 
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -206,22 +71,44 @@ fun TextPicPage(
     }
 
 
-    val imageSectionHeight = screenHeight * 0.36f
-    val overlapHeight = 40.dp
-    val resultBoxHeight = screenHeight * 0.14f
-
     Box(modifier = Modifier.fillMaxSize()) {
-        // Step Progress
+        // Header
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(
+                onClick = {navController.popBackStack()},
+                modifier = Modifier
+                    .padding(
+                        start = screenWidth * 0.03f,
+                        top = screenHeight * 0.05f
+                    )
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.backbtn),
+                    contentDescription = "Back",
+                    tint = Color.Black,
+                    modifier = Modifier.size(screenWidth * 0.09f)
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = screenHeight * 0.08f)
+                .padding(top = screenHeight * 0.13f,
+                    start = 16.dp, end = 16.dp)
                 .align(Alignment.TopCenter)
                 .zIndex(3f),
             contentAlignment = Alignment.Center
         ) {
-            StepProgressBar(currentStep = gameIndex)
+            StepProgressBar(
+                currentStep = gameIndex,
+                totalSteps = totalGames
+            )
         }
+        // Header
+
 
         textPicData?.let { data ->
             Image(
@@ -259,16 +146,16 @@ fun TextPicPage(
                     textAlign = TextAlign.End,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 34.dp)
+                        .padding(end = 16.dp)
                 )
 
-                Spacer(modifier = Modifier.height(55.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.07f))
 
                 if (data.words.isNotEmpty()) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
+                    ){
                         data.words.chunked(4).forEach { rowWords ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -280,18 +167,30 @@ fun TextPicPage(
                                     val backgroundBrush = if (showResultBox) {
                                         if (word.isCorrect) {
                                             if (isSelected) Brush.radialGradient(
-                                                colors = listOf(Color(0xCC7ABDBB), Color(0xFFB0E1DF)),
+                                                colors = listOf(
+                                                    Color(0xCC7ABDBB),
+                                                    Color(0xFFB0E1DF)
+                                                ),
                                                 radius = 130f
                                             ) else Brush.radialGradient(
-                                                colors = listOf(Color(0x1ACDE8E5), Color(0xFF6ABBBB)),
+                                                colors = listOf(
+                                                    Color(0x1ACDE8E5),
+                                                    Color(0xFF6ABBBB)
+                                                ),
                                                 radius = 150f
                                             )
                                         } else {
                                             if (isSelected) Brush.radialGradient(
-                                                colors = listOf(Color(0xCC6ABBBB), Color(0xFFB0E1DF)),
+                                                colors = listOf(
+                                                    Color(0xCC6ABBBB),
+                                                    Color(0xFFB0E1DF)
+                                                ),
                                                 radius = 130f
                                             ) else Brush.radialGradient(
-                                                colors = listOf(Color(0x1ACDE8E5), Color(0xFF6ABBBB)),
+                                                colors = listOf(
+                                                    Color(0x1ACDE8E5),
+                                                    Color(0xFF6ABBBB)
+                                                ),
                                                 radius = 150f
                                             )
                                         }
@@ -311,8 +210,10 @@ fun TextPicPage(
                                         else Color.Transparent
                                     } else Color.Transparent
 
-                                    val borderWidth = if (showResultBox && isSelected) 3.dp else 0.dp
-                                    val textColor = if (showResultBox && isSelected) Color.White else Color.Black
+                                    val borderWidth =
+                                        if (showResultBox && isSelected) 3.dp else 0.dp
+                                    val textColor =
+                                        if (showResultBox && isSelected) Color.White else Color.Black
 
                                     Box(
                                         modifier = Modifier
@@ -322,7 +223,12 @@ fun TextPicPage(
                                             .background(brush = backgroundBrush)
                                             .then(
                                                 if (borderWidth > 0.dp)
-                                                    Modifier.border(BorderStroke(borderWidth, borderColor), RoundedCornerShape(10.dp))
+                                                    Modifier.border(
+                                                        BorderStroke(
+                                                            borderWidth,
+                                                            borderColor
+                                                        ), RoundedCornerShape(10.dp)
+                                                    )
                                                 else Modifier
                                             )
                                             .clickable(enabled = !showResultBox) {
@@ -345,117 +251,58 @@ fun TextPicPage(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
 
-            if (!showResultBox) {
-                Button(onClick = {
-                    showResultBox = true
-                    correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
-                    wrongCount = selectedWords.count { word ->
-                        data.words.find { it.word == word }?.isCorrect == false
+                }
+                Spacer(modifier = Modifier.weight(1f))
+
+                if (!showResultBox && !showFinalDialog) {
+                    Button(
+                        onClick = {
+                            showResultBox = true
+                        },
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(end = 10.dp, bottom = 110.dp)
+                            .width(screenWidth * 0.22f)
+                            .height(53.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4D869C),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(
+                            text = "تأیید",
+                            fontFamily = iranSans,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                    grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
-                }) {
-                    Text("تأیید", fontFamily = iranSans)
                 }
+
             }
 
 
-                }
-            }
-//            Spacer(modifier = Modifier.weight(1f))
-
-//            if (!showResultBox) {
-//                val buttonWidth = screenWidth * 0.22f
-//                val buttonHeight = 42.dp
-//                val paddingRight = 44.dp
-//                val paddingBottom = 54.dp
-//                val calculatedOffsetX = screenWidth - buttonWidth - paddingRight
-//                val calculatedOffsetY = screenHeight - buttonHeight - paddingBottom
-//
-//                Button(
-//                    onClick = {
-//                        showResultBox = true
-//                        correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
-//                        wrongCount = selectedWords.count { word ->
-//                            data.words.find { it.word == word }?.isCorrect == false
-//                        }
-//                        grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
-//                    },
-//                    modifier = Modifier
-//                        .offset(x = calculatedOffsetX, y = calculatedOffsetY)
-//                        .width(buttonWidth)
-//                        .height(buttonHeight),
-//                    shape = RoundedCornerShape(10.dp),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Color(0xFF4D869C),
-//                        contentColor = Color.White
-//                    ),
-//                    enabled = selectedWords.isNotEmpty()
-//                ) {
-//                    Text("تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
-//                }
-//            }
-
-            if (!showResultBox) {
-                val buttonWidth = screenWidth * 0.22f
-                val buttonHeight = 42.dp
-                val paddingRight = 44.dp
-                val paddingBottom = 54.dp
-                val calculatedOffsetX = screenWidth - buttonWidth - paddingRight
-                val calculatedOffsetY = screenHeight - buttonHeight - paddingBottom
-
-                Button(
-                    onClick = {
-                        showResultBox = true
-                        correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
-                        wrongCount = selectedWords.count { word ->
-                            data.words.find { it.word == word }?.isCorrect == false
-                        }
-                        grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
-                    },
-                    modifier = Modifier
-                        .offset(x = calculatedOffsetX, y = calculatedOffsetY)
-                        .width(buttonWidth)
-                        .height(buttonHeight),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4D869C),
-                        contentColor = Color.White
-                    ),
-                    enabled = selectedWords.isNotEmpty()
-                ) {
-                    Text("تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
-                }
-            }
 
 
             if (showResultBox) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(resultBoxHeight)
+                        .background(color = Color(0xFFFFFFFF))
                         .align(Alignment.BottomCenter)
-                        .zIndex(1f)
-                ) {
+                ){
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(resultBoxHeight)
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFF4DA4A4), Color(0xFFBFEAE8))
-                                ),
-                                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-                            )
-                            .padding(horizontal = 22.dp, vertical = 15.dp)
+                            .height(screenHeight * 0.19f)
+                            .padding(horizontal = 20.dp, vertical = 30.dp)
+                            .background(color = Color(0xFF90CECE),RoundedCornerShape(25.dp))
+                            .padding(horizontal = 15.dp, vertical = 5.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight(0.7f),
-                            horizontalAlignment = Alignment.End,
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                .offset(y = 8.dp)
                         ) {
                             if (wrongCount == 0 && correctCount > 0) {
                                 Text(
@@ -539,6 +386,10 @@ fun TextPicPage(
                     }
                 )
             }
+
+
+
+
         } ?: run {
             Text(
                 text = "داده‌ها بارگذاری نشد.",

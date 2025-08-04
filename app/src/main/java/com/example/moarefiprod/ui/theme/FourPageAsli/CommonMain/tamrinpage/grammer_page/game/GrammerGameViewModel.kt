@@ -116,8 +116,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
         resetTextPicGame()
         viewModelScope.launch {
             try {
-//                Log.d("GameViewModel", "Trying to load $gameId")
-
                 val doc = withContext(Dispatchers.IO) {
                     db.collection("grammar_topics")
                         .document(topicId)

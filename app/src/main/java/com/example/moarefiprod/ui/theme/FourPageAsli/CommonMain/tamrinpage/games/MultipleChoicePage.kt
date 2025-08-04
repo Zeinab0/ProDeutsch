@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.zIndex
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
@@ -67,44 +68,64 @@ fun MultipleChoicePage(
         grammarViewModel.loadMultipleChoiceGame(topicId, gameId, gameIndex)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        IconButton(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier
-                .padding(start = screenWidth * 0.03f, top = screenHeight * 0.04f)
-                .align(Alignment.TopStart)
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Header
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.backbtn),
-                contentDescription = "Back",
-                tint = Color.Black,
-                modifier = Modifier.size(screenWidth * 0.09f)
+            IconButton(
+                onClick = {navController.popBackStack()},
+                modifier = Modifier
+                    .padding(
+                        start = screenWidth * 0.03f,
+                        top = screenHeight * 0.05f
+                    )
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.backbtn),
+                    contentDescription = "Back",
+                    tint = Color.Black,
+                    modifier = Modifier.size(screenWidth * 0.09f)
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = screenHeight * 0.13f,
+                    start = 16.dp, end = 16.dp)
+                .align(Alignment.TopCenter)
+                .zIndex(3f),
+            contentAlignment = Alignment.Center
+        ) {
+            StepProgressBar(
+                currentStep = gameIndex,
+                totalSteps = totalGames
             )
         }
+        // Header
+
 
         mcqData?.let { data ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(
+                        top = screenHeight * 0.1f,
+                        start = 40.dp,
+                        end = 40.dp,
+//                        bottom = 46.dp
+                    ),
+//                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(screenHeight * 0.086f))
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    StepProgressBar(currentStep = gameIndex)
-                }
-
-                Spacer(modifier = Modifier.height(80.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.14f))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -113,16 +134,16 @@ fun MultipleChoicePage(
                         tint = Color.Unspecified,
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(screenHeight * 0.01f))
                     Text(
                         text = data.questionText,
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                Spacer(modifier = Modifier.height(70.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.1f))
 
                 data.options.forEachIndexed { index, option ->
                     val backgroundColor = when {
@@ -150,12 +171,6 @@ fun MultipleChoicePage(
                         )
                     }
                 }
-
-                Text(
-                    text = "سوال ${gameIndex + 1} از $totalQuestions",
-                    fontSize = 12.sp,
-                    fontFamily = iranSans
-                )
 
                 Spacer(modifier = Modifier.weight(1f))
             }
@@ -201,31 +216,35 @@ fun MultipleChoicePage(
 
         }
 
-        Button(
-            onClick = {
-                if (selectedIndex != null && !showResultBox) {
-                    val isCorrect = mcqData?.correctAnswerIndex == selectedIndex
-                    grammarViewModel.recordAnswer(isCorrect)
-                    showResultBox = true
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 30.dp, bottom = 180.dp)
-                .width(screenWidth * 0.20f)
-                .height(40.dp),
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF4D869C),
-                contentColor = Color.White
-            )
-        ) {
-            Text(
-                text = "تأیید",
-                fontFamily = iranSans,
-                fontWeight = FontWeight.Bold
-            )
+        if (!showResultBox && !showFinalResultDialog) {
+            Button(
+                onClick = {
+                    if (selectedIndex != null) {
+                        val isCorrect = mcqData?.correctAnswerIndex == selectedIndex
+                        grammarViewModel.recordAnswer(isCorrect)
+                        showResultBox = true
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 30.dp, bottom = 180.dp)
+                    .width(screenWidth * 0.20f)
+                    .height(40.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4D869C),
+                    contentColor = Color.White
+                )
+            ) {
+                Text(
+                    text = "تأیید",
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
+
+
     }
 
     if (showFinalResultDialog) {
@@ -352,14 +371,10 @@ fun ChoiceResultBox(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(screenHeight * 0.14f)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4D869C), Color(0xFFCDE8E5))
-                ),
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-            )
-            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .height(screenHeight * 0.19f)
+            .padding(horizontal = 20.dp, vertical = 30.dp)
+            .background(color = Color(0xFF90CECE),RoundedCornerShape(25.dp))
+            .padding(horizontal = 15.dp, vertical = 5.dp)
     ) {
         Column(
             modifier = Modifier

@@ -13,7 +13,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,7 +35,6 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.MyCoursesScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseDetailPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.details.DarsDetails
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.ReviewPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordProgressPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
@@ -62,15 +60,8 @@ import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.updateWordStatusInFirestore
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MemoryGamePage
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MultipleChoicePage
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceBuilderPage
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.TextPicPage
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GameHost
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GameMeta
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammarGame
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
@@ -96,27 +87,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-//            val dummyWords = remember {
-//                mutableStateListOf(
-//                    Word("سیب", "Apfel", WordStatus.CORRECT),
-//                    Word("زود", "Früh", WordStatus.WRONG),
-//                    Word("سلام", "Hallo", WordStatus.IDK),
-//                    Word("خداحافظ", "Tschüss", WordStatus.NEW),
-//                    Word("زینب", "Apfel", WordStatus.CORRECT),
-//                    Word("لپتاپ", "Früh", WordStatus.CORRECT),
-//                    Word("تپه", "Hallo", WordStatus.CORRECT),
-//                    Word("خدا", "Tschüss", WordStatus.NEW),
-//                )
-//            }
+
 
             val viewModel: CourseViewModel = viewModel()
             val userViewModel: UserProfileViewModel = viewModel()
-            val gameViewModel: GameViewModel = viewModel()
             LaunchedEffect(Unit) {
                 viewModel.loadAllCourses()
             }
 
-            val allCourses by viewModel.allCourses.collectAsState()
 
             NavHost(navController = navController, startDestination = "firstLogo") {
                 composable("firstLogo") {
@@ -340,9 +318,6 @@ class MainActivity : ComponentActivity() {
                 // بخش مربوط به داستان
 
 
-//                composable("my_flashcards") {
-//                    MyFlashCardScreen(navController = navController, words = dummyWords)
-//                }
                 composable("word_progress_page") {
                     WordProgressPage(navController = navController)
                 }
@@ -518,26 +493,27 @@ class MainActivity : ComponentActivity() {
 
                     Log.d("MemoryGameNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
 
-                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
-                        MemoryGamePage(
-                            navController = navController,
-                            courseId = courseId,
-                            lessonId = lessonId,
-                            contentId = contentId,
-                            gameId = gameId,
-                            gameIndex = gameIndex, // پاس دادن gameIndex
-                            viewModel = viewModel()
-                        )
-                    } else {
-                        Text(
-                            "خطا: شناسه های لازم برای بازی یافت نشد.",
-                            color = Color.Red,
-                            fontFamily = iranSans
-                        )
-                        LaunchedEffect(Unit) {
-                            navController.popBackStack()
-                        }
-                    }
+//                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
+//                        MemoryGamePage(
+//                            navController = navController,
+//                            courseId = courseId,
+//                            lessonId = lessonId,
+//                            contentId = contentId,
+//                            gameId = gameId,
+//                            gameIndex = gameIndex,
+//                            totalGames = grammarGames.size, // ⬅️ اینو اضافه کن
+//                            viewModel = viewModel()
+//                        )
+//                    } else {
+//                        Text(
+//                            "خطا: شناسه های لازم برای بازی یافت نشد.",
+//                            color = Color.Red,
+//                            fontFamily = iranSans
+//                        )
+//                        LaunchedEffect(Unit) {
+//                            navController.popBackStack()
+//                        }
+//                    }
                 }
                 //بازی های مربوط به گرامر
 
@@ -551,8 +527,6 @@ class MainActivity : ComponentActivity() {
                         gameIndex = gameIndex
                     )
                 }
-
-
                 //بازی های مربوط به گرامر
 
 

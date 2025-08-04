@@ -1,6 +1,5 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -20,26 +20,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import com.example.moarefiprod.iranSans
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moarefiprod.R
-import com.example.moarefiprod.repository.saveGameResultToFirestore
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MemoryGamePage(
@@ -49,19 +43,23 @@ fun MemoryGamePage(
     contentId: String,
     gameId: String,
     gameIndex: Int,
+    totalGames: Int,
     viewModel: BaseGameViewModel
 ) {
     val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
-
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-
     val wordPairs by grammarViewModel.memoryCardPairs.collectAsState()
     val displayGermanWords = remember { mutableStateListOf<String>() }
     var isDataLoaded by remember { mutableStateOf(false) }
-
     val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
+    var selectedLeft by remember { mutableStateOf<String?>(null) }
+    var selectedRight by remember { mutableStateOf<String?>(null) }
+    val correctPairs = remember { mutableStateListOf<Pair<String, String>>() }
+    val errorCountMap = remember { mutableStateMapOf<String, Int>() }
+    var showError by remember { mutableStateOf(false) }
+    var showFinalDialog by remember { mutableStateOf(false) }
 
     var timeInSeconds by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
@@ -73,8 +71,6 @@ fun MemoryGamePage(
     LaunchedEffect(gameId) {
         grammarViewModel.loadMemoryGameFromGrammar(courseId, gameId)
     }
-
-
     LaunchedEffect(wordPairs) {
         if (wordPairs.isNotEmpty()) {
             isDataLoaded = true
@@ -84,20 +80,12 @@ fun MemoryGamePage(
             isDataLoaded = false
         }
     }
-
     if (!isDataLoaded) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("در حال بارگذاری...", fontFamily = iranSans)
         }
         return
     }
-
-    var selectedLeft by remember { mutableStateOf<String?>(null) }
-    var selectedRight by remember { mutableStateOf<String?>(null) }
-
-    val correctPairs = remember { mutableStateListOf<Pair<String, String>>() }
-    val errorCountMap = remember { mutableStateMapOf<String, Int>() }
-
     val usedFarsiWords = remember {
         derivedStateOf {
             val correct = correctPairs.map { it.first }.toSet()
@@ -105,7 +93,6 @@ fun MemoryGamePage(
             (correct + wrong).toSet()
         }
     }
-
     val wrongGermanWords = remember {
         derivedStateOf {
             val farsiWordsWrong = errorCountMap.filter { it.value >= 3 }.keys
@@ -115,13 +102,11 @@ fun MemoryGamePage(
                 .toSet()
         }
     }
-
     val allUsedUp = remember {
         derivedStateOf {
             wordPairs.isNotEmpty() && usedFarsiWords.value.size == wordPairs.size
         }
     }
-
     LaunchedEffect(selectedLeft, selectedRight) {
         if (selectedLeft != null && selectedRight != null) {
             val isCorrect = wordPairs.any {
@@ -140,24 +125,57 @@ fun MemoryGamePage(
         }
     }
 
-    var showError by remember { mutableStateOf(false) }
-    var showFinalDialog by remember { mutableStateOf(false) }
+
+
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Header
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(
+                onClick = {navController.popBackStack()},
+                modifier = Modifier
+                    .padding(
+                        start = screenWidth * 0.03f,
+                        top = screenHeight * 0.05f
+                    )
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.backbtn),
+                    contentDescription = "Back",
+                    tint = Color.Black,
+                    modifier = Modifier.size(screenWidth * 0.09f)
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    top = screenHeight * 0.13f,
+                    start = 16.dp, end = 16.dp
+                )
+                .align(Alignment.TopCenter)
+                .zIndex(3f),
+            contentAlignment = Alignment.Center
+        ) {
+            StepProgressBar(
+                currentStep = gameIndex,
+                totalSteps = totalGames
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
                     top = screenHeight * 0.1f,
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp
+                    start = 40.dp,
+                    end = 40.dp,
                 ),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            StepProgressBar(currentStep = gameIndex)
-
-            Spacer(modifier = Modifier.height(30.dp))
+        ){
+            Spacer(modifier = Modifier.height(screenHeight * 0.14f))
 
             Text(
                 text = "...بزن بریم\n):باید کلمات رو به معنیشون وصل کنیم ",
@@ -172,7 +190,7 @@ fun MemoryGamePage(
                     .padding(end = 10.dp)
             )
 
-            Spacer(modifier = Modifier.height(38.dp))
+            Spacer(modifier = Modifier.height(screenHeight * 0.05f))
 
             Row(
                 modifier = Modifier.fillMaxSize(),
@@ -238,7 +256,6 @@ fun MemoryGamePage(
                 )
             }
         }
-
         Button(
             onClick = {
                 if (allUsedUp.value) {
@@ -246,8 +263,6 @@ fun MemoryGamePage(
                     val wrong = errorCountMap.values.count { it >= 3 }
 
                     grammarViewModel.recordMemoryGameResult(correct, wrong, timeInSeconds)
-
-                    val nextGameId = grammarViewModel.getNextGameId(gameIndex + 1)
 
                     if (gameIndex + 1 < grammarViewModel.gameListSize()) {
                         navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
@@ -257,21 +272,16 @@ fun MemoryGamePage(
                         showFinalDialog = true
                     }
 
-
-
                     showError = false
                 } else {
                     showError = true
                 }
             },
             modifier = Modifier
-                .offset(
-                    x = screenWidth - (screenWidth * 0.20f) - 30.dp,
-                    y = screenHeight * 0.2f
-                )
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 66.dp, end = 36.dp)
                 .width(screenWidth * 0.20f)
-                .height(40.dp)
-                .zIndex(1f),
+                .height(40.dp),
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF4D869C),
@@ -280,7 +290,6 @@ fun MemoryGamePage(
         ) {
             Text("تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
         }
-
 
         if (showFinalDialog) {
             ResultDialog(
@@ -341,109 +350,5 @@ fun WordItemWithState(
             color = textColor,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-@Composable
-fun Match(
-    correct: Int = 0,
-    wrong: Int = 0,
-    timeInSeconds: Int = 0,
-    showStats: Boolean = true,
-    showTime: Boolean = true,
-    onNext: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val formattedTime = String.format("%02d:%02d", timeInSeconds / 60, timeInSeconds % 60)
-    val allCorrect = wrong == 0
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(screenHeight * 0.14f)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4DA4A4), Color(0xFFBFEAE8))
-                ),
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-            )
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-    ) {
-        if (showTime) {
-            Text(
-                text = formattedTime,
-                fontFamily = iranSans,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 12.dp, top = 60.dp)
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = 8.dp),
-        ) {
-            if (allCorrect) {
-                Text(
-                    text = "عالیییییی\n ^_^ همه جفتا رو پیدا کردی",
-                    fontFamily = iranSans,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    textAlign = TextAlign.Right,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.End)
-                )
-            } else {
-                if (showStats) {
-                    Text(
-                        text = "تعداد درست: $correct    تعداد اشتباه: $wrong",
-                        fontFamily = iranSans,
-                        color = Color.Black,
-                        textAlign = TextAlign.Right,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .width(98.dp)
-                    .height(34.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF4D869C))
-                    .clickable { onNext() }
-                    .align(Alignment.End),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "بریم بعدی",
-                        fontFamily = iranSans,
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.backbtn),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
     }
 }
