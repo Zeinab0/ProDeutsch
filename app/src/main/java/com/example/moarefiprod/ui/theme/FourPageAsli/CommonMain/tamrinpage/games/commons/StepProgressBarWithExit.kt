@@ -85,19 +85,6 @@ fun StepProgressBarWithExit(
             }
         }
 
-//        // دکمه برگشت (بالا)
-//        IconButton(
-//            onClick = { showExitDialog = true },
-//            modifier = Modifier
-//                .align(Alignment.TopStart)
-//        ) {
-//            Icon(
-//                painter = painterResource(id = R.drawable.backbtn),
-//                contentDescription = "Back",
-//                tint = Color.Black,
-//                modifier = Modifier.size(screenWidth * 0.09f)
-//            )
-//        }
         // دکمه برگشت
         IconButton(
             onClick = { onRequestExit() }, // 👈 فقط تریگر کن

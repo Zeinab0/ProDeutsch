@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -244,7 +244,7 @@ fun ConnectWordsPage() {
                 .padding(top = screenHeight * 0.1f, bottom = 100.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            StepProgressBar(currentStep = 3, totalSteps = 6)
+//            StepProgressBarWithExit(currentStep = 3, totalSteps = 6)
             Spacer(modifier = Modifier.height(60.dp))
 
             Text(

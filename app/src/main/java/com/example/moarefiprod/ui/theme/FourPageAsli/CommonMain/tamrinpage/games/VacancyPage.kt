@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.Brush
@@ -68,9 +68,9 @@ fun VacancyPage(
         }
 
         // 📝 StepProgressBar
-        StepProgressBar(currentStep = 3, totalSteps = 6, modifier = Modifier
-            .align(Alignment.TopCenter)
-            .padding(top = screenHeight * 0.1f))
+//        StepProgressBar(currentStep = 3, totalSteps = 6, modifier = Modifier
+//            .align(Alignment.TopCenter)
+//            .padding(top = screenHeight * 0.1f))
 
         // 📝 Row حاوی آیکون مداد و جمله
         // این Row در بالای صفحه ثابت می‌ماند

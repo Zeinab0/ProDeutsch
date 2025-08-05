@@ -503,7 +503,64 @@ class GrammerGameViewModel : BaseGameViewModel() {
         }
     }
 
+    // بازی questionStoryGame
+    private val _questionStoryGameState = MutableStateFlow<QuestionStoryData?>(null)
+    val questionStoryGameState: StateFlow<QuestionStoryData?> = _questionStoryGameState
+
+    fun loadQuestionStoryGame(
+        pathType: GamePathType,
+        courseId: String,
+        lessonId: String,
+        contentId: String,
+        gameId: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val collectionRef = getGameCollectionReference(pathType, courseId, lessonId, contentId)
+                if (collectionRef == null) {
+                    Log.e("GameViewModel", "❌ Invalid Firestore path.")
+                    _questionStoryGameState.value = null
+                    return@launch
+                }
+
+                val docSnapshot = collectionRef.document(gameId).get().await()
+                if (!docSnapshot.exists()) {
+                    Log.e("GameViewModel", "❌ Document not found for ID: $gameId")
+                    _questionStoryGameState.value = null
+                    return@launch
+                }
+
+                val questionText = docSnapshot.getString("questionText") ?: ""
+                val correctAnswer = docSnapshot.getString("correctAnswer") ?: ""
+                val translation = docSnapshot.getString("translation") ?: ""
+
+                _questionStoryGameState.value = QuestionStoryData(
+                    questionText = questionText,
+                    correctAnswer = correctAnswer,
+                    translation = translation
+                )
+
+
+                Log.d("GameViewModel", "✅ Loaded QuestionStoryGame: $questionText")
+
+            } catch (e: Exception) {
+                Log.e("GameViewModel", "❌ Error loading QuestionStoryGame: ${e.message}")
+                _questionStoryGameState.value = null
+            }
+        }
+    }
+
+
+    // بازی questionStoryGame
+
 }
+data class QuestionStoryData(
+    val questionText: String,
+    val correctAnswer: String,
+    val translation: String // ✅ این خط اضافه شود
+)
+
+
 
 data class MemoryCardPair(val farsiWord: String, val germanWord: String)
 
@@ -517,7 +574,10 @@ data class GameModel(
     val wordPool: List<String> = emptyList(),
     val pairs: List<Map<String, String>> = emptyList(),
     val imageUrl: String? = null,
-    val words: List<Map<String, Any>> = emptyList()
+    val words: List<Map<String, Any>> = emptyList(),
+    val correctAnswer: String = "",
+    val questionText: String = "",
+    val translation: String = "",
 )
 
 
