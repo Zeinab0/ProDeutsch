@@ -1,10 +1,12 @@
 package com.example.moarefiprod.data.models
 
 import android.os.Parcelable
+import androidx.annotation.Keep
 import kotlinx.parcelize.Parcelize
 import com.google.firebase.firestore.PropertyName
 import java.util.Date
 
+@Keep
 @Parcelize
 data class Course(
     val id: String = "",
@@ -15,12 +17,16 @@ data class Course(
     val teadad: Int = 0,
     val price: Int = 0,
     val imageUrl: String = "",
-    @PropertyName("isNew") val isNew: Boolean = false,
-    @PropertyName("isFree") val isFree: Boolean = false,
+    val isNew: Boolean = false,
+    val isFree: Boolean = false,
+    val isInProgress: Boolean = false,
+    val isCompleted: Boolean = false,
+    val isUnlocked: Boolean = false,
     val publishedAt: Date = Date(),
     val isPurchased: Boolean = false,
     val lessons: List<CourseLesson> = emptyList()
 ) : Parcelable
+
 
 @Parcelize
 data class CourseLesson(

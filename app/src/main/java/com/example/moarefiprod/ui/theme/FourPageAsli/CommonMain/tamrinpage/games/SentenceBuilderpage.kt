@@ -23,9 +23,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import com.example.moarefiprod.R
-import com.example.moarefiprod.data.SentenceGameViewModel
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -38,21 +38,20 @@ fun SentenceBuilderPage(
     gameId: String,
     gameIndex: Int,
     totalGames: Int,
-    viewModel: SentenceGameViewModel
+    viewModel: BaseGameViewModel
 ) {
+    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
+    val sentenceState by grammarViewModel.sentenceData.collectAsState()
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    val sentenceState by viewModel.sentenceData.collectAsState()
     val correctSentence = sentenceState?.correctSentence?.joinToString(" ") ?: ""
     var selectedWords by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var timeInSeconds by remember { mutableStateOf(0) }
 
-
-    val sentenceViewModel = viewModel as? SentenceGameViewModel ?: return
 
 
     LaunchedEffect(Unit) {
@@ -62,8 +61,21 @@ fun SentenceBuilderPage(
         }
     }
     LaunchedEffect(gameId) {
-        viewModel.loadSentenceGame(courseId, gameId)
+        val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+            GrammerGameViewModel.GamePathType.COURSE
+        } else {
+            GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
+        }
+
+        grammarViewModel.loadSentenceGame(
+            pathType = pathType,
+            courseId = courseId,
+            lessonId = lessonId,
+            contentId = contentId,
+            gameId = gameId
+        )
     }
+
 
 
 
@@ -313,9 +325,10 @@ fun SentenceBuilderPage(
                     selectedWords = mutableListOf()
                     showResultBox = false
                     isCorrect = null
-                    navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
-                        popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
+                    navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
+                        popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                     }
+
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

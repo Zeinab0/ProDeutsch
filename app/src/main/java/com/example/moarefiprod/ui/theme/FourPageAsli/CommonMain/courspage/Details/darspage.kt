@@ -30,8 +30,10 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,7 +44,11 @@ import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseItemType
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
 
 @Composable
 fun DarsDetails(
@@ -57,31 +63,22 @@ fun DarsDetails(
     val isLoading by courseViewModel.isLoading.collectAsState()
     val errorMessage by courseViewModel.errorMessage.collectAsState()
 
-    val gameViewModel: GameViewModel = viewModel()
+    val gameViewModel: GrammerGameViewModel = viewModel()
 
     val currentLesson = remember(lessons, lessonId) {
         lessons.find { it.id == lessonId }
     }
 
     LaunchedEffect(courseId, lessonId, lessonItems) {
-        // فقط لود داده‌ها، بدون فراخوانی زودهنگام initializeGames
         courseViewModel.loadSelectedCourseDetailsAndLessons(courseId)
         courseViewModel.loadLessonItems(courseId, lessonId)
-        Log.d("DarsDetails", "lessonItems loaded: $lessonItems")
 
-        // فقط وقتی lessonItems غیرخالیه و QUIZ_SET داره، initializeGames رو فراخوانی کن
-        if (lessonItems.isNotEmpty()) {
-            val quizContentId = lessonItems.firstOrNull { it.type == CourseItemType.QUIZ_SET }?.id
-            if (quizContentId != null) {
-                Log.d("DarsDetails", "Initializing games with contentId: $quizContentId")
-                gameViewModel.initializeGames(courseId, lessonId, quizContentId)
-            } else {
-                Log.e("DarsDetails", "No QUIZ_SET found in lessonItems: $lessonItems")
-            }
-        } else {
-            Log.d("DarsDetails", "Waiting for lessonItems to load...")
-        }
+        lessonItems.firstOrNull { it.type == CourseItemType.QUIZ_SET }?.let { quizItem ->
+            Log.d("DarsDetails", "Initializing games with contentId: ${quizItem.id}")
+            gameViewModel.initializeGames(courseId, lessonId, quizItem.id)
+        } ?: Log.e("DarsDetails", "❌ No QUIZ_SET item found to load games.")
     }
+
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -225,73 +222,39 @@ fun LessonItemRowUI(
     navController: NavController,
     courseId: String,
     lessonId: String,
-    gameViewModel: GameViewModel = viewModel()
+    gameViewModel: GrammerGameViewModel = viewModel()
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardShape = RoundedCornerShape(16.dp)
-
-    // لود اولیه gameIds
-    LaunchedEffect(courseId, lessonId, item.id) {
-        gameViewModel.initializeGames(courseId, lessonId, item.id)
-        Log.d("LessonItemRowUI", "Initialized games for contentId: ${item.id}, gameIds: ${gameViewModel.gameIds.value}")
-    }
-
-    // مدیریت ایندکس فعلی بازی
+    val contentId = item.id
     var currentGameIndex by remember { mutableStateOf(0) }
+    val gameViewModel: GrammerGameViewModel = viewModel() // یا hiltViewModel() اگر از Hilt استفاده می‌کنی
+
+    val gameIds by gameViewModel.gameIds.collectAsState()
+    val isClickable = item.type == CourseItemType.QUIZ_SET && gameIds.isNotEmpty()
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                when (item.type) {
-                    CourseItemType.QUIZ_SET -> {
-                        val contentId = item.id
-                        val gameId = gameViewModel.getNextGameId(currentGameIndex)
-                        if (contentId.isNotEmpty() && gameId != null) {
-                            when (gameId) {
-                                "memory_game_2" -> {
-                                    navController.navigate("memoryGame/$courseId/$lessonId/$contentId/$gameId?gameIndex=$currentGameIndex") {
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                                "sentence_builder_1" -> {
-                                    navController.navigate("sentenceBuilder/$courseId/$lessonId/$contentId/$gameId?gameIndex=$currentGameIndex") {
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                                "text_pic_3" -> {
-                                    navController.navigate("textPic/$courseId/$lessonId/$contentId/$gameId?gameIndex=$currentGameIndex") {
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                                else -> {
-                                    Log.w("LessonItemRowUI", "Unknown gameId: $gameId")
-                                }
-                            }
-                            // افزایش ایندکس برای بازی بعدی
-                            currentGameIndex++
-                        } else {
-                            Log.e("LessonItemRowUI", "Invalid contentId or gameId: contentId='$contentId', gameId=$gameId")
-                            if (gameId == null) {
-                                currentGameIndex = 0 // ریست ایندکس اگه به آخر لیست رسیدیم
-                            }
-                        }
+            .clickable(enabled = isClickable) {
+                if (isClickable) {
+                    val game = gameViewModel.getGameAt(currentGameIndex)
+
+                    if (game != null) {
+                        navController.navigate("GameHost/$courseId/$lessonId/${item.id}/$currentGameIndex")
+                        currentGameIndex++
+                    } else {
+                        Log.e("LessonItemRowUI", "❌ No more games or game not found at index $currentGameIndex")
+                        currentGameIndex = 0
                     }
-                    else -> {
-                        // برای نوع‌های دیگه فعلاً کاری نمی‌کنیم
-                    }
+                } else {
+                    Log.d("LessonItemRowUI", "⏳ Waiting for games to load...")
                 }
             }
-            .shadow(
-                elevation = 6.dp,
-                shape = cardShape,
-                clip = true
-            )
+            .shadow(6.dp, cardShape, clip = true)
             .clip(cardShape)
-    ) {
+    )
+    {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -325,9 +288,7 @@ fun LessonItemRowUI(
                         fontFamily = iranSans,
                         color = Color.Gray,
                         textAlign = TextAlign.End,
-                        style = androidx.compose.ui.text.TextStyle(
-                            textDirection = androidx.compose.ui.text.style.TextDirection.Rtl
-                        ),
+                        style = TextStyle(textDirection = TextDirection.Rtl),
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -337,9 +298,11 @@ fun LessonItemRowUI(
                 val iconRes = when (item.type) {
                     CourseItemType.VIDEO -> R.drawable.video
                     CourseItemType.DOCUMENT -> R.drawable.document
-                    CourseItemType.QUIZ1, CourseItemType.QUIZ2, CourseItemType.QUIZ3, CourseItemType.FINAL_EXAM, CourseItemType.QUIZ_SET -> R.drawable.exam
+                    CourseItemType.QUIZ1, CourseItemType.QUIZ2, CourseItemType.QUIZ3,
+                    CourseItemType.FINAL_EXAM, CourseItemType.QUIZ_SET -> R.drawable.exam
                     CourseItemType.WORDS -> R.drawable.words
                 }
+
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,

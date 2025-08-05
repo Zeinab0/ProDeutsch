@@ -49,6 +49,7 @@ class CourseViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+
     init {
         loadAllCourses()
         loadFreeCourses()
@@ -153,11 +154,13 @@ class CourseViewModel(
                     .await()
                 val items = itemDocs.map { doc ->
                     doc.toObject(CourseItem::class.java).copy(
-                        id = doc.id, // ست کردن id داکیومنت
-                        // اگه توی دیتابیس فیلد gameId داری، اینو فعال کن
-                        // gameId = doc.getString("gameId") // ست کردن gameId اگه وجود داره
+                        id = doc.id,
+                        gameId = doc.getString("gameId"),
+                        lessonId = lessonId,
+                        courseId = courseId
                     )
                 }
+
                 _selectedLessonItems.value = items // به‌روزرسانی StateFlow
                 Log.d("CourseViewModel", "Contents loaded for lesson $lessonId: $items")
             } catch (e: Exception) {

@@ -33,10 +33,12 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.gramm
 @Composable
 fun MultipleChoicePage(
     navController: NavController,
-    topicId: String,
+    courseId: String,
+    lessonId: String = "",
+    contentId: String = "",
     gameId: String,
     gameIndex: Int,
-    totalGames: Int, // ⬅️ جدید
+    totalGames: Int,
     viewModel: GrammerGameViewModel
 ){
     val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
@@ -53,21 +55,37 @@ fun MultipleChoicePage(
     var showResultBox by remember { mutableStateOf(false) }
     var showFinalResultDialog by remember { mutableStateOf(false) }
 
+    val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+        GrammerGameViewModel.GamePathType.COURSE
+    } else {
+        GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
+    }
 
     LaunchedEffect(gameIndex) {
-        grammarViewModel.initializeTotalQuestions(topicId)
+        viewModel.initializeTotalQuestions(
+            pathType = pathType,
+            courseId = courseId,
+            lessonId = lessonId,
+            contentId = contentId
+        )
 
-        while (grammarViewModel.totalQuestions.value == 0) {
+        while (viewModel.totalQuestions.value == 0) {
             delay(100)
         }
 
         if (gameIndex == 0) {
-            grammarViewModel.resetScores()
+            viewModel.resetScores()
         }
 
-        grammarViewModel.loadMultipleChoiceGame(topicId, gameId, gameIndex)
+        viewModel.loadMultipleChoiceGame(
+            pathType = pathType,
+            courseId = courseId,
+            lessonId = lessonId,
+            contentId = contentId,
+            gameId = gameId,
+            index = gameIndex
+        )
     }
-
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -186,13 +204,13 @@ fun MultipleChoicePage(
                         index != data.correctAnswerIndex &&
                         index in data.options.indices
                     ) {
-                        data.questionText .replace("________", data.options[index])
+                        data.questionText.replace("________", data.options[index])
                     } else {
                         ""
                     },
                     translation = data.translation,
                     gameIndex = gameIndex,
-                    totalGames = totalGames, // ⬅️ اینو اضافه کن
+                    totalGames = totalGames,
                     onNext = {
                         Log.d(
                             "MultipleChoicePage",
@@ -202,7 +220,7 @@ fun MultipleChoicePage(
                         showResultBox = false
 
                         if (gameIndex + 1 < totalGames) {
-                            navController.navigate("GameHost/$topicId/${gameIndex + 1}")
+                            navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}")
                         } else {
                             showFinalResultDialog = true
                         }
@@ -213,6 +231,7 @@ fun MultipleChoicePage(
                         .padding(bottom = 0.dp)
                 )
             }
+
 
         }
 
@@ -248,6 +267,12 @@ fun MultipleChoicePage(
     }
 
     if (showFinalResultDialog) {
+        val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+            "lesson_detail/$courseId/$lessonId" // ✅ مسیر اصلاح‌شده
+        } else {
+            "grammar_page"
+        }
+
         Log.d(
             "MultipleChoicePage",
             "Displaying final result dialog. Total questions: $totalQuestions, Correct: $correctCount, Wrong: $wrongCount"
@@ -296,6 +321,7 @@ fun MultipleChoicePage(
                             .fillMaxWidth()
                             .wrapContentWidth(Alignment.End)
                     )
+
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
@@ -327,15 +353,15 @@ fun MultipleChoicePage(
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
-                            .evenShadow(radius = 25f, cornerRadius = 20f) // ظاهر درست از نسخه اول
+                            .evenShadow(radius = 25f, cornerRadius = 20f)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color(0xFF7AB2B2))
                             .height(45.dp)
                             .fillMaxWidth(0.4f)
                             .clickable {
-                                Log.d("MultipleChoicePage", "Final dialog confirmed. Navigating to grammar_page")
+                                Log.d("MultipleChoicePage", "Final dialog confirmed. Navigating to $returnRoute")
                                 showFinalResultDialog = false
-                                navController.navigate("grammar_page")
+                                navController.navigate(returnRoute)
                             },
                         contentAlignment = Alignment.Center
                     ) {

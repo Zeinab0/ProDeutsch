@@ -492,41 +492,48 @@ class MainActivity : ComponentActivity() {
                     val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // دریافت gameIndex
 
                     Log.d("MemoryGameNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
-
-//                    if (courseId != null && lessonId != null && contentId != null && gameId != null) {
-//                        MemoryGamePage(
-//                            navController = navController,
-//                            courseId = courseId,
-//                            lessonId = lessonId,
-//                            contentId = contentId,
-//                            gameId = gameId,
-//                            gameIndex = gameIndex,
-//                            totalGames = grammarGames.size, // ⬅️ اینو اضافه کن
-//                            viewModel = viewModel()
-//                        )
-//                    } else {
-//                        Text(
-//                            "خطا: شناسه های لازم برای بازی یافت نشد.",
-//                            color = Color.Red,
-//                            fontFamily = iranSans
-//                        )
-//                        LaunchedEffect(Unit) {
-//                            navController.popBackStack()
-//                        }
-//                    }
                 }
                 //بازی های مربوط به گرامر
 
-                composable("GameHost/{topicId}/{gameIndex}") { backStackEntry ->
-                    val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
-                    val gameIndex = backStackEntry.arguments?.getString("gameIndex")?.toInt() ?: 0
+                composable(
+                    route = "GameHost/{courseId}/{lessonId}/{contentId}/{gameIndex}",
+                    arguments = listOf(
+                        navArgument("courseId") { type = NavType.StringType },
+                        navArgument("lessonId") { type = NavType.StringType },
+                        navArgument("contentId") { type = NavType.StringType },
+                        navArgument("gameIndex") { type = NavType.IntType }
+                    )
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+                    val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
+                    val contentId = backStackEntry.arguments?.getString("contentId") ?: ""
+                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0
 
                     GameHost(
                         navController = navController,
-                        topicId = topicId,
+                        courseId = courseId,
+                        lessonId = lessonId,
+                        contentId = contentId,
                         gameIndex = gameIndex
                     )
                 }
+                composable(
+                    route = "GameHostGrammar/{courseId}/{gameId}",
+                    arguments = listOf(
+                        navArgument("courseId") { type = NavType.StringType },
+                        navArgument("gameId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+                    val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
+
+//                    GameHostGrammar(
+//                        courseId = courseId,
+//                        gameId = gameId
+//                    )
+                }
+
+
                 //بازی های مربوط به گرامر
 
 

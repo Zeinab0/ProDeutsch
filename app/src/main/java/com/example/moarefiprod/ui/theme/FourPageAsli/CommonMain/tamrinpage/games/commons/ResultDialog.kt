@@ -26,7 +26,8 @@ fun ResultDialog(
     courseId: String,
     lessonId: String,
     contentId: String,
-    timeInSeconds: Int, // پارامتر جدید اضافه شد
+    timeInSeconds: Int,
+    returnRoute: String, // ✅ مسیر داینامیک برای بازگشت
     onDismiss: () -> Unit
 ) {
     val formattedTime = String.format("%02d:%02d", timeInSeconds / 60, timeInSeconds % 60)
@@ -69,7 +70,7 @@ fun ResultDialog(
                             .background(Color.White)
                             .height(45.dp)
                             .clickable {
-                                navController.navigate("darsDetails/$courseId/$lessonId") // برمی‌گرده به صفحه DarsDetails
+                                navController.navigate(returnRoute) // ✅ بازگشت به مسیر داده‌شده
                                 onDismiss()
                             },
                         contentAlignment = Alignment.Center
@@ -86,7 +87,7 @@ fun ResultDialog(
                             .background(Color(0xFF7AB2B2))
                             .height(45.dp)
                             .clickable {
-                                navController.navigate("memoryGame/$courseId/$lessonId/$contentId/memory_game_2?gameIndex=0") // می‌ره به اولین سوال ازمون
+                                navController.navigate("memoryGame/$courseId/$lessonId/$contentId/memory_game_2?gameIndex=0")
                                 onDismiss()
                             },
                         contentAlignment = Alignment.Center

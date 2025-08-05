@@ -38,6 +38,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.gramm
 @Composable
 fun MemoryGamePage(
     navController: NavController,
+    pathType: GrammerGameViewModel.GamePathType, // ⬅️ اضافه کن
     courseId: String,
     lessonId: String,
     contentId: String,
@@ -69,8 +70,15 @@ fun MemoryGamePage(
         }
     }
     LaunchedEffect(gameId) {
-        grammarViewModel.loadMemoryGameFromGrammar(courseId, gameId)
+        grammarViewModel.loadMemoryGame(
+            pathType = pathType, // یا GRAMMAR_TOPIC بسته به مسیر
+            courseId = courseId,
+            lessonId = lessonId,
+            contentId = contentId,
+            gameId = gameId
+        )
     }
+
     LaunchedEffect(wordPairs) {
         if (wordPairs.isNotEmpty()) {
             isDataLoaded = true
@@ -265,8 +273,8 @@ fun MemoryGamePage(
                     grammarViewModel.recordMemoryGameResult(correct, wrong, timeInSeconds)
 
                     if (gameIndex + 1 < grammarViewModel.gameListSize()) {
-                        navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
-                            popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
+                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
+                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                         }
                     } else {
                         showFinalDialog = true
@@ -292,18 +300,30 @@ fun MemoryGamePage(
         }
 
         if (showFinalDialog) {
+            val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "lesson_detail/$courseId/$lessonId" // ✅ مسیر درست
+            } else {
+                "grammar_page"
+            }
+
             ResultDialog(
                 navController = navController,
                 courseId = courseId,
                 lessonId = lessonId,
                 contentId = contentId,
                 timeInSeconds = totalTimeInSeconds,
+                returnRoute = returnRoute,
                 onDismiss = {
                     showFinalDialog = false
-                    navController.navigate("grammar_page")
+                    navController.navigate(returnRoute)
                 }
             )
         }
+
+
+
+
+
     }
 }
 

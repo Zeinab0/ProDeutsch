@@ -37,6 +37,8 @@ fun GrammarPage(navController: NavController) {
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedTopic by remember { mutableStateOf<GrammarTopic?>(null) }
+    val topicViewModel: GrammarViewModel = viewModel()
+    val topics by topicViewModel.topics.collectAsState()
 
     Column(
         modifier = Modifier
@@ -217,14 +219,15 @@ fun GrammarPage(navController: NavController) {
                                 .background(Color(0xFF7AB2B2))
                                 .height(45.dp)
                                 .clickable {
-                                    Log.d("Navigation", "Navigating to grammarGameHost/${selectedTopic?.id}/0")
-                                    navController.navigate("GameHost/${selectedTopic!!.id}/0")
+                                    Log.d("Navigation", "Navigating to GameHost/${selectedTopic!!.id}///0")
+                                    navController.navigate("GameHost/${selectedTopic!!.id}///0")
                                     showDialog = false
                                 },
                             contentAlignment = Alignment.Center
                         ) {
                             Text("شروع", color = Color.White, fontFamily = iranSans)
                         }
+
                     }
                 }
             }

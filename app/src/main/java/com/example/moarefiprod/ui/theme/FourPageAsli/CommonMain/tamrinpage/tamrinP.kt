@@ -26,38 +26,38 @@ import java.util.Date
 fun courspage(onShowDialog: () -> Unit, navController: NavController) {
     var showDialog by remember { mutableStateOf(false) }
 
-    val allCourses = listOf(
-        Course(
-            "A1 آموزش آلمانی سطح", // id (پیش‌فرض "")
-            "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", // title
-            "", // description
-            "بدون پیش‌نیاز", // sath
-            "۱۰ ساعت و ۳۰ دقیقه", // zaman
-            12, // teadad
-            120, // price
-            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
-            true, // isNew
-            false, // isFree
-            Date(), // publishedAt
-            false, // isPurchased
-            emptyList() // lessons
-        ),
-        Course(
-            "A2 آموزش آلمانی سطح", // id (پیش‌فرض "")
-            "ادامه مسیر یادگیری آلمانی با نکات بیشتر", // title
-            "", // description
-            "نیازمند A1", // sath
-            "۹ ساعت", // zaman
-            10, // teadad
-            0, // price
-            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
-            true, // isNew
-            true, // isFree
-            Date(), // publishedAt
-            false, // isPurchased
-            emptyList() // lessons
-        )
-    )
+//    val allCourses = listOf(
+//        Course(
+//            "A1 آموزش آلمانی سطح", // id (پیش‌فرض "")
+//            "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", // title
+//            "", // description
+//            "بدون پیش‌نیاز", // sath
+//            "۱۰ ساعت و ۳۰ دقیقه", // zaman
+//            12, // teadad
+//            120, // price
+//            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
+//            true, // isNew
+//            false, // isFree
+//            Date(), // publishedAt
+//            false, // isPurchased
+//            emptyList() // lessons
+//        ),
+//        Course(
+//            "A2 آموزش آلمانی سطح", // id (پیش‌فرض "")
+//            "ادامه مسیر یادگیری آلمانی با نکات بیشتر", // title
+//            "", // description
+//            "نیازمند A1", // sath
+//            "۹ ساعت", // zaman
+//            10, // teadad
+//            0, // price
+//            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
+//            true, // isNew
+//            true, // isFree
+//            Date(), // publishedAt
+//            false, // isPurchased
+//            emptyList() // lessons
+//        )
+//    )
 
     val allCards = listOf(
         Cards("a1_2", "A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", 1, "۱۲ جلسه", "cours1"),
@@ -65,7 +65,7 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController) {
         Cards("b1", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 1, "۱۴ جلسه", "cours1"),
         )
 
-    val newCourses = allCourses.filter { it.isNew }
+//    val newCourses = allCourses.filter { it.isNew }
     val newCards = allCards.filter { it.isNew }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -102,14 +102,14 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController) {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(newCourses) { course ->
-                    Box {
-                        CourseCard(course = course, navController = navController)
-                        if (course.isNew) {
-                            NewLabel()
-                        }
-                    }
-                }
+//                items(newCourses) { course ->
+//                    Box {
+//                        CourseCard(course = course, navController = navController)
+//                        if (course.isNew) {
+//                            NewLabel()
+//                        }
+//                    }
+//                }
 
                 items(newCards) { card ->
                     Box {

@@ -66,9 +66,22 @@ fun TextPicPage(
             timeInSeconds++
         }
     }
-    LaunchedEffect(gameId) {
-        grammarViewModel.loadTextPicGameFromGrammar(courseId, gameId)
+    val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+        GrammerGameViewModel.GamePathType.COURSE
+    } else {
+        GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
     }
+
+    LaunchedEffect(gameId) {
+        grammarViewModel.loadTextPicGame(
+            pathType = pathType,       // تشخیص مسیر که در GameHost ساخته بودیم
+            courseId = courseId,
+            lessonId = lessonId,
+            contentId = contentId,
+            gameId = gameId
+        )
+    }
+
 
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -336,9 +349,10 @@ fun TextPicPage(
                                     if (nextGameId == "game_END") {
                                         showFinalDialog = true
                                     } else {
-                                        navController.navigate("GameHost/$courseId/${gameIndex + 1}") {
-                                            popUpTo("GameHost/$courseId/$gameIndex") { inclusive = true }
+                                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
+                                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                                         }
+
                                     }
 
                                     // ریست برای مرحله بعدی
@@ -374,18 +388,29 @@ fun TextPicPage(
 
 
             if (showFinalDialog) {
+                val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                    "lesson_detail/$courseId/$lessonId" // ✅ مسیر درست
+                } else {
+                    "grammar_page"
+                }
+
                 ResultDialog(
                     navController = navController,
                     courseId = courseId,
                     lessonId = lessonId,
                     contentId = contentId,
                     timeInSeconds = totalTimeInSeconds,
+                    returnRoute = returnRoute,
                     onDismiss = {
                         showFinalDialog = false
-                        navController.navigate("grammar_page")
+                        navController.navigate(returnRoute)
                     }
                 )
             }
+
+
+
+
 
 
 

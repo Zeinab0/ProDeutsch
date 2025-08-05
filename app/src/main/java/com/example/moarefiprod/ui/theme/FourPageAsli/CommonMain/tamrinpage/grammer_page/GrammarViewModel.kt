@@ -1,17 +1,11 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.BaseGameViewModel
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.SentenceState
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammarGame
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class GrammarViewModel : ViewModel() {
     private val repo = GrammarRepository()
@@ -36,10 +30,4 @@ class GrammarViewModel : ViewModel() {
             }
         }
     }
-
-//    // برای آینده: گرفتن بازی‌ها برای یک مبحث خاص
-//    fun getGames(topicId: String): Flow<List<GrammarGame>> {
-//        return repo.getGamesForTopic(topicId)
-//    }
-
 }
