@@ -26,7 +26,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
@@ -34,7 +33,7 @@ import com.example.moarefiprod.ui.SignUpScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.HomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.MyCoursesScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseDetailPage
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.details.DarsDetails
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars.DarsDetails
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.ReviewPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.WordProgressPage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.allcartlist.WordListPage
@@ -60,7 +59,6 @@ import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.updateWordStatusInFirestore
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.MemoryGamePage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GameHost
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen

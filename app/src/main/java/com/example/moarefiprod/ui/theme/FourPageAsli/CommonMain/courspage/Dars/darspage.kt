@@ -1,4 +1,4 @@
-package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.details
+package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -45,8 +45,6 @@ import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseItemType
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 //import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
 
