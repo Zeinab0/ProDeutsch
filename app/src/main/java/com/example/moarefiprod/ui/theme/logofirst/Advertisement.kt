@@ -1,5 +1,7 @@
 package com.example.moarefiprod.ui.theme.logofirst
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,26 +14,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 
 @Composable
-fun Advertisement(onNext: () -> Unit, onSkip: () -> Unit) {
-    // ✅ گرفتن اندازه صفحه برای مقیاس‌بندی بهتر
+fun Advertisement(
+    onNext: () -> Unit,
+    onSkip: () -> Unit,
+    currentPage: Int,
+    onPageChange: (Int) -> Unit
+) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+
+    // انیمیشن برای جابه‌جایی مستطیل آبی
+    val indicatorOffset = animateFloatAsState(
+        targetValue = if (currentPage == 0) {
+            screenWidth.value * 0.1f // زیر دایره دوم، مثل صفحه دوم
+        } else {
+            0f
+        },
+        animationSpec = tween(durationMillis = 300)
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFFFFFF))
     ) {
-        // ✅ دکمه "رد شدن" در گوشه بالا سمت راست
         Text(
             text = "رد شدن",
             fontSize = (screenWidth * 0.04f).value.sp,
@@ -44,14 +61,12 @@ fun Advertisement(onNext: () -> Unit, onSkip: () -> Unit) {
                 .clickable { onSkip() }
         )
 
-        // ✅ ستون وسط صفحه که شامل تصویر و متن‌ها است
         Column(
             modifier = Modifier
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.Center, // ✅ وسط‌چین کردن عمودی محتوا
-            horizontalAlignment = Alignment.CenterHorizontally // ✅ وسط‌چین کردن افقی محتوا
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ✅ تصویر تبلیغاتی
             Image(
                 painter = painterResource(id = R.drawable.ad1),
                 contentDescription = "advertisement",
@@ -62,9 +77,8 @@ fun Advertisement(onNext: () -> Unit, onSkip: () -> Unit) {
 
             Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-            // ✅ متن عنوان
             Text(
-                text = "یادگیری با بازی و سرگرمی",
+                text = "دوره\u200Cهای آموزشی با آزمون",
                 fontSize = (screenWidth * 0.06f).value.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = iranSans,
@@ -74,51 +88,61 @@ fun Advertisement(onNext: () -> Unit, onSkip: () -> Unit) {
 
             Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
-            // ✅ متن توضیحاتی
             Text(
-                text = "یادگیری آلمانی دیگر خسته‌کننده نیست! با بازی‌های آموزشی و تمرین‌های تعاملی، مفاهیم را به‌راحتی به خاطر بسپارید و از یادگیری لذت ببرید!",
+                text = "این دوره\u200Cها طوری طراحی شدن که بدونی کجا هستی و داری به کجا می\u200Cری. بعد از هر بخش یه آزمون کوچیک هست که کمک می\u200Cکنه مطمئن شی چیزی از قلم نیفتاده.",
                 fontSize = (screenWidth * 0.04f).value.sp,
                 fontWeight = FontWeight.Light,
                 fontFamily = iranSans,
                 textAlign = TextAlign.Center,
                 color = Color(0xFF000000),
+                style = TextStyle(textDirection = TextDirection.Rtl),
                 modifier = Modifier.width(screenWidth * 0.9f)
             )
 
             Spacer(modifier = Modifier.height(screenHeight * 0.05f))
 
-            // ✅ نشانگر صفحات تبلیغاتی (ریسپانسیو)
-            Row(
-                modifier = Modifier.width(screenWidth * 0.3f),
-                horizontalArrangement = Arrangement.Center
+            Box(
+                modifier = Modifier
+                    .width(screenWidth * 0.3f)
+                    .height(screenHeight * 0.010f)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.twocircle),
-                    contentDescription = "indicator",
-                    modifier = Modifier.size(screenWidth * 0.066f, screenHeight * 0.014f)
-                )
-                Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-
-                Image(
-                    painter = painterResource(id = R.drawable.circle),
-                    contentDescription = "indicator",
-                    modifier = Modifier.size(screenWidth * 0.03f)
-                )
-                Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-
-                Image(
-                    painter = painterResource(id = R.drawable.circle),
-                    contentDescription = "indicator",
-                    modifier = Modifier.size(screenWidth * 0.03f)
+                Row(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.circle),
+                        contentDescription = "indicator",
+                        modifier = Modifier.size(screenWidth * 0.10f)
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.circle),
+                        contentDescription = "indicator",
+                        modifier = Modifier.size(screenWidth * 0.06f)
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.circle),
+                        contentDescription = "indicator",
+                        modifier = Modifier.size(screenWidth * 0.06f)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .offset(x = (indicatorOffset.value - (screenWidth.value * 0.033f)).dp) // جابجایی برای مرکز دایره
+                        .size(screenWidth * 0.066f, screenHeight * 0.010f)
+                        .background(Color(0xFF4D869C), RoundedCornerShape(50))
                 )
             }
         }
 
-        // ✅ دکمه "بعدی" ریسپانسیو که از `Column` جدا شده و پایین صفحه قرار گرفته است
         Button(
-            onClick = { onNext() },
+            onClick = {
+                onNext()
+                onPageChange(1)
+            },
             modifier = Modifier
-                .align(Alignment.BottomCenter) // ✅ دکمه را در پایین صفحه قرار می‌دهد
+                .align(Alignment.BottomCenter)
                 .padding(bottom = screenHeight * 0.09f)
                 .width(screenWidth * 0.7f)
                 .height(screenHeight * 0.07f),
@@ -130,7 +154,7 @@ fun Advertisement(onNext: () -> Unit, onSkip: () -> Unit) {
                 color = Color.White,
                 fontSize = (screenWidth * 0.05f).value.sp,
                 fontFamily = iranSans,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Bold
             )
         }
     }

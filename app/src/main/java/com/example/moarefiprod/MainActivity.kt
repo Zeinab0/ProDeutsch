@@ -69,6 +69,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryReadingScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryScreen
+import com.example.moarefiprod.ui.theme.logofirst.OnboardingViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -91,6 +92,11 @@ class MainActivity : ComponentActivity() {
 
             val viewModel: CourseViewModel = viewModel()
             val userViewModel: UserProfileViewModel = viewModel()
+            val onboardingViewModel: OnboardingViewModel = viewModel()
+            LaunchedEffect(Unit) {
+                viewModel.loadAllCourses()
+            }
+
             LaunchedEffect(Unit) {
                 viewModel.loadAllCourses()
             }
@@ -111,19 +117,25 @@ class MainActivity : ComponentActivity() {
                 composable("advertisement1") {
                     Advertisement(
                         onNext = { navController.navigate("advertisement2") },
-                        onSkip = { navController.navigate("login") }
+                        onSkip = { navController.navigate("login") },
+                        currentPage = onboardingViewModel.currentPage, // پاس دادن currentPage
+                        onPageChange = { onboardingViewModel.currentPage = it } // برای به‌روزرسانی
                     )
                 }
                 composable("advertisement2") {
                     Advertisement2(
                         onNext = { navController.navigate("advertisement3") },
-                        onSkip = { navController.navigate("login") }
+                        onSkip = { navController.navigate("login") },
+                        currentPage = onboardingViewModel.currentPage,
+                        onPageChange = { onboardingViewModel.currentPage = it }
                     )
                 }
                 composable("advertisement3") {
                     Advertisement3(
                         onNext = { navController.navigate("login") },
-                        onSkip = { navController.navigate("login") }
+                        onSkip = { navController.navigate("login") },
+                        currentPage = onboardingViewModel.currentPage,
+                        onPageChange = { onboardingViewModel.currentPage = it }
                     )
                 }
                 composable("login") {
