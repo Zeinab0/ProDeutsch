@@ -51,11 +51,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
             return
         }
 
-        if (gameId.isBlank()) {
-            Log.e("GameViewModel", "❌ gameId is blank, cannot load document.")
-            return
-        }
-
         resetMemoryGame()
 
         viewModelScope.launch {
@@ -156,6 +151,11 @@ class GrammerGameViewModel : BaseGameViewModel() {
         lessonId: String = "",
         contentId: String = ""
     ) {
+        if (gameId.isBlank()) {
+            Log.e("GameViewModel", "❌ gameId is blank.")
+            return
+        }
+
         if (loadedTextPicGames.contains(gameId)) {
             Log.d("GameViewModel", "Already loaded $gameId, skipping.")
             return
@@ -215,8 +215,14 @@ class GrammerGameViewModel : BaseGameViewModel() {
         lessonId: String = "",
         contentId: String = ""
     ) {
+        if (gameId.isBlank()) {
+            Log.e("GameViewModel", "❌ gameId is blank.")
+            return
+        }
+
         viewModelScope.launch {
             try {
+
                 // دریافت مسیر امن به collection بازی‌ها
                 val collectionRef = getGameCollectionReference(pathType, courseId, lessonId, contentId)
                 if (collectionRef == null) {
