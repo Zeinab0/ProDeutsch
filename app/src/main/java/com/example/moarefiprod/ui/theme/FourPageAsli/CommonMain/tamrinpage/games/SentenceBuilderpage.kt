@@ -24,7 +24,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBar
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import kotlinx.coroutines.delay
 
@@ -60,13 +61,12 @@ fun SentenceBuilderPage(
             timeInSeconds++
         }
     }
+    val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+        GrammerGameViewModel.GamePathType.COURSE
+    } else {
+        GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
+    }
     LaunchedEffect(gameId) {
-        val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
-            GrammerGameViewModel.GamePathType.COURSE
-        } else {
-            GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
-        }
-
         grammarViewModel.loadSentenceGame(
             pathType = pathType,
             courseId = courseId,
@@ -81,39 +81,39 @@ fun SentenceBuilderPage(
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Header
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(
-                onClick = {navController.popBackStack()},
-                modifier = Modifier
-                    .padding(
-                        start = screenWidth * 0.03f,
-                        top = screenHeight * 0.05f
-                    )
-                    .align(Alignment.TopStart)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.backbtn),
-                    contentDescription = "Back",
-                    tint = Color.Black,
-                    modifier = Modifier.size(screenWidth * 0.09f)
+        var showExitDialog by remember { mutableStateOf(false) }
+
+        // تشخیص مسیر برگشت
+        val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
+            "darsDetails/$courseId/$lessonId"
+        } else {
+            "grammar_page"
+        }
+
+        Box(modifier = Modifier.fillMaxSize()
+            .align(Alignment.TopCenter)
+            .zIndex(3f),
+        ){
+            StepProgressBarWithExit(
+                navController = navController,
+                currentStep = gameIndex,
+                totalSteps = totalGames,
+                returnRoute = returnRoute, // ✅ ارسال مسیر درست
+                modifier = Modifier.fillMaxSize(),
+                onRequestExit = { showExitDialog = true }
+            )
+
+            if (showExitDialog) {
+                ExitConfirmationDialog(
+                    onConfirmExit = {
+                        navController.navigate(returnRoute) {
+                            popUpTo("home") { inclusive = false } // اختیاری برای پاکسازی
+                        }
+                        showExitDialog = false
+                    },
+                    onDismiss = { showExitDialog = false }
                 )
             }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = screenHeight * 0.13f,
-                    start = 16.dp, end = 16.dp)
-                .align(Alignment.TopCenter)
-                .zIndex(3f),
-            contentAlignment = Alignment.Center
-        ) {
-            StepProgressBar(
-                currentStep = gameIndex,
-                totalSteps = totalGames
-            )
         }
         // Header
 

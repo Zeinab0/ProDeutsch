@@ -47,7 +47,12 @@ fun GrammarPage(navController: NavController) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             IconButton(
-                onClick = { navController.popBackStack() },
+                onClick = {
+                    navController.navigate("home"){
+                        popUpTo(0) { inclusive = true } // برگشت کامل
+                        launchSingleTop = true
+                    }
+                },
                 modifier = Modifier
                     .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
                     .align(Alignment.TopStart)
@@ -60,6 +65,7 @@ fun GrammarPage(navController: NavController) {
                 )
             }
         }
+
 
         Text(
             text = "گرامر",

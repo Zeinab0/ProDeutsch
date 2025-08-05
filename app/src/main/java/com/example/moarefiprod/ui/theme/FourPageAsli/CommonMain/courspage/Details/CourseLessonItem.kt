@@ -52,7 +52,7 @@ fun CourseLessonItem(
                 Icon(
                     painter = painterResource(id = R.drawable.play_ic),
                     contentDescription = "Play",
-                    modifier = Modifier.size(35.dp),
+                    modifier = Modifier.size(45.dp),
                     tint = Color.Unspecified
                 )
             } else {
@@ -60,7 +60,7 @@ fun CourseLessonItem(
                 Icon(
                     painter = painterResource(id = R.drawable.lock_ic),
                     contentDescription = "Locked",
-                    modifier = Modifier.size(35.dp),
+                    modifier = Modifier.size(45.dp),
                     tint = Color.Unspecified
                 )
             }

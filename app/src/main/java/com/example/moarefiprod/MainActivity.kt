@@ -411,6 +411,18 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                composable(
+                    route = "darsDetails/{courseId}/{lessonId}",
+                    arguments = listOf(
+                        navArgument("courseId") { type = NavType.StringType },
+                        navArgument("lessonId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+                    val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
+
+                    DarsDetails(navController = navController, courseId = courseId, lessonId = lessonId)
+                }
 
                 composable(
                     route = "lesson_detail/{courseId}/{lessonId}",
@@ -535,6 +547,20 @@ class MainActivity : ComponentActivity() {
 
 
                 //بازی های مربوط به گرامر
+                //دکمه های برگشت
+
+
+                composable(
+                    route = "courseDetail/{courseId}",
+                    arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+                ) {
+                    val courseId = it.arguments?.getString("courseId") ?: ""
+                    CourseDetailPage(navController = navController, courseId = courseId)
+                }
+
+
+
+                //دکمه های برگشت
 
 
 

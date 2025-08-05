@@ -42,7 +42,9 @@ fun CourseHeaderSection(navController: NavController, courseSath: String) {
         )
 
         IconButton(
-            onClick = { navController.popBackStack() },
+            onClick = {
+                navController.navigate("home")
+            },
             modifier = Modifier
                 .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
                 .align(Alignment.TopStart)
@@ -51,7 +53,7 @@ fun CourseHeaderSection(navController: NavController, courseSath: String) {
                 painter = painterResource(id = R.drawable.backbtn),
                 contentDescription = "Back",
                 tint = Color.Unspecified,
-                modifier = Modifier.size(screenWidth * 0.07f)
+                modifier = Modifier.size(screenWidth * 0.09f)
             )
         }
 

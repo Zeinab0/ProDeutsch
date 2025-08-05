@@ -67,13 +67,18 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .padding(horizontal = screenWidth * 0.05f)
         ) {
-            Box(modifier = Modifier.fillMaxWidth()) {
+            // Header
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 IconButton(
-                    onClick = { navController.popBackStack() },
+                    onClick = {navController.popBackStack()},
                     modifier = Modifier
-                        .padding(top = screenHeight * 0.05f)
+                        .padding(
+                            start = screenWidth * 0.03f,
+                            top = screenHeight * 0.05f
+                        )
                         .align(Alignment.TopStart)
                 ) {
                     Icon(

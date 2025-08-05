@@ -89,9 +89,9 @@ fun CourseDetailPage(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(screenHeight * 0.09f)
+                            .height(screenHeight * 0.11f)
                             .shadow(20.dp, bottomBarShape)
-                            .background(Color.White, bottomBarShape),
+                            .background(Color(0xFF90CECE), bottomBarShape),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Button(
@@ -102,9 +102,10 @@ fun CourseDetailPage(
                                 Log.d("CourseDetailPage", "Purchase simulated for course: ${course.title}")
                             },
                             modifier = Modifier
-                                .padding(start = screenWidth * 0.07f)
-                                .width(screenWidth * 0.2f)
-                                .height(screenHeight * 0.04f),
+                                .padding(start = screenWidth * 0.07f
+                                        , bottom = screenWidth * 0.05f)
+                                .width(screenWidth * 0.24f)
+                                .height(screenHeight * 0.055f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C)),
                             shape = RoundedCornerShape(screenWidth * 0.02f)
                         ) {

@@ -48,7 +48,6 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.gramm
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-//import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.GameViewModel
 
 @Composable
 fun DarsDetails(
@@ -57,7 +56,6 @@ fun DarsDetails(
     lessonId: String,
     courseViewModel: CourseViewModel = viewModel()
 ) {
-    val course by courseViewModel.selectedCourse.collectAsState()
     val lessons by courseViewModel.selectedCourseLessons.collectAsState()
     val lessonItems by courseViewModel.selectedLessonItems.collectAsState()
     val isLoading by courseViewModel.isLoading.collectAsState()
@@ -118,18 +116,29 @@ fun DarsDetails(
                 )
 
                 IconButton(
-                    onClick = { navController.popBackStack() },
+                    onClick = {
+                        navController.navigate("courseDetail/$courseId") {
+                            popUpTo("courseDetail/$courseId") {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    },
                     modifier = Modifier
-                        .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
+                        .padding(
+                            start = screenWidth * 0.03f,
+                            top = screenHeight * 0.05f
+                        )
                         .align(Alignment.TopStart)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.backbtn),
                         contentDescription = "Back",
                         tint = Color.Unspecified,
-                        modifier = Modifier.size(screenWidth * 0.07f)
+                        modifier = Modifier.size(screenWidth * 0.09f)
                     )
                 }
+
 
                 Column(
                     modifier = Modifier

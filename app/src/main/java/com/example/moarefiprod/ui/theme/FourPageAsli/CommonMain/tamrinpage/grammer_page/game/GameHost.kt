@@ -71,7 +71,7 @@ fun GameHost(
 
     LaunchedEffect(Unit) {
         // بعد از 2 ثانیه، بررسی کن هنوز بازی‌ای لود نشده یا نه
-        delay(2000)
+        delay(10000)
         isLoading.value = false
     }
 
