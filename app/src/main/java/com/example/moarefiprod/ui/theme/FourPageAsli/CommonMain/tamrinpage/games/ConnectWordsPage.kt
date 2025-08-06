@@ -1,6 +1,7 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
 import android.media.MediaPlayer
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,218 +27,85 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioProgressVisualizerr
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 
-// داده‌های بازی
-data class ConnectWordsQuestion(
-    val words: List<String>,
-    val audioIds: List<Int>,
-    val correctPairs: Map<String, Int>
-)
 
 @Composable
-fun AudioProgressVisualizer(
-    progress: Float,
-    isSelected: Boolean,
-    isCorrect: Boolean? // پارامتر جدید
+fun ConnectWordsPage(
+    navController: NavController,
+    courseId: String,
+    lessonId: String,
+    contentId: String,
+    gameId: String,
+    gameIndex: Int,
+    totalGames: Int,
+    viewModel: GrammerGameViewModel,
+    onGameFinished: (Boolean, String?) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        val barColor = when {
-            isSelected || isCorrect != null -> Color.White
-            else -> Color(0xFF7AB2B2)
-        }
+    val gameState = viewModel.connectWordsGameState.collectAsState().value
 
-        val inactiveColor = when {
-            isSelected || isCorrect != null -> Color.White
-            else -> Color(0xFFCDE8E5)
-        }
+    if (gameState == null) return
 
-        repeat(20) { index ->
-            Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(if (index % 3 == 0) 20.dp else 10.dp)
-                    .background(
-                        if (index.toFloat() / 20f < progress) barColor else inactiveColor,
-                        RoundedCornerShape(2.dp)
-                    )
-            )
-        }
+    val words = gameState.words
+    val audioUrls = gameState.audioUrls
+    val correctPairs = gameState.correctPairs
+
+    val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+        GrammerGameViewModel.GamePathType.COURSE
+    } else {
+        GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
     }
-}
-
-// کامپوزابل برای نمایش یک کلمه
-@Composable
-fun WordBox(word: String, isSelected: Boolean, onClick: (String) -> Unit) {
-    Box(
-        modifier = Modifier
-            .width(90.dp)
-            .height(45.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .evenShadow(radius = 25f, cornerRadius = 20f)
-            //.shadow(8.dp, RoundedCornerShape(20.dp))
-            .background(Color(0xFFCDE8E5))
-            .clickable { onClick(word) },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = word,
-            fontFamily = iranSans,
-            fontSize = 14.sp,
-            color = Color.Black,
-            fontWeight = FontWeight.Bold
-        )
+    val audioMap = remember(words, audioUrls) {
+        words.mapIndexed { index, word ->
+            val start = index * 2
+            val pair = audioUrls.slice(start until (start + 2).coerceAtMost(audioUrls.size))
+            word to pair
+        }.toMap()
     }
-}
-
-// کامپوزابل برای نمایش یک باکس صوتی
-@Composable
-fun AudioBox(
-    audioId: Int,
-    isPlayingNow: Boolean,
-    isSelected: Boolean,
-    result: Boolean?,
-    onPlayClick: () -> Unit,
-    onSelect: () -> Unit
-) {
-    val context = LocalContext.current
-    var mediaPlayer: MediaPlayer? by remember { mutableStateOf(null) }
-    var isPlaying by remember { mutableStateOf(false) }
-    var progress by remember { mutableStateOf(0f) }
-    var remainingPlays by remember { mutableStateOf(3) }
-    val scope = rememberCoroutineScope()
-
-    // مدیریت MediaPlayer
-    DisposableEffect(Unit) {
-        mediaPlayer = MediaPlayer.create(context, audioId)
-
-        onDispose {
-            mediaPlayer?.release()
-            mediaPlayer = null
-        }
+    LaunchedEffect(gameId) {
+        viewModel.loadConnectWordsGame(pathType, courseId, lessonId, contentId, gameId)
     }
 
-    val boxBgColor = when (result) {
-        true -> Color(0xFF14CB00)
-        false -> Color(0xFFFF3B3B)
-        null -> if (isSelected) Color(0xFF4D869C) else Color(0xFFEFEFEF)
-    }
 
-    val iconTint = if (result != null || isSelected) Color.White else Color(0xFF4D869C)
+    val selectedAudios = remember { mutableStateMapOf<String, String>() }
+    var playingUrl by remember { mutableStateOf<String?>(null) }
+    var showResultBox by remember { mutableStateOf(false) }
+    var isCorrect by remember { mutableStateOf(false) }
+    var resultStatus by remember { mutableStateOf<Map<String, Boolean>?>(null) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(boxBgColor)
-            .clickable(enabled = result == null) { onSelect() }
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            onClick = {
-                if (remainingPlays > 0 && mediaPlayer != null) {
-                    onPlayClick()
-
-                    scope.launch {
-                        mediaPlayer?.let { player ->
-                            if (!player.isPlaying) {
-                                // اگر به انتهای صوت رسید، به ابتدا برگرد و progress ریست شود
-                                if (player.currentPosition >= player.duration) {
-                                    player.seekTo(0)
-                                    progress = 0f
-                                }
-
-                                player.start()
-                                isPlaying = true
-
-                                while (player.isPlaying) {
-                                    progress = player.currentPosition.toFloat() / player.duration.toFloat()
-                                    delay(100.milliseconds)
-                                }
-
-                                // بررسی پایان کامل پخش
-                                if (player.currentPosition >= player.duration) {
-                                    progress = 1.0f
-                                    remainingPlays--
-                                }
-
-                                isPlaying = false
-                            } else {
-                                // توقف موقت بدون تغییر progress
-                                player.pause()
-                                isPlaying = false
-                            }
-                        }
-                    }
-                }
-            },
-            modifier = Modifier.size(24.dp),
-            enabled = remainingPlays > 0 && result == null
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.volume),
-                contentDescription = "Play Audio",
-                tint = iconTint
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        AudioProgressVisualizer(
-            progress = progress,
-            isSelected = isSelected,
-            isCorrect = result
-        )
-    }
-}
-
-@Composable
-fun ConnectWordsPage() {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    val question = ConnectWordsQuestion(
-        words = listOf("۱. fluss", "۲. Fluss"),
-        audioIds = listOf(
-//            R.raw.audio1,  // fluss
-//            R.raw.audio2,  // fluss
-//            R.raw.audio3,  // Fluss
-//            R.raw.audio4   // Fluss
-        ),
-        correctPairs = mapOf(
-//            "۱. fluss" to R.raw.audio2,
-//            "۲. Fluss" to R.raw.audio4
+
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        var showExitDialog by remember { mutableStateOf(false) }
+
+        val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
+            "darsDetails/$courseId/$lessonId"
+        } else {
+            "grammar_page"
+        }
+
+        StepProgressBarWithExit(
+            navController = navController,
+            currentStep = gameIndex,
+            totalSteps = totalGames,
+            returnRoute = returnRoute,
+            onRequestExit = { showExitDialog = true },
+            modifier = Modifier.fillMaxWidth()
         )
-    )
-
-    val selectedAudios = remember { mutableStateMapOf<String, Int>() }
-    var playingAudioId by remember { mutableStateOf<Int?>(null) }
-    var showResultBox by remember { mutableStateOf(false) }
-    var isCorrect by remember { mutableStateOf(false) }
-    var resultStatus by remember { mutableStateOf<Map<String, Boolean>?>(null) } // State جدید
-
-    val audioMap = mapOf(
-        "۱. fluss" to listOf(question.audioIds[0], question.audioIds[1]),
-        "۲. Fluss" to listOf(question.audioIds[2], question.audioIds[3])
-    )
-
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -267,53 +135,57 @@ fun ConnectWordsPage() {
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                audioMap.forEach { (word, audioList) ->
+                audioMap.forEach { (word, audioList) -> // ← audioList به‌جای urls
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         WordBox(word = word, isSelected = false, onClick = {})
+
                         Spacer(modifier = Modifier.width(16.dp))
+
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            audioList.forEach { audioId ->
-                                AudioBox(
-                                    audioId = audioId,
-                                    isPlayingNow = playingAudioId == audioId,
-                                    isSelected = selectedAudios[word] == audioId,
-                                    result = if (showResultBox && selectedAudios[word] == audioId) {
+                            audioList.forEach { audioUrl ->
+                                AudioBoxFromUrl(
+                                    audioUrl = audioUrl,
+                                    isPlayingNow = playingUrl == audioUrl,
+                                    isSelected = selectedAudios[word] == audioUrl,
+                                    result = if (showResultBox && selectedAudios[word] == audioUrl) {
                                         resultStatus?.get(word)
                                     } else null,
-                                    onPlayClick = { playingAudioId = audioId },
+                                    onPlayClick = { playingUrl = audioUrl },
                                     onSelect = {
                                         if (resultStatus == null) {
-                                            if (selectedAudios[word] == audioId) {
+                                            if (selectedAudios[word] == audioUrl)
                                                 selectedAudios.remove(word)
-                                            } else {
-                                                selectedAudios[word] = audioId
-                                            }
+                                            else
+                                                selectedAudios[word] = audioUrl
                                         }
                                     }
                                 )
                             }
                         }
                     }
+
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
+
         }
 
-        val allSelected = selectedAudios.keys.containsAll(question.words)
+        val allSelected = selectedAudios.keys.containsAll(words)
+
+        val userIsCorrect = selectedAudios == correctPairs
+
+        val newResultStatus = words.associateWith { word ->
+            selectedAudios[word] == correctPairs[word]
+        }
 
         Button(
             onClick = {
-                val userIsCorrect = selectedAudios == question.correctPairs
                 showResultBox = true
                 isCorrect = userIsCorrect
-
-                val newResultStatus = question.words.associateWith { word ->
-                    selectedAudios[word] == question.correctPairs[word]
-                }
                 resultStatus = newResultStatus
             },
             enabled = allSelected,
@@ -345,6 +217,162 @@ fun ConnectWordsPage() {
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
+    }
+}
+
+
+//
+//@Composable
+//fun AudioProgressVisualizer(
+//    progress: Float,
+//    isSelected: Boolean,
+//    isCorrect: Boolean? // پارامتر جدید
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .height(20.dp),
+//        verticalAlignment = Alignment.CenterVertically,
+//        horizontalArrangement = Arrangement.SpaceBetween
+//    ) {
+//        val barColor = when {
+//            isSelected || isCorrect != null -> Color.White
+//            else -> Color(0xFF7AB2B2)
+//        }
+//
+//        val inactiveColor = when {
+//            isSelected || isCorrect != null -> Color.White
+//            else -> Color(0xFFCDE8E5)
+//        }
+//
+//        repeat(20) { index ->
+//            Box(
+//                modifier = Modifier
+//                    .width(3.dp)
+//                    .height(if (index % 3 == 0) 20.dp else 10.dp)
+//                    .background(
+//                        if (index.toFloat() / 20f < progress) barColor else inactiveColor,
+//                        RoundedCornerShape(2.dp)
+//                    )
+//            )
+//        }
+//    }
+//}
+
+@Composable
+fun AudioBoxFromUrl(
+    audioUrl: String,
+    isPlayingNow: Boolean,
+    isSelected: Boolean,
+    result: Boolean?,
+    onPlayClick: () -> Unit,
+    onSelect: () -> Unit
+) {
+    val context = LocalContext.current
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var isPlaying by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0f) }
+    var remainingPlays by remember { mutableStateOf(3) }
+    val scope = rememberCoroutineScope()
+
+    DisposableEffect(audioUrl) {
+        mediaPlayer = MediaPlayer().apply {
+            setDataSource(context, Uri.parse(audioUrl))
+            prepareAsync()
+        }
+
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
+
+    val boxBgColor = when (result) {
+        true -> Color(0xFF14CB00)
+        false -> Color(0xFFFF3B3B)
+        null -> if (isSelected) Color(0xFF4D869C) else Color(0xFFEFEFEF)
+    }
+
+    val iconTint = if (result != null || isSelected) Color.White else Color(0xFF4D869C)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(boxBgColor)
+            .clickable(enabled = result == null) { onSelect() }
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = {
+                if (remainingPlays > 0 && mediaPlayer != null) {
+                    onPlayClick()
+                    scope.launch {
+                        mediaPlayer?.let { player ->
+                            if (!player.isPlaying) {
+                                player.start()
+                                isPlaying = true
+
+                                while (player.isPlaying) {
+                                    progress = player.currentPosition.toFloat() / player.duration.toFloat()
+                                    delay(100L)
+                                }
+
+                                progress = 1f
+                                remainingPlays--
+                                isPlaying = false
+                            } else {
+                                player.pause()
+                                isPlaying = false
+                            }
+                        }
+                    }
+                }
+            },
+            enabled = remainingPlays > 0 && result == null
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.volume),
+                contentDescription = "Play Audio",
+                tint = iconTint
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        AudioProgressVisualizerr(
+            isPlaying = isPlaying,
+            isDisabled = remainingPlays == 0,
+            progress = progress
+        )
+    }
+}
+
+
+
+// کامپوزابل برای نمایش یک کلمه
+@Composable
+fun WordBox(word: String, isSelected: Boolean, onClick: (String) -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(90.dp)
+            .height(45.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .evenShadow(radius = 25f, cornerRadius = 20f)
+            //.shadow(8.dp, RoundedCornerShape(20.dp))
+            .background(Color(0xFFCDE8E5))
+            .clickable { onClick(word) },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = word,
+            fontFamily = iranSans,
+            fontSize = 14.sp,
+            color = Color.Black,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -435,10 +463,4 @@ fun ConnectWordsResultBox(
             )
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ConnectWordsPagePreview() {
-    ConnectWordsPage()
 }

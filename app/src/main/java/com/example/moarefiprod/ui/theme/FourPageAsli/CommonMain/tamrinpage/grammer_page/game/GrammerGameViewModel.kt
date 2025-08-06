@@ -649,9 +649,42 @@ class GrammerGameViewModel : BaseGameViewModel() {
             }
         }
     }
-
-
     // بازی audio
+    // بازی WordsGame
+    private val _connectWordsGameState = MutableStateFlow<ConnectWordsGameData?>(null)
+    val connectWordsGameState: StateFlow<ConnectWordsGameData?> = _connectWordsGameState
+
+    fun loadConnectWordsGame(
+        pathType: GamePathType,
+        courseId: String,
+        lessonId: String,
+        contentId: String,
+        gameId: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val collectionRef = getGameCollectionReference(pathType, courseId, lessonId, contentId)
+                    ?: return@launch
+
+                val doc = collectionRef.document(gameId).get().await()
+
+                val words = doc["words"] as? List<String> ?: emptyList()
+                val audioUrls = doc["audioUrls"] as? List<String> ?: emptyList()
+                val correctPairsRaw = doc["correctPairs"] as? Map<String, String> ?: emptyMap()
+
+                _connectWordsGameState.value = ConnectWordsGameData(
+                    words = words,
+                    audioUrls = audioUrls,
+                    correctPairs = correctPairsRaw
+                )
+            } catch (e: Exception) {
+                Log.e("ViewModel", "❌ Error loading ConnectWordsGame: ${e.message}")
+                _connectWordsGameState.value = null
+            }
+        }
+    }
+
+    // بازی WordsGame
 }
 data class QuestionStoryData(
     val questionText: String,
@@ -670,6 +703,13 @@ data class AudioRecognitionData(
     val options: List<String> = emptyList(),
     val translation: String = ""
 )
+
+data class ConnectWordsGameData(
+    val words: List<String> = emptyList(),
+    val audioUrls: List<String> = emptyList(), // از Firestore آدرس mp3 می‌گیریم
+    val correctPairs: Map<String, String> = emptyMap() // word → audioUrl
+)
+
 
 
 data class MemoryCardPair(val farsiWord: String, val germanWord: String)
