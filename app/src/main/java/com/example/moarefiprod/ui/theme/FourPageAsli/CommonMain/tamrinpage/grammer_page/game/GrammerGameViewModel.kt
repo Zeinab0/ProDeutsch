@@ -550,14 +550,59 @@ class GrammerGameViewModel : BaseGameViewModel() {
         }
     }
 
-
     // بازی questionStoryGame
+
+    // بازی loadVacancyGame
+    private val _vacancyGameState = MutableStateFlow<VacancyData?>(null)
+    val vacancyGameState: StateFlow<VacancyData?> = _vacancyGameState
+
+    fun loadVacancyGame(
+        pathType: GamePathType,
+        courseId: String,
+        lessonId: String,
+        contentId: String,
+        gameId: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val collectionRef = getGameCollectionReference(pathType, courseId, lessonId, contentId)
+                if (collectionRef == null) {
+                    Log.e("GameViewModel", "❌ Invalid Firestore path.")
+                    _vacancyGameState.value = null
+                    return@launch
+                }
+
+                val docSnapshot = collectionRef.document(gameId).get().await()
+                if (!docSnapshot.exists()) {
+                    Log.e("GameViewModel", "❌ Document not found for ID: $gameId")
+                    _vacancyGameState.value = null
+                    return@launch
+                }
+
+                val sentence = docSnapshot.getString("sentence") ?: ""
+                val correctAnswer = docSnapshot.getString("correctAnswer") ?: ""
+                val translation = docSnapshot.getString("translation") ?: ""
+
+                _vacancyGameState.value = VacancyData(sentence, correctAnswer, translation)
+
+            } catch (e: Exception) {
+                Log.e("GameViewModel", "❌ Error loading VacancyGame: ${e.message}")
+                _vacancyGameState.value = null
+            }
+        }
+    }
+    // بازی loadVacancyGame
 
 }
 data class QuestionStoryData(
     val questionText: String,
     val correctAnswer: String,
     val translation: String // ✅ این خط اضافه شود
+)
+data class VacancyData(
+    val sentence: String = "",
+    val correctAnswer: String = "",
+    val translation: String = ""
 )
 
 

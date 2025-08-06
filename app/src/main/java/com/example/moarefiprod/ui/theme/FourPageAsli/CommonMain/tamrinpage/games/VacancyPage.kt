@@ -28,100 +28,151 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
-
+import androidx.navigation.NavController
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 
 
 @Composable
 fun VacancyPage(
-    onGameFinished: (isCorrect: Boolean, correctAnswer: String?) -> Unit
+    navController: NavController,
+    courseId: String,
+    lessonId: String,
+    contentId: String,
+    gameId: String,
+    gameIndex: Int,
+    totalGames: Int,
+    viewModel: BaseGameViewModel,
+    onGameFinished: (Boolean, String?) -> Unit
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+
+    val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
+    val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+        GrammerGameViewModel.GamePathType.COURSE
+    } else {
+        GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
+    }
+
+    LaunchedEffect(gameId) {
+        grammarViewModel.loadVacancyGame(pathType, courseId, lessonId, contentId, gameId)
+    }
+
+    val vacancyData = grammarViewModel.vacancyGameState.collectAsState().value
+    val sentence = vacancyData?.sentence ?: ""
+    val correctAnswer = vacancyData?.correctAnswer ?: ""
+    val translation = vacancyData?.translation ?: ""
 
     var userInput by remember { mutableStateOf(TextFieldValue("")) }
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var showCompletedSentence by remember { mutableStateOf(false) }
 
-    val sentence = "Ich lerne ____ ,weil es eine schöne Sprache ist."
-    val correctAnswer = "Deutsch"
+
     val sentenceParts = sentence.split("____")
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // 🔙 دکمه برگشت
-        IconButton(
-            onClick = { /*TODO*/ },
-            modifier = Modifier
-                .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
-                .align(Alignment.TopStart)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.backbtn),
-                contentDescription = "Back",
-                tint = Color.Black,
-                modifier = Modifier.size(screenWidth * 0.09f)
-            )
+        var showExitDialog by remember { mutableStateOf(false) }
+
+        val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
+            "darsDetails/$courseId/$lessonId"
+        } else {
+            "grammar_page"
         }
 
-        // 📝 StepProgressBar
-//        StepProgressBar(currentStep = 3, totalSteps = 6, modifier = Modifier
-//            .align(Alignment.TopCenter)
-//            .padding(top = screenHeight * 0.1f))
+        StepProgressBarWithExit(
+            navController = navController,
+            currentStep = gameIndex,
+            totalSteps = totalGames,
+            returnRoute = returnRoute,
+            onRequestExit = { showExitDialog = true },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // 📝 Row حاوی آیکون مداد و جمله
         // این Row در بالای صفحه ثابت می‌ماند
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = screenHeight * 0.22f, start = 24.dp, end = 24.dp)
+                .padding(top = screenHeight * 0.24f, start = 32.dp, end = 32.dp)
                 .fillMaxWidth()
-        ) {
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.align(Alignment.TopStart)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.pen),
-                    contentDescription = "pen",
+        ){
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(height =  screenHeight * 1f)
+            ){
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.align(Alignment.Start)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.pen),
+                        contentDescription = "pen",
+                        modifier = Modifier
+                            .size(26.dp)
+                            .align(Alignment.Top)
+                            .offset(y = (20).dp)
+                    )
+                }
+
+                Text(
+                    text = if (showCompletedSentence) {
+                        buildAnnotatedString {
+                            append(sentenceParts.getOrNull(0) ?: "")
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = if (isCorrect == true) Color.Green else Color.Red)) {
+                                append(userInput.text)
+                            }
+                            append(sentenceParts.getOrNull(1) ?: "")
+                        }
+                    } else {
+                        buildAnnotatedString {
+                            append(sentenceParts.getOrNull(0) ?: "")
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Gray)) {
+                                append("____")
+                            }
+                            append(sentenceParts.getOrNull(1) ?: "")
+                        }
+                    },
+                    fontSize = 16.sp,
+                    fontFamily = iranSans,
+                    softWrap = true,
+                    maxLines = Int.MAX_VALUE,
+                    minLines = 3,
                     modifier = Modifier
-                        .size(26.dp)
-                        .align(Alignment.Top)
-                    // .offset(y = (-10).dp)
+                        .padding(start = 36.dp) // برای اینکه با آیکون تداخل نداشته باشه
+//                        .align(Alignment.TopStart)
+                )
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
+                // 📘 ترجمه جمله
+                Text(
+                    text = translation,
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    fontSize = 14.sp,
+                    minLines = 3,
+                    maxLines = 3,
+                    textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 4.dp)
                 )
             }
 
-            Text(
-                text = if (showCompletedSentence) {
-                    buildAnnotatedString {
-                        append(sentenceParts.getOrNull(0) ?: "")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = if (isCorrect == true) Color.Green else Color.Red)) {
-                            append(userInput.text)
-                        }
-                        append(sentenceParts.getOrNull(1) ?: "")
-                    }
-                } else {
-                    buildAnnotatedString {
-                        append(sentenceParts.getOrNull(0) ?: "")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Gray)) {
-                            append("____")
-                        }
-                        append(sentenceParts.getOrNull(1) ?: "")
-                    }
-                },
-                fontSize = 15.sp,
-                fontFamily = iranSans,
-                softWrap = true,
-                maxLines = Int.MAX_VALUE,
-                modifier = Modifier
-                    .padding(start = 36.dp) // برای اینکه با آیکون تداخل نداشته باشه
-                    .align(Alignment.TopStart)
-            )
+
+
         }
+
 
 
         // 📝 Column برای فیلد ورودی و دکمه تایید
@@ -129,7 +180,7 @@ fun VacancyPage(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = screenHeight * 0.45f, bottom = 100.dp), // تنظیم موقعیت پایین‌تر
+                .padding(top = screenHeight * 0.66f), // تنظیم موقعیت پایین‌تر
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (!showCompletedSentence) {
@@ -137,10 +188,10 @@ fun VacancyPage(
                     value = userInput,
                     onValueChange = { userInput = it },
                     modifier = Modifier
-                        .padding(horizontal = 40.dp)
+                        .padding(horizontal = 30.dp)
                         .fillMaxWidth()
-                        .background(Color(0xFFEFEFEF), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .background(Color(0xFFCDE8E5), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 16.dp, vertical = 20.dp),
                     textStyle = TextStyle(
                         fontSize = 15.sp,
                         fontFamily = iranSans,
@@ -155,10 +206,10 @@ fun VacancyPage(
                         ) {
                             if (userInput.text.isEmpty()) {
                                 Text(
-                                    text = "کلمه را اینجا وارد کنید",
-                                    fontSize = 15.sp,
+                                    text = "پاسخ را اینجا وارد کنید",
+                                    fontSize = 14.sp,
                                     fontFamily = iranSans,
-                                    color = Color.Gray
+                                    color = Color.White
                                 )
                             }
                             innerTextField()
@@ -167,48 +218,83 @@ fun VacancyPage(
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
         }
 
         // 🖼️ باکس نتیجه در پایین صفحه
         if (showResultBox) {
             WinnerBoxVacancy(
                 isCorrect = isCorrect,
-                correctSentence = (sentenceParts.getOrNull(0) ?: "") + " " + correctAnswer + " " + (sentenceParts.getOrNull(1) ?: ""),
-                userSentence = (sentenceParts.getOrNull(0) ?: "") + " " + userInput.text + " " + (sentenceParts.getOrNull(1) ?: ""),
+                correctSentence = correctAnswer,
+                userSentence = userInput.text,
+                translation = vacancyData?.translation ?: "",
+                navController = navController,
+                isLastGame = gameIndex == totalGames - 1,
+                returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE)
+                    "darsDetails/$courseId/$lessonId"
+                else
+                    "grammar_page",
                 onNext = {
-                    onGameFinished(isCorrect ?: false, correctAnswer)
-                    userInput = TextFieldValue("")
-                    showResultBox = false
-                    isCorrect = null
-                    showCompletedSentence = false
+                    onGameFinished(isCorrect == true, correctAnswer)
+                    navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
+                        popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
+                    }
                 },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 0.dp)
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
+
         }
 
-        // --- دکمه تایید ---
-        val buttonWidth = (screenWidth * 0.22f)
-        val buttonHeight = 42.dp
-        val paddingRight = 44.dp
-        val paddingBottom = if (showResultBox) (screenHeight * 0.14f) + 18.dp else 180.dp
-        val calculatedOffsetX = screenWidth - buttonWidth - paddingRight
-        val calculatedOffsetY = screenHeight - buttonHeight - paddingBottom
 
         if (!showCompletedSentence) {
-            ConfirmButton(
+            Button(
                 onClick = {
                     isCorrect = userInput.text.trim().equals(correctAnswer, ignoreCase = true)
                     showResultBox = true
                     showCompletedSentence = true
+
+                    viewModel.recordAnswer(isCorrect == true)
+                    viewModel.recordMemoryGameResult(
+                        correct = if (isCorrect == true) 1 else 0,
+                        wrong = if (isCorrect == false) 1 else 0,
+                        timeInSeconds = viewModel.totalTimeInSeconds.value
+                    )
                 },
-                xOffset = calculatedOffsetX,
-                yOffset = calculatedOffsetY
-            )
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 30.dp, bottom = 180.dp)
+                    .width(screenWidth * 0.22f)
+                    .height(42.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4D869C),
+                    contentColor = Color.White
+                ),
+            ) {
+                Text(
+                    text = "تایید",
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
+
         }
         // --- پایان بخش دکمه تایید ---
+
+        if (showExitDialog) {
+            ExitConfirmationDialog(
+                onConfirmExit = {
+                    navController.navigate(returnRoute) {
+                        popUpTo("home") { inclusive = false }
+                    }
+                    showExitDialog = false
+                },
+                onDismiss = {
+                    showExitDialog = false
+                }
+            )
+        }
+
     }
 }
 
@@ -218,6 +304,9 @@ fun WinnerBoxVacancy(
     correctSentence: String,
     userSentence: String,
     translation: String = "من آلمانی یاد می‌گیرم چون زبان زیبایی است.",
+    navController: NavController,
+    isLastGame: Boolean,
+    returnRoute: String,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -226,17 +315,16 @@ fun WinnerBoxVacancy(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(screenHeight * if (isCorrect == true) 0.14f else 0.22f)
-            .background(
-                brush = Brush.horizontalGradient(
-                    listOf(Color(0xFF4DA4A4), Color(0xFFBFEAE8))
-                ),
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-            )
-            .padding(horizontal = 20.dp, vertical = 14.dp)
+            .height(screenHeight * 0.19f)
+            .padding(horizontal = 20.dp, vertical = 30.dp)
+            .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
+            .padding(horizontal = 15.dp, vertical = 5.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = 8.dp)
+        ) {
             if (isCorrect == false) {
                 // 🔴 جمله غلط
                 Row(
@@ -248,9 +336,7 @@ fun WinnerBoxVacancy(
                         painter = painterResource(id = R.drawable.cross),
                         contentDescription = null,
                         tint = Color.Unspecified,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .padding(top = 2.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -262,8 +348,6 @@ fun WinnerBoxVacancy(
                         modifier = Modifier.weight(1f)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(4.dp))
 
                 // ✅ جمله درست
                 Row(
@@ -288,8 +372,6 @@ fun WinnerBoxVacancy(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
             } else if (isCorrect == true) {
                 // ✅ فقط جمله درست
                 Row(
@@ -313,33 +395,27 @@ fun WinnerBoxVacancy(
                         modifier = Modifier.weight(1f)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
             }
+            Spacer(modifier = Modifier.height(screenHeight * 0.018f))
 
-            // 📘 ترجمه جمله
-            Text(
-                text = translation,
-                fontFamily = iranSans,
-                color = Color.DarkGray,
-                fontSize = 13.sp,
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 🟢 دکمه بریم بعدی
+            // 🟢 دکمه بریم بعدی / تمام
             Box(
                 modifier = Modifier
-                    .width(98.dp)
-                    .height(34.dp)
+                    .fillMaxWidth()
+                    .wrapContentWidth(Alignment.End)
+                    .width(90.dp)
+                    .height(30.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFF4D869C))
-                    .clickable { onNext() }
-                    .align(Alignment.End),
+                    .clickable {
+                        if (isLastGame) {
+                            navController.navigate(returnRoute) {
+                                popUpTo("home") { inclusive = false }
+                            }
+                        } else {
+                            onNext()
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -347,43 +423,22 @@ fun WinnerBoxVacancy(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "بریم بعدی",
+                        text = if (isLastGame) "تمام" else "بریم بعدی",
                         fontFamily = iranSans,
                         color = Color.White,
-                        fontSize = 14.sp
+                        fontSize = 12.sp
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.nextbtn),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    if (!isLastGame) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.nextbtn),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun ConfirmButton(
-    onClick: () -> Unit,
-    xOffset: Dp,
-    yOffset: Dp
-) {
-    Box(
-        modifier = Modifier
-            .offset(x = xOffset, y = yOffset)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF4D869C))
-            .clickable { onClick() }
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-    ) {
-        Text(
-            text = "تایید",
-            fontFamily = iranSans,
-            color = Color.White,
-            fontSize = 14.sp
-        )
     }
 }

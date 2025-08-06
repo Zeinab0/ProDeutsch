@@ -244,7 +244,7 @@ fun ConnectWordsPage() {
                 .padding(top = screenHeight * 0.1f, bottom = 100.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            StepProgressBarWithExit(currentStep = 3, totalSteps = 6)
+//            StepProgressBarWithExit(currentStep = 3 , totalSteps = 6)
             Spacer(modifier = Modifier.height(60.dp))
 
             Text(

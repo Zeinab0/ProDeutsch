@@ -186,6 +186,30 @@ fun GameHost(
                 }
             )
         }
+
+        "VACANCY" -> {
+            viewModel.loadVacancyGame(pathType, courseId, lessonId, contentId, currentGame.id)
+
+            VacancyPage(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                gameId = currentGame.id,
+                gameIndex = gameIndex,
+                totalGames = grammarGames.size,
+                viewModel = viewModel,
+                onGameFinished = { isCorrect, correctAnswer ->
+                    viewModel.recordAnswer(isCorrect)
+                    viewModel.recordMemoryGameResult(
+                        correct = if (isCorrect) 1 else 0,
+                        wrong = if (!isCorrect) 1 else 0,
+                        timeInSeconds = viewModel.totalTimeInSeconds.value
+                    )
+                }
+            )
+        }
+
         else -> {
             Log.e("GameHost", "Unknown game type: ${currentGame.type}")
             Text("نوع بازی ناشناخته: ${currentGame.type}", fontFamily = iranSans)
