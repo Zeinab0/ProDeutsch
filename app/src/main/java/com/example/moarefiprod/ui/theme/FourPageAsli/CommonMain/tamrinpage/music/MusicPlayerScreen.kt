@@ -87,7 +87,7 @@ fun MusicPlayerScreen() {
                 )
             }
             Icon(
-                painter = painterResource(id = R.drawable.favorites), // آیکون قلب قرمز
+                painter = painterResource(id = R.drawable.unfavorites), // آیکون قلب قرمز
                 contentDescription = "Favorite",
                 tint = Color.Red,
                 modifier = Modifier.size(24.dp)

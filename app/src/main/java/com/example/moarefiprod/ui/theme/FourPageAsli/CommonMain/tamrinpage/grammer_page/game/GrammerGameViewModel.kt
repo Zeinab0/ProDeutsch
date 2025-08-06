@@ -2,7 +2,6 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.gram
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.BaseGameViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.CollectionReference
@@ -24,15 +23,16 @@ class GrammerGameViewModel : BaseGameViewModel() {
     val memoryCardPairs: StateFlow<List<MemoryCardPair>> = _memoryCardPairs
 
     private val _memoryGameTitle = MutableStateFlow("بازی حافظه")
+    val memoryGameTitle: StateFlow<String> = _memoryGameTitle
 
     fun resetMemoryGame() {
         _memoryCardPairs.value = emptyList()
         _memoryGameTitle.value = "بازی حافظه"
     }
+
     fun gameListSize(): Int = _gameList.size
     private val _gameIds = MutableStateFlow<List<String>>(emptyList())
     val gameIds: StateFlow<List<String>> = _gameIds
-
 
     fun loadMemoryGame(
         pathType: GamePathType,
@@ -55,9 +55,7 @@ class GrammerGameViewModel : BaseGameViewModel() {
 
         viewModelScope.launch {
             try {
-
                 val collectionRef = when (pathType) {
-
                     GamePathType.GRAMMAR_TOPIC -> {
                         if (courseId.isBlank()) {
                             Log.e("GameViewModel", "❌ courseId is blank for GRAMMAR_TOPIC path.")
@@ -113,15 +111,11 @@ class GrammerGameViewModel : BaseGameViewModel() {
                 _memoryGameTitle.value = title
 
                 Log.d("GameViewModel", "✅ Memory game loaded successfully: $title with ${cardPairs.size} pairs.")
-
             } catch (e: Exception) {
                 Log.e("GameViewModel", "❌ loadMemoryGame error: ${e.message}", e)
             }
         }
     }
-
-
-
 
     private val _gameList = mutableListOf<String>()
 
@@ -171,13 +165,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
                 }
                 val doc = collectionRef.document(gameId).get().await()
 
-//                val doc = withContext(Dispatchers.IO) {
-//                    db.collection(path)
-//                        .document(gameId)
-//                        .get()
-//                        .await()
-//                }
-
                 val imageUrl = doc.getString("imageUrl") ?: ""
                 val title = doc.getString("title") ?: ""
                 val order = doc.getLong("order")?.toInt() ?: 0
@@ -195,14 +182,12 @@ class GrammerGameViewModel : BaseGameViewModel() {
                 loadedTextPicGames.add(gameId)
 
                 Log.d("GameViewModel", "✅ Loaded TextPic game $gameId successfully")
-
             } catch (e: Exception) {
                 Log.e("GameViewModel", "❌ loadTextPicGame error: ${e.message}")
                 _textPicData.value = null
             }
         }
     }
-
 
     // ---------- SENTENCE BUILDER ----------
     private val _sentenceData = MutableStateFlow<SentenceGameData?>(null)
@@ -222,8 +207,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
 
         viewModelScope.launch {
             try {
-
-                // دریافت مسیر امن به collection بازی‌ها
                 val collectionRef = getGameCollectionReference(pathType, courseId, lessonId, contentId)
                 if (collectionRef == null) {
                     Log.e("SentenceGameViewModel", "❌ Invalid Firestore path (null collectionRef).")
@@ -231,7 +214,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
                     return@launch
                 }
 
-                // گرفتن داکیومنت بازی
                 val docSnapshot = collectionRef
                     .document(gameId)
                     .get()
@@ -254,7 +236,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
                 )
 
                 Log.d("SentenceGameViewModel", "✅ Loaded sentence game: question='$question', words=$words")
-
             } catch (e: Exception) {
                 Log.e("SentenceGameViewModel", "❌ Error loading sentence game: ${e.message}", e)
                 _sentenceData.value = null
@@ -262,10 +243,7 @@ class GrammerGameViewModel : BaseGameViewModel() {
         }
     }
 
-
-
     private val _correctAnswerss = MutableStateFlow(0)
-
     private val _wrongAnswerss = MutableStateFlow(0)
 
     fun incrementCorrect(count: Int) {
@@ -298,25 +276,21 @@ class GrammerGameViewModel : BaseGameViewModel() {
         viewModelScope.launch {
             try {
                 val collectionRef = getGameCollectionReference(pathType, courseId, lessonId, contentId)
-
                 if (collectionRef == null) {
                     Log.e("GameViewModel", "❌ Could not build Firestore path.")
                     return@launch
                 }
 
                 val snapshot = collectionRef.get().await()
-
                 val total = snapshot.documents.count { it.getString("type") == "MULTIPLE_CHOICE" }
                 _totalQuestions.value = total
 
                 Log.d("GameViewModel", "✅ Total MULTIPLE_CHOICE questions: $total")
-
             } catch (e: Exception) {
                 Log.e("GameViewModel", "❌ initializeTotalQuestions error: ${e.message}", e)
             }
         }
     }
-
 
     fun resetScores() {
         _correctAnswers.value = 0
@@ -340,11 +314,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
                 }
                 val doc = collectionRef.document(gameId).get().await()
 
-//                val doc = db.collection(path)
-//                    .document(gameId)
-//                    .get()
-//                    .await()
-
                 val questionText = doc.getString("questionText") ?: ""
                 val options = doc.get("options") as? List<String> ?: emptyList()
                 val correctAnswerIndex = doc.getLong("correctAnswerIndex")?.toInt() ?: -1
@@ -362,13 +331,11 @@ class GrammerGameViewModel : BaseGameViewModel() {
                 )
 
                 Log.d("GameViewModel", "✅ MultipleChoice loaded: $gameId")
-
             } catch (e: Exception) {
                 Log.e("GameViewModel", "❌ loadMultipleChoiceGame error: ${e.message}")
             }
         }
     }
-
 
     fun recordAnswer(isCorrect: Boolean) {
         if (isCorrect) _correctAnswers.value += 1
@@ -416,13 +383,13 @@ class GrammerGameViewModel : BaseGameViewModel() {
             }
     }
 
-
     private val _allGames = MutableStateFlow<List<GameModel>>(emptyList())
     val allGames: StateFlow<List<GameModel>> = _allGames
 
     fun getGameAt(index: Int): GameModel? {
         return allGames.value.getOrNull(index)
     }
+
     private val _games = MutableStateFlow<List<GameModel>>(emptyList())
     val games: StateFlow<List<GameModel>> = _games
 
@@ -451,7 +418,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
         }
     }
 
-
     fun loadGamesForTopic(topicId: String) {
         viewModelScope.launch {
             try {
@@ -461,8 +427,9 @@ class GrammerGameViewModel : BaseGameViewModel() {
                     .get()
                     .await()
 
-                val games = snapshot.documents.mapNotNull { it.toObject(GameModel::class.java)?.copy(id = it.id) }
-                    .sortedBy { it.order }
+                val games = snapshot.documents.mapNotNull {
+                    it.toObject(GameModel::class.java)?.copy(id = it.id)
+                }.sortedBy { it.order }
 
                 _games.value = games
                 Log.d("GrammerGameViewModel", "📚 Loaded topic games: ${games.map { it.id }}")
@@ -472,16 +439,14 @@ class GrammerGameViewModel : BaseGameViewModel() {
         }
     }
 
-
-
     private fun getGameCollectionReference(
-        pathType: GrammerGameViewModel.GamePathType,
+        pathType: GamePathType,
         courseId: String,
         lessonId: String = "",
         contentId: String = ""
     ): CollectionReference? {
         return when (pathType) {
-            GrammerGameViewModel.GamePathType.COURSE -> {
+            GamePathType.COURSE -> {
                 if (lessonId.isEmpty() || contentId.isEmpty()) {
                     Log.e("GameViewModel", "❌ Invalid lessonId or contentId for COURSE path.")
                     return null
@@ -495,7 +460,7 @@ class GrammerGameViewModel : BaseGameViewModel() {
                     .collection("games")
             }
 
-            GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC -> {
+            GamePathType.GRAMMAR_TOPIC -> {
                 db.collection("grammar_topics")
                     .document(courseId)
                     .collection("games")
@@ -592,8 +557,8 @@ class GrammerGameViewModel : BaseGameViewModel() {
         }
     }
     // بازی loadVacancyGame
-    // بازی audio
 
+    // بازی audio
     private val _audioRecognitionGameState = MutableStateFlow<AudioRecognitionData?>(null)
     val audioRecognitionGameState: StateFlow<AudioRecognitionData?> = _audioRecognitionGameState
     private val _audioUrl = MutableStateFlow("")
@@ -649,7 +614,8 @@ class GrammerGameViewModel : BaseGameViewModel() {
             }
         }
     }
-    // بازی audio
+// بازی audio
+
     // بازی WordsGame
     private val _connectWordsGameState = MutableStateFlow<ConnectWordsGameData?>(null)
     val connectWordsGameState: StateFlow<ConnectWordsGameData?> = _connectWordsGameState
@@ -685,30 +651,9 @@ class GrammerGameViewModel : BaseGameViewModel() {
     }
 
     // بازی WordsGame
+
 }
-data class QuestionStoryData(
-    val questionText: String,
-    val correctAnswer: String,
-    val translation: String // ✅ این خط اضافه شود
-)
-data class VacancyData(
-    val sentence: String = "",
-    val correctAnswer: String = "",
-    val translation: String = ""
-)
 
-data class AudioRecognitionData(
-    val questionText: String = "",
-    val correctAnswerIndex: Int = -1,
-    val options: List<String> = emptyList(),
-    val translation: String = ""
-)
-
-data class ConnectWordsGameData(
-    val words: List<String> = emptyList(),
-    val audioUrls: List<String> = emptyList(), // از Firestore آدرس mp3 می‌گیریم
-    val correctPairs: Map<String, String> = emptyMap() // word → audioUrl
-)
 
 
 
@@ -724,12 +669,8 @@ data class GameModel(
     val wordPool: List<String> = emptyList(),
     val pairs: List<Map<String, String>> = emptyList(),
     val imageUrl: String? = null,
-    val words: List<Map<String, Any>> = emptyList(),
-    val correctAnswer: String = "",
-    val questionText: String = "",
-    val translation: String = "",
+    val words: List<Map<String, Any>> = emptyList()
 )
-
 
 data class MultipleChoiceData(
     val questionText: String = "",
@@ -739,11 +680,12 @@ data class MultipleChoiceData(
     val type: String = "",
     val translation: String
 )
+
 data class TextPicData(
     val imageUrl: String,
-    val title: String,         // اضافه کردن فیلد title
-    val order: Int,           // اضافه کردن فیلد order
-    val type: String,         // اضافه کردن فیلد type
+    val title: String,
+    val order: Int,
+    val type: String,
     val words: List<TextPicWord>
 )
 
@@ -751,6 +693,7 @@ data class TextPicWord(
     val word: String,
     val isCorrect: Boolean
 )
+
 data class SentenceGameData(
     val gameType: String = "",
     val question: String = "",
@@ -758,5 +701,27 @@ data class SentenceGameData(
     val wordPool: List<String> = emptyList()
 )
 
+data class ConnectWordsGameData(
+    val words: List<String> = emptyList(),
+    val audioUrls: List<String> = emptyList(), // از Firestore آدرس mp3 می‌گیریم
+    val correctPairs: Map<String, String> = emptyMap() // word → audioUrl
+)
 
+data class AudioRecognitionData(
+    val questionText: String = "",
+    val correctAnswerIndex: Int = -1,
+    val options: List<String> = emptyList(),
+    val translation: String = ""
+)
 
+data class QuestionStoryData(
+    val questionText: String,
+    val correctAnswer: String,
+    val translation: String // ✅ این خط اضافه شود
+)
+
+data class VacancyData(
+    val sentence: String = "",
+    val correctAnswer: String = "",
+    val translation: String = ""
+)

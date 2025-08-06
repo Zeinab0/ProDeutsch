@@ -9,37 +9,37 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
-import androidx.navigation.NavController
-import com.example.moarefiprod.iranSans
-import kotlinx.coroutines.delay
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
 import com.example.moarefiprod.R
+import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
+import kotlinx.coroutines.delay
+
 
 @Composable
 fun MemoryGamePage(
     navController: NavController,
-    pathType: GrammerGameViewModel.GamePathType, // ⬅️ اضافه کن
+    pathType: GrammerGameViewModel.GamePathType,
     courseId: String,
     lessonId: String,
     contentId: String,
@@ -62,6 +62,7 @@ fun MemoryGamePage(
     val errorCountMap = remember { mutableStateMapOf<String, Int>() }
     var showError by remember { mutableStateOf(false) }
     var showFinalDialog by remember { mutableStateOf(false) }
+    var showResultBox by remember { mutableStateOf(false) } // ✅ اضافه شده
 
     var timeInSeconds by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
@@ -72,7 +73,7 @@ fun MemoryGamePage(
     }
     LaunchedEffect(gameId) {
         grammarViewModel.loadMemoryGame(
-            pathType = pathType, // یا GRAMMAR_TOPIC بسته به مسیر
+            pathType = pathType,
             courseId = courseId,
             lessonId = lessonId,
             contentId = contentId,
@@ -134,49 +135,26 @@ fun MemoryGamePage(
         }
     }
 
-
-
-
     Box(modifier = Modifier.fillMaxSize()) {
-        // Header
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(
-//                    start = screenWidth * 0.01f,
-//                    end = screenWidth * 0.03f,
-//                    top = screenHeight * 0.05f
-//                )
-//                .align(Alignment.TopCenter)
-//                .zIndex(3f),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            StepProgressBarWithExit(
-//                navController = navController,
-//                currentStep = gameIndex,
-//                totalSteps = totalGames,
-//                modifier = Modifier.fillMaxSize() // ✅ پاس دادن به خودش
-//
-//            )
-//        }
         var showExitDialog by remember { mutableStateOf(false) }
 
-        // تشخیص مسیر برگشت
         val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
             "darsDetails/$courseId/$lessonId"
         } else {
             "grammar_page"
         }
 
-        Box(modifier = Modifier.fillMaxSize()
-            .align(Alignment.TopCenter)
-            .zIndex(3f),
-        ){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.TopCenter)
+                .zIndex(3f),
+        ) {
             StepProgressBarWithExit(
                 navController = navController,
                 currentStep = gameIndex,
                 totalSteps = totalGames,
-                returnRoute = returnRoute, // ✅ ارسال مسیر درست
+                returnRoute = returnRoute,
                 modifier = Modifier.fillMaxSize(),
                 onRequestExit = { showExitDialog = true }
             )
@@ -185,7 +163,7 @@ fun MemoryGamePage(
                 ExitConfirmationDialog(
                     onConfirmExit = {
                         navController.navigate(returnRoute) {
-                            popUpTo("home") { inclusive = false } // اختیاری برای پاکسازی
+                            popUpTo("home") { inclusive = false }
                         }
                         showExitDialog = false
                     },
@@ -202,8 +180,8 @@ fun MemoryGamePage(
                     start = 40.dp,
                     end = 40.dp,
                 ),
-        ){
-            Spacer(modifier = Modifier.height(screenHeight * 0.14f))
+        ) {
+            Spacer(modifier = Modifier.height(screenHeight * 0.10f))
 
             Text(
                 text = "...بزن بریم\n):باید کلمات رو به معنیشون وصل کنیم ",
@@ -289,17 +267,8 @@ fun MemoryGamePage(
                 if (allUsedUp.value) {
                     val correct = correctPairs.size
                     val wrong = errorCountMap.values.count { it >= 3 }
-
                     grammarViewModel.recordMemoryGameResult(correct, wrong, timeInSeconds)
-
-                    if (gameIndex + 1 < grammarViewModel.gameListSize()) {
-                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
-                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
-                        }
-                    } else {
-                        showFinalDialog = true
-                    }
-
+                    showResultBox = true // ✅ متغیر نمایش باکس را true می‌کند
                     showError = false
                 } else {
                     showError = true
@@ -307,7 +276,7 @@ fun MemoryGamePage(
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 66.dp, end = 36.dp)
+                .padding(bottom = screenHeight * 0.19f, end = screenWidth * 0.06f)
                 .width(screenWidth * 0.20f)
                 .height(40.dp),
             shape = RoundedCornerShape(10.dp),
@@ -319,9 +288,34 @@ fun MemoryGamePage(
             Text("تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
         }
 
+        if (showResultBox) { // ✅ باکس نتایج فقط در صورت true بودن این متغیر نمایش داده می‌شود
+            val correctCount = correctPairs.size
+            val wrongCount = errorCountMap.values.count { it >= 3 }
+            val totalCount = wordPairs.size
+
+            MemoryGameResultBox(
+                correctCount = correctCount,
+                wrongCount = wrongCount,
+                total = totalCount,
+                onNext = {
+                    if (gameIndex + 1 < grammarViewModel.gameListSize()) {
+                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
+                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
+                        }
+                    } else {
+                        showFinalDialog = true
+                    }
+                },
+                isLastGame = gameIndex + 1 >= grammarViewModel.gameListSize(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = screenHeight * 0.03f)
+            )
+        }
+
         if (showFinalDialog) {
             val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
-                "lesson_detail/$courseId/$lessonId" // ✅ مسیر درست
+                "lesson_detail/$courseId/$lessonId"
             } else {
                 "grammar_page"
             }
@@ -339,11 +333,6 @@ fun MemoryGamePage(
                 }
             )
         }
-
-
-
-
-
     }
 }
 
@@ -389,6 +378,120 @@ fun WordItemWithState(
             fontFamily = iranSans,
             color = textColor,
             textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun MemoryGameResultBox(
+    correctCount: Int,
+    wrongCount: Int,
+    total: Int,
+    onNext: () -> Unit,
+    isLastGame: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .offset(y = 8.dp)
+            .height(160.dp)
+            .padding(16.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFF90CECE)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            // ✅ Arrangement را به Top تغییر دهید تا کنترل کامل روی فواصل داشته باشید
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.End
+        ) {
+            // متن‌ها
+            if (wrongCount == 0) {
+                Text(
+                    text = "آفرین 🎉 همه رو درست زدی!",
+                    fontFamily = iranSans,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    style = TextStyle(textDirection = TextDirection.Rtl),
+                    textAlign = TextAlign.Right,
+                )
+            } else {
+                InfoRowMemory("تعداد کلمات درست", correctCount)
+                Spacer(modifier = Modifier.height(6.dp))
+                InfoRowMemory("تعداد کلمات غلط", wrongCount)
+            }
+
+            // ✅ یک Spacer با ارتفاع ثابت بین متن و دکمه قرار دهید
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // دکمه "بریم بعدی"
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentWidth(Alignment.End)
+                    // ✅ offset دکمه را کمتر کنید تا کمتر به پایین حرکت کند
+                    .offset(y = (-5).dp)
+                    .width(90.dp)
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF4D869C))
+                    .clickable { onNext() },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (isLastGame) "تمام" else "بریم بعدی",
+                        fontFamily = iranSans,
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
+
+                    if (!isLastGame) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.nextbtn),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoRowMemory(label: String, count: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 0.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = count.toString(),
+            fontFamily = iranSans,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = ": $label",
+            fontFamily = iranSans,
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp
         )
     }
 }

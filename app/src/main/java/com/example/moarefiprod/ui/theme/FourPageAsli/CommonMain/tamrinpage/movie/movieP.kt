@@ -484,6 +484,6 @@ fun VideoCard(
                         style = TextStyle(textDirection = TextDirection.Rtl)
                     )
                 }
+            }
         }
-    }
 }

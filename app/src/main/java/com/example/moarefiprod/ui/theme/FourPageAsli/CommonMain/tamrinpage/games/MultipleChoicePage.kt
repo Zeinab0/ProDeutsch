@@ -17,18 +17,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 import kotlinx.coroutines.delay
-
-
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 
 @Composable
@@ -41,7 +37,7 @@ fun MultipleChoicePage(
     gameIndex: Int,
     totalGames: Int,
     viewModel: GrammerGameViewModel
-){
+) {
     val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
 
     val configuration = LocalConfiguration.current
@@ -87,29 +83,29 @@ fun MultipleChoicePage(
             index = gameIndex
         )
     }
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Header
+
+    Box(modifier = Modifier.fillMaxSize()) {
         var showExitDialog by remember { mutableStateOf(false) }
 
-        // تشخیص مسیر برگشت
         val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
             "darsDetails/$courseId/$lessonId"
         } else {
             "grammar_page"
         }
 
-        Box(modifier = Modifier.fillMaxSize()
-            .align(Alignment.TopCenter)
-            .zIndex(3f),
-        ){
+        // Header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .zIndex(3f)
+        ) {
             StepProgressBarWithExit(
                 navController = navController,
                 currentStep = gameIndex,
                 totalSteps = totalGames,
-                returnRoute = returnRoute, // ✅ ارسال مسیر درست
-                modifier = Modifier.fillMaxSize(),
+                returnRoute = returnRoute,
+                modifier = Modifier.fillMaxWidth(),
                 onRequestExit = { showExitDialog = true }
             )
 
@@ -117,7 +113,7 @@ fun MultipleChoicePage(
                 ExitConfirmationDialog(
                     onConfirmExit = {
                         navController.navigate(returnRoute) {
-                            popUpTo("home") { inclusive = false } // اختیاری برای پاکسازی
+                            popUpTo("home") { inclusive = false }
                         }
                         showExitDialog = false
                     },
@@ -125,8 +121,6 @@ fun MultipleChoicePage(
                 )
             }
         }
-        // Header
-
 
         mcqData?.let { data ->
             Column(
@@ -135,12 +129,9 @@ fun MultipleChoicePage(
                     .padding(
                         top = screenHeight * 0.1f,
                         start = 40.dp,
-                        end = 40.dp,
-//                        bottom = 46.dp
-                    ),
-//                horizontalAlignment = Alignment.CenterHorizontally
+                        end = 40.dp
+                    )
             ) {
-
                 Spacer(modifier = Modifier.height(screenHeight * 0.14f))
 
                 Row(
@@ -191,21 +182,19 @@ fun MultipleChoicePage(
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(80.dp)) // Space for fixed button
             }
 
             if (showResultBox) {
                 val index = selectedIndex
+                val userWord = selectedIndex?.let { data.options.getOrNull(it) } ?: ""
+                val correctWord = data.options.getOrNull(data.correctAnswerIndex) ?: ""
                 ChoiceResultBox(
-                    correct = if (index == data.correctAnswerIndex) 1 else 0,
-                    wrong = if (index != data.correctAnswerIndex) 1 else 0,
-                    correctSentence = data.questionText.replace("________", data.options[data.correctAnswerIndex]),
-                    userSentence = if (
-                        index != null &&
-                        index != data.correctAnswerIndex &&
-                        index in data.options.indices
-                    ) {
-                        data.questionText.replace("________", data.options[index])
+                    correct = if (selectedIndex == data.correctAnswerIndex) 1 else 0,
+                    wrong = if (selectedIndex != data.correctAnswerIndex) 1 else 0,
+                    correctSentence = data.questionText.replace("________", correctWord),
+                    userSentence = if (selectedIndex != data.correctAnswerIndex) {
+                        data.questionText.replace("________", userWord)
                     } else {
                         ""
                     },
@@ -213,30 +202,33 @@ fun MultipleChoicePage(
                     gameIndex = gameIndex,
                     totalGames = totalGames,
                     onNext = {
-                        Log.d(
-                            "MultipleChoicePage",
-                            "Moving to next question. Current correct: ${viewModel.correctAnswers.value}, wrong: ${viewModel.wrongAnswers.value}"
-                        )
                         selectedIndex = null
                         showResultBox = false
-
                         if (gameIndex + 1 < totalGames) {
                             navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}")
                         } else {
                             showFinalResultDialog = true
                         }
-
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 0.dp)
                 )
             }
-
-
         }
 
-        if (!showResultBox && !showFinalResultDialog) {
+        // Fixed Confirm Button
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(
+                    end = screenWidth * 0.06f,
+                    bottom = screenHeight * 0.19f
+                )
+                .width(screenWidth * 0.20f)
+                .height(40.dp)
+                .zIndex(2f)
+        ) {
             Button(
                 onClick = {
                     if (selectedIndex != null) {
@@ -245,16 +237,12 @@ fun MultipleChoicePage(
                         showResultBox = true
                     }
                 },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 30.dp, bottom = 180.dp)
-                    .width(screenWidth * 0.20f)
-                    .height(40.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4D869C),
                     contentColor = Color.White
-                )
+                ),
+                modifier = Modifier.fillMaxSize()
             ) {
                 Text(
                     text = "تأیید",
@@ -264,121 +252,117 @@ fun MultipleChoicePage(
             }
         }
 
+        if (showFinalResultDialog) {
+            val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "darsDetails/$courseId/$lessonId"
+            } else {
+                "grammar_page"
+            }
 
-    }
+            Log.d(
+                "MultipleChoicePage",
+                "Displaying final result dialog. Total questions: $totalQuestions, Correct: $correctCount, Wrong: $wrongCount"
+            )
 
-    if (showFinalResultDialog) {
-        val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
-            "lesson_detail/$courseId/$lessonId" // ✅ مسیر اصلاح‌شده
-        } else {
-            "grammar_page"
-        }
-
-        Log.d(
-            "MultipleChoicePage",
-            "Displaying final result dialog. Total questions: $totalQuestions, Correct: $correctCount, Wrong: $wrongCount"
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(enabled = true, onClick = {}),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White,
+            Box(
                 modifier = Modifier
-                    .width(300.dp)
-                    .wrapContentHeight()
-                    .padding(16.dp)
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable(enabled = true, onClick = {}),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    modifier = Modifier
+                        .width(300.dp)
+                        .wrapContentHeight()
+                        .padding(16.dp)
                 ) {
-                    Text(
-                        text = ":نتیجه آزمون",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = iranSans,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "تعداد کل سوالات: $totalQuestions",
-                        fontSize = 12.sp,
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Right,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "تعداد جواب‌های درست: $correctCount",
-                        fontSize = 12.sp,
-                        fontFamily = iranSans,
-                        color = Color.Black,
-                        textAlign = TextAlign.Right,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "تعداد جواب‌های غلط: $wrongCount",
-                        fontSize = 12.sp,
-                        fontFamily = iranSans,
-                        color = Color.Black,
-                        textAlign = TextAlign.Right,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.End)
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .evenShadow(radius = 25f, cornerRadius = 20f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF7AB2B2))
-                            .height(45.dp)
-                            .fillMaxWidth(0.4f)
-                            .clickable {
-                                Log.d("MultipleChoicePage", "Final dialog confirmed. Navigating to $returnRoute")
-                                showFinalResultDialog = false
-                                navController.navigate(returnRoute)
-                            },
-                        contentAlignment = Alignment.Center
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "تأیید",
-                            color = Color.White,
-                            fontFamily = iranSans
+                            text = ":نتیجه آزمون",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = iranSans,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.End),
+                            textAlign = TextAlign.Center
                         )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "تعداد کل سوالات: $totalQuestions",
+                            fontSize = 12.sp,
+                            fontFamily = iranSans,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.End)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "تعداد جواب‌های درست: $correctCount",
+                            fontSize = 12.sp,
+                            fontFamily = iranSans,
+                            color = Color.Black,
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.End)
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "تعداد جواب‌های غلط: $wrongCount",
+                            fontSize = 12.sp,
+                            fontFamily = iranSans,
+                            color = Color.Black,
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.End)
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.End)
+                                .padding(bottom = screenHeight * 0.19f, end = screenWidth * 0.06f)
+                                .width(screenWidth * 0.20f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF7AB2B2))
+                                .height(40.dp)
+                                .clickable {
+                                    Log.d("MultipleChoicePage", "Final dialog confirmed. Navigating to $returnRoute")
+                                    showFinalResultDialog = false
+                                    navController.navigate(returnRoute)
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "تأیید",
+                                color = Color.White,
+                                fontFamily = iranSans
+                            )
+                        }
                     }
                 }
             }
         }
     }
-
 }
-
 
 @Composable
 fun ChoiceResultBox(
@@ -388,11 +372,10 @@ fun ChoiceResultBox(
     userSentence: String? = null,
     translation: String? = null,
     gameIndex: Int,
-    totalGames: Int,     // ⬅️ این رو اضافه کن
+    totalGames: Int,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
-)
-{
+) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
     Box(
@@ -400,7 +383,7 @@ fun ChoiceResultBox(
             .fillMaxWidth()
             .height(screenHeight * 0.19f)
             .padding(horizontal = 20.dp, vertical = 30.dp)
-            .background(color = Color(0xFF90CECE),RoundedCornerShape(25.dp))
+            .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
             .padding(horizontal = 15.dp, vertical = 5.dp)
     ) {
         Column(
@@ -429,6 +412,7 @@ fun ChoiceResultBox(
                             text = if (correct == 1) correctSentence ?: "" else userSentence ?: "",
                             fontFamily = iranSans,
                             fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
                             color = Color.Black,
                             textAlign = TextAlign.Left
                         )
@@ -439,7 +423,7 @@ fun ChoiceResultBox(
                             text = translation,
                             fontFamily = iranSans,
                             fontSize = 13.sp,
-                            color = Color.DarkGray,
+                            color = Color.Black,
                             textAlign = TextAlign.Right,
                             modifier = Modifier
                                 .padding(start = 8.dp)
@@ -465,6 +449,7 @@ fun ChoiceResultBox(
                             text = correctSentence ?: "",
                             fontFamily = iranSans,
                             fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
                             color = Color.Black,
                             textAlign = TextAlign.Left
                         )
@@ -496,7 +481,7 @@ fun ChoiceResultBox(
                     text = if (isLastGame) "تمام" else "بریم بعدی",
                     fontFamily = iranSans,
                     color = Color.White,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
 
                 if (!isLastGame) {
@@ -510,6 +495,5 @@ fun ChoiceResultBox(
                 }
             }
         }
-
     }
 }

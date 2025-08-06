@@ -68,7 +68,6 @@ fun AudioRecognitionPage(
         return
     }
 
-
     val audioData = viewModel.audioRecognitionGameState.collectAsState().value
     var selectedAnswerIndex by remember { mutableStateOf(-1) }
     var showResultBox by remember { mutableStateOf(false) }

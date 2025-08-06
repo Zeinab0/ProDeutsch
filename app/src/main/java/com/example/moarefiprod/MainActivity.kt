@@ -63,6 +63,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.gramm
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music.MusicHomeScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.Story
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryReadingScreen
@@ -86,8 +87,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-
-
             val viewModel: CourseViewModel = viewModel()
             val userViewModel: UserProfileViewModel = viewModel()
             val onboardingViewModel: OnboardingViewModel = viewModel()
@@ -98,7 +97,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 viewModel.loadAllCourses()
             }
-
+            // MusicHomeScreen()
 
             NavHost(navController = navController, startDestination = "firstLogo") {
                 composable("firstLogo") {
@@ -193,7 +192,8 @@ class MainActivity : ComponentActivity() {
                     MovieScreen(navController = navController)
                 }
                 composable("movie_detail/{movieId}") { backStackEntry ->
-                    val movieId = backStackEntry.arguments?.getString("movieId") ?: return@composable
+                    val movieId =
+                        backStackEntry.arguments?.getString("movieId") ?: return@composable
 
                     var movie by remember { mutableStateOf<Movie?>(null) }
 
@@ -224,7 +224,8 @@ class MainActivity : ComponentActivity() {
                     StoryScreen(navController = navController)
                 }
                 composable("story_detail/{storyId}") { backStackEntry ->
-                    val storyId = backStackEntry.arguments?.getString("storyId") ?: return@composable
+                    val storyId =
+                        backStackEntry.arguments?.getString("storyId") ?: return@composable
 
                     var story by remember { mutableStateOf<Story?>(null) }
 
@@ -265,8 +266,9 @@ class MainActivity : ComponentActivity() {
                         navArgument("storyId") { type = NavType.StringType },
                         navArgument("isPurchased") { type = NavType.BoolType; defaultValue = false }
                     )
-                ) {  backStackEntry ->
-                    val storyId = backStackEntry.arguments?.getString("storyId") ?: return@composable
+                ) { backStackEntry ->
+                    val storyId =
+                        backStackEntry.arguments?.getString("storyId") ?: return@composable
                     val isPurchased = backStackEntry.arguments?.getBoolean("isPurchased") ?: false
                     val user = FirebaseAuth.getInstance().currentUser
                     val userId = user?.uid ?: return@composable
@@ -307,6 +309,7 @@ class MainActivity : ComponentActivity() {
                             )
 
                         }
+
                         story != null -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Text(
@@ -317,6 +320,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+
                         else -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator()
@@ -339,7 +343,8 @@ class MainActivity : ComponentActivity() {
                         navController.getBackStackEntry("word_progress_page")
                     }
 
-                    val allWords = parentEntry.savedStateHandle.get<List<Word>>("all_words") ?: emptyList()
+                    val allWords =
+                        parentEntry.savedStateHandle.get<List<Word>>("all_words") ?: emptyList()
 
                     WordListPage(
                         words = allWords,
@@ -431,7 +436,11 @@ class MainActivity : ComponentActivity() {
                     val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
                     val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
 
-                    DarsDetails(navController = navController, courseId = courseId, lessonId = lessonId)
+                    DarsDetails(
+                        navController = navController,
+                        courseId = courseId,
+                        lessonId = lessonId
+                    )
                 }
 
                 composable(
@@ -445,7 +454,11 @@ class MainActivity : ComponentActivity() {
                     val lessonId = backStackEntry.arguments?.getString("lessonId")
                     Log.d("LessonDetailNav", "Received courseId: $courseId, lessonId: $lessonId")
                     if (courseId != null && lessonId != null) {
-                        DarsDetails(navController = navController, courseId = courseId, lessonId = lessonId)
+                        DarsDetails(
+                            navController = navController,
+                            courseId = courseId,
+                            lessonId = lessonId
+                        )
                     } else {
                         Text(
                             "خطا: شناسه دوره یا درس در مسیریابی ناقص است.",
@@ -504,16 +517,22 @@ class MainActivity : ComponentActivity() {
                         navArgument("lessonId") { type = NavType.StringType },
                         navArgument("contentId") { type = NavType.StringType },
                         navArgument("gameId") { type = NavType.StringType },
-                        navArgument("gameIndex") { type = NavType.IntType; defaultValue = 0 } // مقدار پیش‌فرض
+                        navArgument("gameIndex") {
+                            type = NavType.IntType; defaultValue = 0
+                        } // مقدار پیش‌فرض
                     )
                 ) { backStackEntry ->
                     val courseId = backStackEntry.arguments?.getString("courseId")
                     val lessonId = backStackEntry.arguments?.getString("lessonId")
                     val contentId = backStackEntry.arguments?.getString("contentId")
                     val gameId = backStackEntry.arguments?.getString("gameId")
-                    val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0 // دریافت gameIndex
+                    val gameIndex =
+                        backStackEntry.arguments?.getInt("gameIndex") ?: 0 // دریافت gameIndex
 
-                    Log.d("MemoryGameNav", "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex")
+                    Log.d(
+                        "MemoryGameNav",
+                        "Received: courseId=$courseId, lessonId=$lessonId, contentId=$contentId, gameId=$gameId, gameIndex=$gameIndex"
+                    )
                 }
                 //بازی های مربوط به گرامر
 
@@ -559,7 +578,6 @@ class MainActivity : ComponentActivity() {
                 //بازی های مربوط به گرامر
                 //دکمه های برگشت
 
-
                 composable(
                     route = "courseDetail/{courseId}",
                     arguments = listOf(navArgument("courseId") { type = NavType.StringType })
@@ -568,11 +586,7 @@ class MainActivity : ComponentActivity() {
                     CourseDetailPage(navController = navController, courseId = courseId)
                 }
 
-
-
                 //دکمه های برگشت
-
-
 
             }
         }

@@ -99,8 +99,6 @@ fun QuestionStoryPage(
             modifier = Modifier.fillMaxWidth()
         )
 
-
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -228,11 +226,6 @@ fun QuestionStoryPage(
                 )
             }
         }
-
-
-
-
-
         // 🖼️ باکس نتیجه در پایین صفحه
         if (showResultBox) {
             QuestionResultBox(
