@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 @Composable
-fun AudioProgressVisualizer(
+fun AudioProgressVisualizerr(
     isPlaying: Boolean,
     isDisabled: Boolean,
     progress: Float, // ⬅️ مقدار بین 0.0 تا 1.0

@@ -197,7 +197,7 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
             }
 
             // این ویژوالایزر برای نشان دادن حالت در حال پخش
-            AudioProgressVisualizer(
+            AudioProgressVisualizerr(
                 isPlaying = isPlaying,
                 isDisabled = remainingPlays == 0,
                 progress = progress

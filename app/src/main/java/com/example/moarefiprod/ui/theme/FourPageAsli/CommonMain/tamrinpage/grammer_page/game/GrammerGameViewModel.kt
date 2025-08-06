@@ -592,7 +592,66 @@ class GrammerGameViewModel : BaseGameViewModel() {
         }
     }
     // بازی loadVacancyGame
+    // بازی audio
 
+    private val _audioRecognitionGameState = MutableStateFlow<AudioRecognitionData?>(null)
+    val audioRecognitionGameState: StateFlow<AudioRecognitionData?> = _audioRecognitionGameState
+    private val _audioUrl = MutableStateFlow("")
+    val audioUrl: StateFlow<String> = _audioUrl
+
+    fun loadAudioRecognitionGame(
+        pathType: GamePathType,
+        courseId: String,
+        lessonId: String,
+        contentId: String,
+        gameId: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val collectionRef = getGameCollectionReference(pathType, courseId, lessonId, contentId)
+                if (collectionRef == null) {
+                    Log.e("GameViewModel", "❌ Invalid Firestore path.")
+                    _audioRecognitionGameState.value = null
+                    _audioUrl.value = ""
+                    return@launch
+                }
+
+                val docSnapshot = collectionRef.document(gameId).get().await()
+                if (!docSnapshot.exists()) {
+                    Log.e("GameViewModel", "❌ AudioRecognition doc not found: $gameId")
+                    _audioRecognitionGameState.value = null
+                    _audioUrl.value = ""
+                    return@launch
+                }
+
+                val questionText = docSnapshot.getString("questionText") ?: ""
+                val options = docSnapshot["options"] as? List<String> ?: emptyList()
+                val correctIndex = docSnapshot.getLong("correctAnswerIndex")?.toInt() ?: -1
+                val translation = docSnapshot.getString("translation") ?: ""
+
+                val audioUrl = docSnapshot.getString("audioUrl") ?: "" // ✅ گرفتن آدرس فایل ویس
+
+                _audioRecognitionGameState.value = AudioRecognitionData(
+                    questionText = questionText,
+                    options = options,
+                    correctAnswerIndex = correctIndex,
+                    translation = translation
+                )
+
+                _audioUrl.value = audioUrl // ✅ ذخیره برای استفاده در UI
+
+                Log.d("GameViewModel", "✅ AudioRecognition loaded. Audio URL: $audioUrl")
+
+            } catch (e: Exception) {
+                Log.e("GameViewModel", "❌ Error loading AudioRecognitionGame: ${e.message}")
+                _audioRecognitionGameState.value = null
+                _audioUrl.value = ""
+            }
+        }
+    }
+
+
+    // بازی audio
 }
 data class QuestionStoryData(
     val questionText: String,
@@ -605,6 +664,12 @@ data class VacancyData(
     val translation: String = ""
 )
 
+data class AudioRecognitionData(
+    val questionText: String = "",
+    val correctAnswerIndex: Int = -1,
+    val options: List<String> = emptyList(),
+    val translation: String = ""
+)
 
 
 data class MemoryCardPair(val farsiWord: String, val germanWord: String)
