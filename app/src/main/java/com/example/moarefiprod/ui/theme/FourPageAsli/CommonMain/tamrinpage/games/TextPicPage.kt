@@ -322,7 +322,7 @@ fun TextPicPage(
                             .fillMaxWidth()
                             .height(screenHeight * 0.19f)
                             .padding(horizontal = 20.dp, vertical = 30.dp)
-                            .background(color = Color(0xFF90CECE),RoundedCornerShape(25.dp))
+                            .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
                             .padding(horizontal = 15.dp, vertical = 5.dp)
                     ) {
                         Column(
@@ -330,7 +330,11 @@ fun TextPicPage(
                                 .fillMaxWidth()
                                 .offset(y = 8.dp)
                         ) {
-                            if (wrongCount == 0 && correctCount > 0) {
+                            val totalCorrectCount = data.words.count { it.isCorrect }
+                            val unanswered = totalCorrectCount - correctCount
+
+                            if (wrongCount == 0 && correctCount == totalCorrectCount) {
+                                // ✅ همه جواب‌های درست انتخاب شده و هیچ غلطی نبوده
                                 Text(
                                     text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
                                     fontFamily = iranSans,
@@ -344,6 +348,7 @@ fun TextPicPage(
                             } else {
                                 InfoRow("تعداد درست", correctCount)
                                 InfoRow("تعداد اشتباه", wrongCount)
+                                InfoRow("تعداد نزده", unanswered.coerceAtLeast(0)) // جلوگیری از منفی شدن
                             }
                         }
 
@@ -356,18 +361,6 @@ fun TextPicPage(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFF4D869C))
                                 .clickable {
-//                                    val nextGameId = "game_${gameIndex + 1}"
-//
-//                                    // اگر به پایان رسیده:
-//                                    if (nextGameId == "game_END") {
-//                                        showFinalDialog = true
-//                                    } else {
-//                                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
-//                                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
-//                                        }
-//
-//                                    }
-
                                     if (gameIndex + 1 >= totalGames) {
                                         showFinalDialog = true
                                     } else {
@@ -376,7 +369,6 @@ fun TextPicPage(
                                         }
                                     }
 
-                                    // ریست برای مرحله بعدی
                                     selectedWords.clear()
                                     showResultBox = false
                                     correctCount = 0

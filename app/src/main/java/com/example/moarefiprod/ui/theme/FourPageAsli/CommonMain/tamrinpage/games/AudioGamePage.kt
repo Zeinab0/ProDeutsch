@@ -266,7 +266,7 @@ fun AudioRecognitionPage(
 
 
         // دکمه تایید
-        if (!showResultBox && selectedAnswerIndex >= 0) {
+       // if (!showResultBox && selectedAnswerIndex >= 0) {
             Button(
                 onClick = {
                     showResultBox = true
@@ -280,9 +280,9 @@ fun AudioRecognitionPage(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 40.dp, bottom = 180.dp)
-                    .width(screenWidth * 0.22f)
-                    .height(42.dp),
+                    .padding(end = 30.dp, bottom = 180.dp)
+                    .width(screenWidth * 0.20f)
+                    .height(40.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4D869C),
@@ -296,7 +296,7 @@ fun AudioRecognitionPage(
                     fontSize = 14.sp
                 )
             }
-        }
+       // }
         if (showExitDialog) {
             Box(
                 modifier = Modifier
@@ -318,8 +318,6 @@ fun AudioRecognitionPage(
             }
         }
     }
-
-
 }
 
 
@@ -354,154 +352,117 @@ fun AudioResultBox(
                 .fillMaxWidth()
                 .offset(y = 8.dp)
         ) {
-            val iconRes = if (isCorrect == false) R.drawable.cross else R.drawable.tik
-
-            // ترجمه
-            Text(
-                text = translation,
-                fontFamily = iranSans,
-                color = Color.DarkGray,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Right,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .align(Alignment.End)
-            )
-
-            // جمله‌ی انتخاب شده یا درست
+            // 📘 ردیف بالا: ترجمه و جمله (user/correct)
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .padding(top = 2.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
+                // ✅ جمله کاربر یا جمله صحیح (بسته به درست بودن)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    val iconRes = if (isCorrect == false) R.drawable.cross else R.drawable.tik
+                    val iconTint = if (isCorrect == false) Color(0xFFFF3B3B) else Color(0xFF14CB00)
+
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (isCorrect == false) userSentence else correctSentence,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Left
+                    )
+                }
+
+                // ✅ ترجمه فارسی
                 Text(
-                    text = if (isCorrect == false) userSentence else correctSentence,
+                    text = translation,
                     fontFamily = iranSans,
+                    fontSize = 13.sp,
                     color = Color.Black,
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
                 )
             }
 
-            // اگر اشتباه بوده، جمله صحیح هم نمایش بده
+            // ✅ اگر کاربر اشتباه کرده بود، جمله صحیح رو هم نشون بده
             if (isCorrect == false) {
-                Spacer(modifier = Modifier.height(10.dp))
-
+                Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.tik),
                         contentDescription = null,
-                        tint = Color.Unspecified,
+                        tint = Color(0xFF14CB00),
                         modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = correctSentence,
                         fontFamily = iranSans,
-                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 14.sp,
-                        textAlign = TextAlign.End
+                        color = Color.Black,
+                        textAlign = TextAlign.Left
                     )
                 }
             }
 
-            // دکمه "بریم بعدی"
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.End)
-                    .offset(y = (-14).dp)
-                    .width(90.dp)
-                    .height(30.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF4D869C))
-                    .clickable {
-                        if (isLastGame) {
-                            navController.navigate(returnRoute) {
-                                popUpTo("home") { inclusive = false }
-                            }
-                        } else {
-                            onNext()
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        // ✅ دکمه "بریم بعدی / تمام" پایین باکس سمت راست
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(y = (-14).dp)
+                .width(90.dp)
+                .height(30.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFF4D869C))
+                .clickable {
+                    if (isLastGame) {
+                        navController.navigate(returnRoute) {
+                            popUpTo("home") { inclusive = false }
                         }
-                    },
-                contentAlignment = Alignment.Center
+                    } else {
+                        onNext()
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = if (isLastGame) "تمام" else "بریم بعدی",
-                        fontFamily = iranSans,
-                        color = Color.White,
-                        fontSize = 12.sp
+                Text(
+                    text = if (isLastGame) "تمام" else "بریم بعدی",
+                    fontFamily = iranSans,
+                    color = Color.White,
+                    fontSize = 12.sp
+                )
+                if (!isLastGame) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.nextbtn),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(12.dp)
                     )
-                    if (!isLastGame) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            painter = painterResource(id = R.drawable.nextbtn),
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(25.dp))
-
-            // دکمه رفتن به بازی بعدی با استفاده از route
-            if (courseId.isNotBlank() && lessonId.isNotBlank() && contentId.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .width(98.dp)
-                        .height(34.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF4D869C))
-                        .clickable {
-                            val currentRoute = "GameHost/$courseId/$lessonId/$contentId/$gameIndex"
-                            val nextRoute = "GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}"
-                            navController.navigate(nextRoute) {
-                                popUpTo(currentRoute) { inclusive = true }
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "ادامه",
-                            fontFamily = iranSans,
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            painter = painterResource(id = R.drawable.nextbtn),
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            } else {
-                Log.e("Navigation", "❌ مسیر ناقص: courseId یا lessonId یا contentId خالی است.")
             }
         }
     }
