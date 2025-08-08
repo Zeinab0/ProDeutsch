@@ -79,6 +79,7 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController) {
                         "مهارت شنیداری" -> navController.navigate("hören_page")
                         "فیلم" -> navController.navigate("MovieScreen")
                         "داستان" -> navController.navigate("StoryScreen")
+                        "آهنگ" -> navController.navigate("MusicScreen")
                     }
                 }
             )

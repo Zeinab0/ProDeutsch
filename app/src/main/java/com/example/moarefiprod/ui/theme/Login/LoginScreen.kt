@@ -1,6 +1,7 @@
 package com.example.moarefiprod.ui.theme.Login
 
 import ClickableRegisterTextL
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +27,7 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.signup.EmailValidationTextField
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -173,7 +175,35 @@ fun LoginScreen(
                             .addOnCompleteListener { task ->
                                 isLoading = false
                                 if (task.isSuccessful) {
+                                    val user = FirebaseAuth.getInstance().currentUser
+                                    val uid = user?.uid
+
+                                    if (uid != null) {
+                                        FirebaseFirestore.getInstance()
+                                            .collection("users")
+                                            .document(uid)
+                                            .get()
+                                            .addOnSuccessListener { doc ->
+                                                if (doc.exists()) {
+                                                    val firstName = doc.getString("firstName") ?: ""
+                                                    val lastName = doc.getString("lastName") ?: ""
+                                                    val email = doc.getString("email") ?: ""
+
+                                                    Log.d("Login", "کاربر پیدا شد: $firstName $lastName")
+
+                                                    // ✅ می‌تونی اطلاعات رو به ViewModel بفرستی یا ذخیره کنی
+                                                    // userViewModel.setUserData(firstName, lastName, email)
+                                                } else {
+                                                    Log.e("Login", "کاربر در Firestore پیدا نشد")
+                                                }
+                                            }
+                                            .addOnFailureListener {
+                                                Log.e("Login", "خطا در دریافت اطلاعات کاربر: ${it.message}")
+                                            }
+                                    }
+
                                     Toast.makeText(context, "با موفقیت وارد شدید! 🎉", Toast.LENGTH_SHORT).show()
+
                                     navController.navigate("home") {
                                         popUpTo("login") { inclusive = true }
                                     }

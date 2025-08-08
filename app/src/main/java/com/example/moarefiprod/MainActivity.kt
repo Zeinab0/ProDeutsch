@@ -63,6 +63,12 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.gramm
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music.Famous
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music.MusicDetailScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music.MusicScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music.Singer
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music.SingerDetailScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music.faveriteScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.Story
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.story.StoryReadingScreen
@@ -71,6 +77,7 @@ import com.example.moarefiprod.ui.theme.logofirst.OnboardingViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import java.net.URLDecoder
 
 val iranSans = FontFamily(
     Font(R.font.iransans_bold, FontWeight.Bold),
@@ -258,6 +265,39 @@ class MainActivity : ComponentActivity() {
                         CircularProgressIndicator()
                     }
                 }
+                composable("MusicScreen") {
+                    MusicScreen(navController = navController)
+                }
+
+                composable("detail/{songId}") { backStackEntry ->
+                    val songId = backStackEntry.arguments?.getString("songId") ?: ""
+                    MusicDetailScreen(songId = songId, navController = navController)
+                }
+                composable("favorites") {
+                    faveriteScreen(navController = navController)
+                }
+                composable("famous_singers") {
+                    Famous(navController)
+                }
+                composable(
+                    route = "singerDetail/{name}/{imageUrl}",
+                    arguments = listOf(
+                        navArgument("name") { type = NavType.StringType },
+                        navArgument("imageUrl") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val name = backStackEntry.arguments?.getString("name") ?: ""
+                    val encodedUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
+                    val imageUrl = URLDecoder.decode(encodedUrl, "UTF-8")
+
+                    val singer = Singer(id = "", name = name, imageUrl = imageUrl)
+
+                    SingerDetailScreen(
+                        singer = singer,
+                        navController = navController
+                    )
+                }
+
 
                 composable(
                     route = "reading_screen/{storyId}?isPurchased={isPurchased}",

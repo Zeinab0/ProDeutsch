@@ -49,13 +49,24 @@ fun HomeScreen(navController: NavController,userViewModel: UserProfileViewModel)
         val user = FirebaseAuth.getInstance().currentUser
         user?.let {
             val db = FirebaseFirestore.getInstance().collection("users")
-            val docs = db.whereEqualTo("email", it.email).get().await()
+            val docs = db.whereEqualTo("email", it.email).limit(1).get().await()
 
             if (docs.isEmpty) {
                 showCompleteProfileDialog.value = true
+            } else {
+                val doc = docs.documents.first()
+                val firstName = doc.getString("firstName") ?: ""
+                val lastName = doc.getString("lastName") ?: ""
+                val gender = doc.getString("gender") ?: ""
+                val birthday = doc.getString("birthday") ?: ""
+
+                if (firstName.isBlank() || lastName.isBlank() || gender.isBlank() || birthday.isBlank()) {
+                    showCompleteProfileDialog.value = true
+                }
             }
         }
     }
+
 
 
     Box(modifier = Modifier.fillMaxSize()) {

@@ -1,224 +1,403 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.music
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
+import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.material3.Text
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MusicScreen() {
+fun MusicScreen(navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    var showFavorites by remember { mutableStateOf(false) }
+    val viewModel: MusicViewModel = viewModel()
+    val songs by viewModel.songs.collectAsState()
+    val singers by viewModel.singers.collectAsState()
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+    var likedSongs by remember { mutableStateOf(listOf<Song>()) }
+    var likedSongIds by remember { mutableStateOf(setOf<String>()) }
+
+    LaunchedEffect(userId) {
+        userId?.let { uid ->
+            viewModel.getLikedSongsForUser(uid) {
+                likedSongs = it
+            }
+        }
+    }
+
+    LaunchedEffect(userId) {
+        userId?.let {
+            viewModel.getLikedSongIdsForUser(it) { ids ->
+                likedSongIds = ids
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(horizontal = 16.dp)
     ) {
-        // Header with Back Button and Search Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = screenHeight * 0.05f),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-           // IconButton(onClick = { navController.popBackStack() }) {
-            IconButton(onClick = {}) {
+        // Header
+        Box(modifier = Modifier.fillMaxWidth()) {
+            IconButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .padding(start = screenWidth * 0.03f, top = screenHeight * 0.05f)
+                    .align(Alignment.TopStart)
+            ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.music),
+                    painter = painterResource(id = R.drawable.backbtn),
                     contentDescription = "Back",
                     tint = Color.Black,
                     modifier = Modifier.size(screenWidth * 0.09f)
                 )
             }
-            OutlinedTextField(
-                value = "",
-                onValueChange = {},
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp),
-                placeholder = { Text("جستجو", fontFamily = iranSans) },
-                leadingIcon = { Icon(painterResource(id = android.R.drawable.ic_menu_search), null) },
-                trailingIcon = { Text("جستجو", fontFamily = iranSans, color = Color.Gray) },
-                shape = RoundedCornerShape(24.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.LightGray,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
         }
 
-        // Section Titles
-        Text(
-            text = "Am beliebtesten",
-            fontSize = 18.sp,
-            fontFamily = iranSans,
-            fontWeight = FontWeight.Bold,
+        // SearchBar
+        com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar()
+
+        Column(
             modifier = Modifier
-                .padding(top = 16.dp, bottom = 8.dp)
-                .align(Alignment.End)
-        )
-
-        // Popular Artists
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(horizontal = screenWidth * 0.06f) // 24.dp تقریباً
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.music),
-                contentDescription = "Artist 1",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clickable { }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.music),
-                contentDescription = "Artist 2",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clickable { }
-            )
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .size(100.dp)
-                    .align(Alignment.CenterVertically),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
-            ) {
-                Text("see more", fontFamily = iranSans)
-            }
-        }
-
-        // Favorites Toggle
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
+            // Meine Favoriten
             Text(
-                text = "Favoriten",
-                fontSize = 18.sp,
+                text = "Meine Favoriten",
+                fontSize = (screenWidth * 0.035f).value.sp,
                 fontFamily = iranSans,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(top = screenHeight * 0.02f, bottom = screenHeight * 0.01f)
+                    .align(Alignment.Start)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Alle",
-                fontSize = 16.sp,
-                fontFamily = iranSans,
-                color = Color.Gray,
-                modifier = Modifier.clickable { showFavorites = !showFavorites }
-            )
-        }
 
-        // Song List
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(listOf("Lena Meyer-Landrut", "Lena Meyer-Landrut", "Lena Meyer-Landrut", "Lena Meyer-Landrut", "Lena Me")) { song ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { }
-                        .background(Color.LightGray.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.music),
-                        contentDescription = song,
-                        modifier = Modifier.size(50.dp)
-                    )
-                    Column(modifier = Modifier.weight(1f)) {
+
+            LazyRow {
+                items(likedSongs.take(5)) { song ->
+                    FavoriteSongCard(song = song) {
+                        navController.navigate("detail/${song.id}")
+                    }
+                }
+
+                item {
+                    Box(
+                        modifier = Modifier
+                            .width(screenWidth * 0.4f) // حدود 160.dp
+                            .height(screenHeight * 0.1f) // حدود 80.dp
+                            .clip(RoundedCornerShape(screenWidth * 0.03f))
+                            .background(Color(0xFFE0E0E0))
+                            .clickable {
+                                navController.navigate("favorites")
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = song,
-                            fontSize = 16.sp,
-                            fontFamily = iranSans,
-                            fontWeight = FontWeight.Medium
+                            text = "Mehr anzeigen",
+                            color = Color.Black,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
-                    Icon(
-                        painter = painterResource(id = R.drawable.music),
-                        contentDescription = "Favorite",
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Icon(
-                        painter = painterResource(id = R.drawable.music),
-                        contentDescription = "Download",
-                        modifier = Modifier.size(24.dp)
-                    )
                 }
             }
-            item {
-                AnimatedVisibility(visible = showFavorites) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { }
-                            .background(Color(0xFF7AB2B2).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.music),
-                            contentDescription = "Lena Me",
-                            modifier = Modifier.size(50.dp)
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Lena Me",
-                                fontSize = 16.sp,
-                                fontFamily = iranSans,
-                                fontWeight = FontWeight.Medium
-                            )
+
+            // Berühmte Sänger
+            Text(
+                text = "Berühmte Sänger",
+                fontSize = (screenWidth * 0.035f).value.sp,
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(
+                        top = screenHeight * 0.02f,
+                        bottom = screenHeight * 0.01f
+                    )
+                    .align(Alignment.Start)
+            )
+
+            FamousSingersRow(singers = singers, navController = navController)
+
+            Text(
+                text = "Alle",
+                fontSize = (screenWidth * 0.035f).value.sp,
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(
+                        top = screenHeight * 0.02f,
+                        bottom = screenHeight * 0.01f
+                    )
+                    .align(Alignment.Start)
+            )
+
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+            ) {
+                items(songs) { song ->
+                    val isFavorite = likedSongIds.contains(song.id)
+                    val updatedSong = song.copy(isFavorite = isFavorite)
+
+                    SongItem(
+                        song = updatedSong,
+                        onClick = { navController.navigate("detail/${song.id}") },
+                        onLikeClick = { clickedSong ->
+                            val newState = !clickedSong.isFavorite
+                            userId?.let { uid ->
+                                viewModel.toggleSongLike(
+                                    userId = uid,
+                                    song = clickedSong.copy(isFavorite = newState),
+                                    liked = newState
+                                ) {
+                                    viewModel.getLikedSongIdsForUser(uid) { ids ->
+                                        likedSongIds = ids
+                                    }
+                                }
+                            }
                         }
-                        Icon(
-                            painter = painterResource(id = R.drawable.music),
-                            contentDescription = "Play",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                    )
                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+
 @Composable
-fun MusicScreenPreview() {
-    MusicScreen()
+fun FavoriteSongCard(song: Song, onClick: (Song) -> Unit) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val cardWidth = screenWidth * 0.4f           // حدود 40٪ از عرض صفحه
+    val cardHeight = screenHeight * 0.1f        // حدود 12٪ از ارتفاع صفحه
+    val imageIconSize = screenWidth * 0.1f       // سایز آیکن جایگزین
+    val fontSize = (screenWidth * 0.032f).value.sp
+    val spacing = screenHeight * 0.007f
+
+    Column(
+        modifier = Modifier
+            .width(cardWidth)
+            .padding(end = screenWidth * 0.025f)
+            .clickable { onClick(song) },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = cardWidth, height = cardHeight)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.LightGray),
+            contentAlignment = Alignment.Center
+        ) {
+            if (song.imageUrl.isNullOrEmpty()) {
+                Icon(
+                    painter = painterResource(id = R.drawable.music),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(imageIconSize)
+                )
+            } else {
+                AsyncImage(
+                    model = song.imageUrl,
+                    contentDescription = song.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(spacing))
+
+        Text(
+            text = song.title,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = fontSize),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
+
+@Composable
+fun FamousSingersRow(singers: List<Singer>, navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val itemSize = screenWidth * 0.25f // مثلاً 25% از عرض صفحه
+    val fontSize = (screenWidth * 0.03f).value.sp
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = screenWidth * 0.04f),
+        horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.04f)
+    ) {
+        items(singers.take(5)) { singer ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .width(itemSize)
+                    .clickable {
+                        navController.navigate(
+                            "singerDetail/${Uri.encode(singer.name)}/${Uri.encode(singer.imageUrl)}"
+                        )
+                    }
+            ) {
+                AsyncImage(
+                    model = singer.imageUrl,
+                    contentDescription = singer.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(itemSize)
+                        .clip(CircleShape)
+                )
+            }
+        }
+
+        // ➕ Mehr anzeigen
+        item {
+            Box(
+                modifier = Modifier
+                    .size(itemSize)
+                    .clip(CircleShape)
+                    .background(Color(0xFFEAEAEA))
+                    .clickable {
+                        navController.navigate("famous_singers")
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Mehr anzeigen",
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun SongItem(
+    song: Song,
+    onClick: (Song) -> Unit,
+    onLikeClick: (Song) -> Unit
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val rowHeight = screenHeight * 0.075f              // حدوداً 9٪ از ارتفاع صفحه
+    val imageWidth = screenWidth * 0.22f              // عرض عکس
+    val imageHeight = rowHeight                       // تصویر هم‌ارتفاع با ردیف
+    val textPadding = screenWidth * 0.03f
+    val titleFont = (screenWidth * 0.038f).value.sp
+    val artistFont = (screenWidth * 0.032f).value.sp
+    val likeIconSize = screenWidth * 0.07f
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(rowHeight)
+            .background(color = Color(0xFFE5E5E5), RoundedCornerShape(12.dp))
+            .padding(end = screenWidth * 0.04f)
+    ) {
+        // تصویر + متن (کلیک‌پذیر)
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clickable { onClick(song) },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = song.imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(width = imageWidth, height = imageHeight)
+                    .clip(RoundedCornerShape(12.dp, 0.dp, 0.dp, 12.dp))
+            )
+
+            Column(
+                modifier = Modifier.padding(start = textPadding)
+            ) {
+                Text(
+                    text = song.title,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF000000),
+                    fontSize = titleFont
+                )
+                Spacer(modifier = Modifier.height(screenHeight * 0.005f))
+                Text(
+                    text = song.artist,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Light,
+                    fontSize = artistFont
+                )
+            }
+        }
+
+        // آیکون لایک
+        IconButton(
+            onClick = { onLikeClick(song) },
+            modifier = Modifier.size(likeIconSize)
+        ) {
+            Icon(
+                imageVector = if (song.isFavorite) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = null,
+                tint = if (song.isFavorite) Color.Red else Color.Gray,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+
 

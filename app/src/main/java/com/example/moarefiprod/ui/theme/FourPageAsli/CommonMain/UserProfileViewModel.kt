@@ -47,16 +47,14 @@ class UserProfileViewModel : ViewModel() {
         loadUserData()
     }
 
-    public fun loadUserData() {
-        val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: return
-        email.value = currentEmail
+    fun loadUserData() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         db.collection("users")
-            .whereEqualTo("email", currentEmail)
-            .limit(1)
+            .document(uid)
             .get()
-            .addOnSuccessListener { result ->
-                val doc = result.documents.firstOrNull() ?: return@addOnSuccessListener
+            .addOnSuccessListener { doc ->
+                if (!doc.exists()) return@addOnSuccessListener
 
                 setFirstName(doc.getString("firstName") ?: "")
                 setLastName(doc.getString("lastName") ?: "")
@@ -71,11 +69,12 @@ class UserProfileViewModel : ViewModel() {
 
                 setGender(doc.getString("gender") ?: "")
                 profileImage.value = doc.getString("profileImage")
+                email.value = doc.getString("email") ?: ""
             }
     }
 
     fun saveProfile(onSuccess: () -> Unit, onFailure: () -> Unit) {
-        val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: return
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         val userData = hashMapOf(
             "firstName" to firstName.value,
@@ -83,33 +82,19 @@ class UserProfileViewModel : ViewModel() {
             "birthday" to "${birthYear.value}-${birthMonth.value}-${birthDay.value}",
             "gender" to gender.value,
             "profileImage" to (profileImage.value ?: "default"),
-            "email" to currentEmail,
-            "enrolledCourses" to listOf<String>()  // اگر می‌خوای خالی بمونه
+            "email" to FirebaseAuth.getInstance().currentUser?.email,
+            "uid" to uid,
+            "enrolledCourses" to listOf<String>()
         )
 
-        val userId = "${firstName.value.lowercase()}.${lastName.value.lowercase()}"
-
-        // بررسی می‌کنیم که کاربر با این ایمیل قبلاً وجود داشته یا نه
-        db.collection("users")
-            .whereEqualTo("email", currentEmail)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { result ->
-                val doc = result.documents.firstOrNull()
-
-                val documentId = doc?.id ?: "$userId.${System.currentTimeMillis()}"
-
-                db.collection("users").document(documentId)
-                    .set(userData)
-                    .addOnSuccessListener {
-                        loadUserData()
-                        onSuccess()
-                    }
-                    .addOnFailureListener { onFailure() }
+        db.collection("users").document(uid)
+            .set(userData)
+            .addOnSuccessListener {
+                loadUserData()
+                onSuccess()
             }
             .addOnFailureListener { onFailure() }
     }
-
 
     fun updateProfileImageBasedOnGender(gender: String) {
         profileImage.value = when (gender) {
@@ -117,20 +102,6 @@ class UserProfileViewModel : ViewModel() {
             "زن" -> "profw"
             else -> null
         }
-    }
-    suspend fun generateReadableUserId(firstName: String, lastName: String): String {
-        val base = "${firstName.lowercase()}.${lastName.lowercase()}"
-        val db = FirebaseFirestore.getInstance().collection("users")
-        var index = 1
-        var finalId = "$base.${"%03d".format(index)}"
-
-        while (true) {
-            val snapshot = db.document(finalId).get().await()
-            if (!snapshot.exists()) break
-            index++
-            finalId = "$base.${"%03d".format(index)}"
-        }
-        return finalId
     }
 
 }

@@ -23,6 +23,7 @@ import com.example.moarefiprod.ui.theme.signup.ClickableRegisterText
 import com.example.moarefiprod.ui.theme.signup.EmailValidationTextField
 import com.example.moarefiprod.ui.theme.signup.PasswordValidationTextField
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +39,9 @@ fun SignUpScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) } // ✅
+    var isLoading by remember { mutableStateOf(false) }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
 
     if (isLoading) {
         AlertDialog(
@@ -148,22 +151,55 @@ fun SignUpScreen(
 
                 Button(
                     onClick = {
-                        if (password == confirmPassword) {
-                            isLoading = true
-                            FirebaseAuth.getInstance()
-                                .createUserWithEmailAndPassword(email, password)
-                                .addOnCompleteListener { task ->
-                                    isLoading = false
-                                    if (task.isSuccessful) {
-                                        Toast.makeText(context, "ثبت‌نام موفق بود ✅", Toast.LENGTH_SHORT).show()
-                                        onSignUpSuccess()
-                                    } else {
-                                        Toast.makeText(context, "خطا: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                        } else {
-                            Toast.makeText(context, "رمزها با هم مطابقت ندارند ❌", Toast.LENGTH_SHORT).show()
+                        if (email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+                            Toast.makeText(context, "لطفاً همه فیلدها را پر کنید", Toast.LENGTH_SHORT).show()
+                            return@Button
                         }
+
+                        if (password != confirmPassword) {
+                            Toast.makeText(context, "رمزها با هم مطابقت ندارند ❌", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        isLoading = true
+                        FirebaseAuth.getInstance()
+                            .createUserWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val user = FirebaseAuth.getInstance().currentUser
+                                    val uid = user?.uid
+
+                                    if (uid != null) {
+                                        val userData = hashMapOf(
+                                            "uid" to uid,
+                                            "email" to email,
+                                            "firstName" to firstName,
+                                            "lastName" to lastName
+                                        )
+
+                                        FirebaseFirestore.getInstance()
+                                            .collection("users")
+                                            .document(uid)
+                                            .set(userData)
+                                            .addOnSuccessListener {
+                                                isLoading = false
+                                                Toast.makeText(context, "ثبت‌نام موفق بود ✅", Toast.LENGTH_SHORT).show()
+                                                onSignUpSuccess()
+                                            }
+                                            .addOnFailureListener { e ->
+                                                isLoading = false
+                                                Toast.makeText(context, "خطا در ذخیره اطلاعات: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            }
+                                    } else {
+                                        isLoading = false
+                                        Toast.makeText(context, "خطا در دریافت UID", Toast.LENGTH_SHORT).show()
+                                    }
+
+                                } else {
+                                    isLoading = false
+                                    Toast.makeText(context, "خطا: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                     },
                     modifier = Modifier
                         .width(screenWidth * 0.73f)
@@ -179,6 +215,7 @@ fun SignUpScreen(
                         fontWeight = FontWeight.Bold,
                     )
                 }
+
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
