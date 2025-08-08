@@ -2,6 +2,7 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.game
 
 import android.media.MediaPlayer
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,6 +32,7 @@ import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.ConnectResult
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioProgressVisualizerr
@@ -81,12 +83,11 @@ fun ConnectWordsPage(
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf(false) }
     var resultStatus by remember { mutableStateOf<Map<String, Boolean>?>(null) }
+    var resultList by remember { mutableStateOf<List<ConnectResult>>(emptyList()) }
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-
-
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -116,7 +117,7 @@ fun ConnectWordsPage(
             Spacer(modifier = Modifier.height(60.dp))
 
             Text(
-                text = "۲. در داستان 'Die Brücke'، کدام کلمات نمادین به مفاهیم واقعی زیر اشاره دارند؟ آن‌ها را به هم متصل کن.",
+                text = gameState.questionText ?: "", // 👈 از Firestore خونده میشه
                 fontFamily = iranSans,
                 fontSize = 14.sp,
                 color = Color.Black,
@@ -177,7 +178,7 @@ fun ConnectWordsPage(
         val allSelected = selectedAudios.keys.containsAll(words)
 
         val userIsCorrect = selectedAudios == correctPairs
-
+        val selectedWordAndUrl: Map<String, String> = selectedAudios.toMap()
         val newResultStatus = words.associateWith { word ->
             selectedAudios[word] == correctPairs[word]
         }
@@ -187,8 +188,30 @@ fun ConnectWordsPage(
                 showResultBox = true
                 isCorrect = userIsCorrect
                 resultStatus = newResultStatus
+
+                resultList = words.map { word ->
+                    val selectedAudio = selectedAudios[word] ?: ""
+                    val correctAudio = correctPairs[word] ?: ""
+                    val userSentence = gameState.audioTexts[selectedAudio] ?: "---"
+                    val correctSentence = gameState.audioTexts[correctAudio] ?: "---"
+                    val isCorrect = selectedAudio == correctAudio
+                    val translation = gameState.wordTranslations[word] ?: ""
+
+                    Log.d("TranslationCheck", "Translation for $word: $translation")
+
+                    ConnectResult(
+                        word = word,
+                        selectedAudioUrl = selectedAudio,
+                        correctAudioUrl = correctAudio,
+                        userSentence = userSentence,
+                        correctSentence = correctSentence,
+                        isCorrect = isCorrect,
+                        translation = translation
+                    )
+                }
             },
-            enabled = allSelected,
+            //enabled = allSelected,
+            enabled = true,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 30.dp, bottom = 180.dp)
@@ -205,59 +228,22 @@ fun ConnectWordsPage(
 
         if (showResultBox) {
             ConnectWordsResultBox(
-                isCorrect = isCorrect,
-                correctSentence = "پاسخ درست داده شده",
-                userSentence = "",
-                translation = null,
+                resultList = resultList,
+                isLastGame = gameIndex == totalGames - 1,
+                navController = navController,
+                returnRoute = returnRoute,
                 onNext = {
                     showResultBox = false
                     selectedAudios.clear()
-                    resultStatus = null // reset status
+                    resultStatus = null
                 },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 0.dp)
             )
         }
     }
 }
-
-
-//
-//@Composable
-//fun AudioProgressVisualizer(
-//    progress: Float,
-//    isSelected: Boolean,
-//    isCorrect: Boolean? // پارامتر جدید
-//) {
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .height(20.dp),
-//        verticalAlignment = Alignment.CenterVertically,
-//        horizontalArrangement = Arrangement.SpaceBetween
-//    ) {
-//        val barColor = when {
-//            isSelected || isCorrect != null -> Color.White
-//            else -> Color(0xFF7AB2B2)
-//        }
-//
-//        val inactiveColor = when {
-//            isSelected || isCorrect != null -> Color.White
-//            else -> Color(0xFFCDE8E5)
-//        }
-//
-//        repeat(20) { index ->
-//            Box(
-//                modifier = Modifier
-//                    .width(3.dp)
-//                    .height(if (index % 3 == 0) 20.dp else 10.dp)
-//                    .background(
-//                        if (index.toFloat() / 20f < progress) barColor else inactiveColor,
-//                        RoundedCornerShape(2.dp)
-//                    )
-//            )
-//        }
-//    }
-//}
 
 @Composable
 fun AudioBoxFromUrl(
@@ -274,6 +260,7 @@ fun AudioBoxFromUrl(
     var progress by remember { mutableStateOf(0f) }
     var remainingPlays by remember { mutableStateOf(3) }
     val scope = rememberCoroutineScope()
+
 
     DisposableEffect(audioUrl) {
         mediaPlayer = MediaPlayer().apply {
@@ -336,7 +323,8 @@ fun AudioBoxFromUrl(
             Icon(
                 painter = painterResource(id = R.drawable.volume),
                 contentDescription = "Play Audio",
-                tint = iconTint
+                tint = iconTint,
+                modifier = Modifier.size(25.dp)
             )
         }
 
@@ -378,60 +366,55 @@ fun WordBox(word: String, isSelected: Boolean, onClick: (String) -> Unit) {
 
 @Composable
 fun ConnectWordsResultBox(
-    isCorrect: Boolean,
-    correctSentence: String,
-    userSentence: String?,
-    translation: String?,
+    resultList: List<ConnectResult>,
+    isLastGame: Boolean,
+    navController: NavController,
+    returnRoute: String,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
-){
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(screenHeight * 0.14f)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4D869C), Color(0xFFCDE8E5))
-                ),
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-            )
-            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .wrapContentHeight()
+            .padding(horizontal = 20.dp, vertical = 20.dp)
+            .background(color = Color(0xFF90CECE), shape = RoundedCornerShape(25.dp))
+            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = 8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        painter = painterResource(id = if (isCorrect) R.drawable.tik else R.drawable.cross),
-                        contentDescription = null,
-                        tint = if (isCorrect) Color(0xFF14CB00) else Color(0xFFFF3B3B),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (isCorrect) correctSentence else userSentence ?: "",
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        textAlign = TextAlign.Left
-                    )
-                }
+        Column(modifier = Modifier.fillMaxWidth()) {
 
-                if (!translation.isNullOrEmpty()) {
+            resultList.forEachIndexed { index, result ->
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // =================== جمله آلمانی + وضعیت چکمارک (سمت چپ)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = if (result.isCorrect) R.drawable.tik else R.drawable.cross),
+                            contentDescription = null,
+                            tint = if (result.isCorrect) Color(0xFF14CB00) else Color(0xFFFF3B3B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${result.userSentence}",
+                            fontFamily = iranSans,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                        )
+                    }
+
+                    // ==================== ترجمه فارسی کلمه (سمت راست)
                     Text(
-                        text = translation,
+                        text = result.translation,
                         fontFamily = iranSans,
                         fontSize = 13.sp,
                         color = Color.DarkGray,
@@ -439,28 +422,76 @@ fun ConnectWordsResultBox(
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
+
+                if (!result.isCorrect) {
+                    // جمله درست (در صورت غلط بودن)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                       // Spacer(modifier = Modifier.width(2.dp)) // ایجاد فاصله از چپ
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.tik),
+                            contentDescription = null,
+                            tint = Color(0xFF14CB00),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = result.correctSentence,
+                            fontFamily = iranSans,
+                            fontSize = 13.sp,
+                            color = Color.Black
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .offset(y = (-14).dp)
-                .width(90.dp)
-                .height(30.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF4D869C))
-                .clickable { onNext() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "بریم بعدی",
-                fontFamily = iranSans,
-                color = Color.White,
-                fontSize = 12.sp
-            )
+            // دکمه پایین سمت چپ
+            Box(
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .offset(y = (-14).dp)
+                    .width(90.dp)
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF4D869C))
+                    .clickable {
+                        if (isLastGame) {
+                            navController.navigate(returnRoute) {
+                                popUpTo("home") { inclusive = false }
+                            }
+                        } else {
+                            onNext()
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (isLastGame) "تمام" else "بریم بعدی",
+                        fontFamily = iranSans,
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
+                    if (!isLastGame) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.nextbtn),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

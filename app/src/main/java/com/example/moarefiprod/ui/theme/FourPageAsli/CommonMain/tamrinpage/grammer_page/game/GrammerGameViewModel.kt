@@ -634,14 +634,29 @@ class GrammerGameViewModel : BaseGameViewModel() {
 
                 val doc = collectionRef.document(gameId).get().await()
 
+                Log.d("RAW_DOC", doc.data.toString())
+
                 val words = doc["words"] as? List<String> ?: emptyList()
                 val audioUrls = doc["audioUrls"] as? List<String> ?: emptyList()
                 val correctPairsRaw = doc["correctPairs"] as? Map<String, String> ?: emptyMap()
+                val audioTexts = doc["audioTexts"] as? Map<String, String> ?: emptyMap()
+                val wordTranslations = doc["wordTranslations"] as? Map<String, String> ?: emptyMap()
+                val questionText = doc.getString("questionText") ?: ""
+
+//                @Suppress("UNCHECKED_CAST")
+//                val wordTranslations = doc.get("wordTranslations") as? Map<String, Any> ?: emptyMap()
+
+                Log.d("DEBUG_TRANSLATIONS", "📦 Received wordTranslations: $wordTranslations") // ✅
+                Log.d("CHECK_GAMEID", "Loading gameId: $gameId")
 
                 _connectWordsGameState.value = ConnectWordsGameData(
                     words = words,
                     audioUrls = audioUrls,
-                    correctPairs = correctPairsRaw
+                    correctPairs = correctPairsRaw,
+                    audioTexts = audioTexts,                            // ← اضافه کن
+                    wordTranslations = wordTranslations,
+                   // wordTranslations.mapValues { it.value.toString() },
+                    questionText = questionText
                 )
             } catch (e: Exception) {
                 Log.e("ViewModel", "❌ Error loading ConnectWordsGame: ${e.message}")
@@ -669,7 +684,8 @@ data class GameModel(
     val wordPool: List<String> = emptyList(),
     val pairs: List<Map<String, String>> = emptyList(),
     val imageUrl: String? = null,
-    val words: List<Map<String, Any>> = emptyList()
+   // val words: List<Map<String, Any>> = emptyList()
+    val words: List<Any>? = null
 )
 
 data class MultipleChoiceData(
@@ -704,7 +720,20 @@ data class SentenceGameData(
 data class ConnectWordsGameData(
     val words: List<String> = emptyList(),
     val audioUrls: List<String> = emptyList(), // از Firestore آدرس mp3 می‌گیریم
-    val correctPairs: Map<String, String> = emptyMap() // word → audioUrl
+    val correctPairs: Map<String, String> = emptyMap(), // word → audioUrl
+    val audioTexts: Map<String, String> = emptyMap(),          // ← 🔥 جدید
+    val wordTranslations: Map<String, String> = emptyMap(),     // ← تو قبلاً اضافهش کردی، اگه نکردی الان بکن
+    val questionText: String = ""
+)
+
+data class ConnectResult(
+    val word: String,
+    val selectedAudioUrl: String,
+    val correctAudioUrl: String,
+    val userSentence: String,
+    val correctSentence: String,
+    val isCorrect: Boolean,
+    val translation: String
 )
 
 data class AudioRecognitionData(

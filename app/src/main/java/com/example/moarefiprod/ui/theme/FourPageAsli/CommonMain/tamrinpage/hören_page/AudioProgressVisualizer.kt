@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
@@ -29,7 +30,10 @@ fun AudioProgressVisualizerr(
     isPlaying: Boolean,
     isDisabled: Boolean,
     progress: Float, // ⬅️ مقدار بین 0.0 تا 1.0
-    barCount: Int = 30,
+    barCount: Int = 28,
+//    barWidth: Dp = 2.dp,           // ← قابل تغییر
+//    barHeight: Dp = 12.dp,         // ← حداکثر ارتفاع
+//    spaceBetween: Dp = 1.dp,
     barColor: Color = Color(0xFFB7E5E4),
     barActiveColor: Color = Color(0xFF4DA3A3),
     barDisabledColor: Color = Color.Gray
@@ -43,7 +47,7 @@ fun AudioProgressVisualizerr(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .height(50.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         for (i in 0 until barCount) {

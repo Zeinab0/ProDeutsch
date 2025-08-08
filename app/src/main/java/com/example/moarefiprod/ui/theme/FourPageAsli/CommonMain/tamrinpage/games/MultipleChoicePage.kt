@@ -226,7 +226,7 @@ fun MultipleChoicePage(
                     bottom = screenHeight * 0.19f
                 )
                 .width(screenWidth * 0.20f)
-                .height(40.dp)
+                .height(30.dp)
                 .zIndex(2f)
         ) {
             Button(
