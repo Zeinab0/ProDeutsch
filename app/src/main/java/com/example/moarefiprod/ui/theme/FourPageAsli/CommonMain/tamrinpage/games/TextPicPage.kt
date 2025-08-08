@@ -59,7 +59,7 @@ fun TextPicPage(
     val imageSectionHeight = screenHeight * 0.36f
     val overlapHeight = 40.dp
     val resultBoxHeight = screenHeight * 0.19f
-
+    val isLastGame = gameIndex + 1 >= totalGames
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -182,8 +182,8 @@ fun TextPicPage(
                                         if (word.isCorrect) {
                                             if (isSelected) Brush.radialGradient(
                                                 colors = listOf(
-                                                    Color(0xCC7ABDBB),
-                                                    Color(0xFFB0E1DF)
+                                                    Color(0xFF6ABBBB), // بنفش تیره
+                                                    Color(0xFF6ABBBB)  // بنفش روشن
                                                 ),
                                                 radius = 130f
                                             ) else Brush.radialGradient(
@@ -196,8 +196,8 @@ fun TextPicPage(
                                         } else {
                                             if (isSelected) Brush.radialGradient(
                                                 colors = listOf(
-                                                    Color(0xCC6ABBBB),
-                                                    Color(0xFFB0E1DF)
+                                                    Color(0xFF6ABBBB), // بنفش تیره
+                                                    Color(0xFF6ABBBB)  // بنفش روشن
                                                 ),
                                                 radius = 130f
                                             ) else Brush.radialGradient(
@@ -210,14 +210,19 @@ fun TextPicPage(
                                         }
                                     } else {
                                         if (isSelected) Brush.radialGradient(
-                                            colors = listOf(Color(0xFF6ABBBB), Color(0xFFB0E1DF)),
+                                            colors = listOf(
+                                                Color(0xFF6ABBBB), // بنفش تیره
+                                                Color(0xFF6ABBBB)  // بنفش روشن
+                                            ),
                                             radius = 130f
                                         ) else Brush.radialGradient(
-                                            colors = listOf(Color(0x1ACDE8E5), Color(0xFF6ABBBB)),
+                                            colors = listOf(
+                                                Color(0x1ACDE8E5),
+                                                Color(0xFF6ABBBB)
+                                            ),
                                             radius = 150f
                                         )
                                     }
-
                                     val borderColor = if (showResultBox) {
                                         if (word.isCorrect && isSelected) Color(0xFF14CB00)
                                         else if (!word.isCorrect && isSelected) Color(0xFFD32F2F)
@@ -272,13 +277,21 @@ fun TextPicPage(
                 if (!showResultBox && !showFinalDialog) {
                     Button(
                         onClick = {
+                            correctCount = data.words.count { word ->
+                                word.isCorrect && selectedWords.contains(word.word)
+                            }
+                            wrongCount = selectedWords.count { word ->
+                                data.words.find { it.word == word }?.isCorrect == false
+                            }
                             showResultBox = true
+                            // اضافه کردن این خط برای ثبت زمان
+                            grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
                         },
                         modifier = Modifier
                             .align(Alignment.End)
-                            .padding(end = 10.dp, bottom = 110.dp)
-                            .width(screenWidth * 0.22f)
-                            .height(53.dp),
+                            .padding(bottom = screenHeight * 0.19f, end = screenWidth * 0.06f)
+                            .width(screenWidth * 0.20f)
+                            .height(40.dp),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4D869C),
@@ -292,7 +305,6 @@ fun TextPicPage(
                         )
                     }
                 }
-
             }
 
 
@@ -310,7 +322,7 @@ fun TextPicPage(
                             .fillMaxWidth()
                             .height(screenHeight * 0.19f)
                             .padding(horizontal = 20.dp, vertical = 30.dp)
-                            .background(color = Color(0xFF90CECE),RoundedCornerShape(25.dp))
+                            .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
                             .padding(horizontal = 15.dp, vertical = 5.dp)
                     ) {
                         Column(
@@ -318,7 +330,11 @@ fun TextPicPage(
                                 .fillMaxWidth()
                                 .offset(y = 8.dp)
                         ) {
-                            if (wrongCount == 0 && correctCount > 0) {
+                            val totalCorrectCount = data.words.count { it.isCorrect }
+                            val unanswered = totalCorrectCount - correctCount
+
+                            if (wrongCount == 0 && correctCount == totalCorrectCount) {
+                                // ✅ همه جواب‌های درست انتخاب شده و هیچ غلطی نبوده
                                 Text(
                                     text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
                                     fontFamily = iranSans,
@@ -332,6 +348,7 @@ fun TextPicPage(
                             } else {
                                 InfoRow("تعداد درست", correctCount)
                                 InfoRow("تعداد اشتباه", wrongCount)
+                                InfoRow("تعداد نزده", unanswered.coerceAtLeast(0)) // جلوگیری از منفی شدن
                             }
                         }
 
@@ -344,19 +361,14 @@ fun TextPicPage(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFF4D869C))
                                 .clickable {
-                                    val nextGameId = "game_${gameIndex + 1}"
-
-                                    // اگر به پایان رسیده:
-                                    if (nextGameId == "game_END") {
+                                    if (gameIndex + 1 >= totalGames) {
                                         showFinalDialog = true
                                     } else {
                                         navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
                                             popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                                         }
-
                                     }
 
-                                    // ریست برای مرحله بعدی
                                     selectedWords.clear()
                                     showResultBox = false
                                     correctCount = 0
@@ -369,18 +381,21 @@ fun TextPicPage(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "بریم بعدی",
+                                    text = if (isLastGame) "تمام" else "بریم بعدی",
                                     fontFamily = iranSans,
                                     color = Color.White,
                                     fontSize = 13.sp,
-                                    modifier = Modifier.padding(start = 8.dp)
+                                    modifier = Modifier.padding(start = if (isLastGame) 0.dp else 8.dp)
                                 )
-                                Icon(
-                                    painter = painterResource(id = R.drawable.nextbtn),
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
+
+                                if (!isLastGame) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.nextbtn),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -408,14 +423,6 @@ fun TextPicPage(
                     }
                 )
             }
-
-
-
-
-
-
-
-
         } ?: run {
             Text(
                 text = "داده‌ها بارگذاری نشد.",

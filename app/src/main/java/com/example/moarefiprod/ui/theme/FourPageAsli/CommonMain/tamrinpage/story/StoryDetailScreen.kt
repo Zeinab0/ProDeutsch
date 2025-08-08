@@ -286,5 +286,5 @@ fun StoryDetailScreen(
             }
         }
 
-    }
+     }
 }

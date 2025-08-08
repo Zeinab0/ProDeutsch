@@ -4,24 +4,29 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.*
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.style.TextAlign
-import androidx.navigation.NavController
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
@@ -52,8 +57,7 @@ fun SentenceBuilderPage(
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var timeInSeconds by remember { mutableStateOf(0) }
-
-
+    val density = LocalDensity.current
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -76,30 +80,26 @@ fun SentenceBuilderPage(
         )
     }
 
-
-
-
     Box(modifier = Modifier.fillMaxSize()) {
-        // Header
         var showExitDialog by remember { mutableStateOf(false) }
 
-        // تشخیص مسیر برگشت
         val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
             "darsDetails/$courseId/$lessonId"
         } else {
             "grammar_page"
         }
 
-        Box(modifier = Modifier.fillMaxSize()
-            .align(Alignment.TopCenter)
-            .zIndex(3f),
-        ){
+        // ProgressBar and Exit button at the top
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .zIndex(3f)
+        ) {
             StepProgressBarWithExit(
                 navController = navController,
                 currentStep = gameIndex,
                 totalSteps = totalGames,
-                returnRoute = returnRoute, // ✅ ارسال مسیر درست
-                modifier = Modifier.fillMaxSize(),
+                returnRoute = returnRoute,
                 onRequestExit = { showExitDialog = true }
             )
 
@@ -107,7 +107,7 @@ fun SentenceBuilderPage(
                 ExitConfirmationDialog(
                     onConfirmExit = {
                         navController.navigate(returnRoute) {
-                            popUpTo("home") { inclusive = false } // اختیاری برای پاکسازی
+                            popUpTo("home") { inclusive = false }
                         }
                         showExitDialog = false
                     },
@@ -115,8 +115,6 @@ fun SentenceBuilderPage(
                 )
             }
         }
-        // Header
-
 
         when {
             sentenceState == null -> {
@@ -137,35 +135,31 @@ fun SentenceBuilderPage(
             }
             else -> {
                 val state = sentenceState!!
-                val wordList = state.wordPool
                 val correctSentence = state.correctSentence.joinToString(" ")
                 val question = state.question
 
-                Column(
+                // Fixed sentence and chat icon
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            horizontal = 30.dp,
-                        ),
+                        .fillMaxWidth()
+                        .padding(top = screenHeight * 0.18f)
+                        .zIndex(1f)
                 ) {
-
-                    Spacer(modifier = Modifier.weight(1f))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End,
-                        modifier = Modifier.fillMaxWidth()
-                    ){
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                    ) {
                         Text(
                             text = question,
                             fontFamily = iranSans,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
                             fontSize = 16.sp,
-                            style = TextStyle(
-                                textDirection = TextDirection.Rtl
-                            ),
+                            style = TextStyle(textDirection = TextDirection.Rtl),
                             textAlign = TextAlign.Center
-
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Image(
@@ -176,32 +170,41 @@ fun SentenceBuilderPage(
                                 .padding(end = 12.dp)
                         )
                     }
+                }
 
-
-                    Spacer(modifier = Modifier.height(screenHeight * 0.05f))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(screenHeight * 0.07f),
-                        contentAlignment = Alignment.Center
+                // Scrollable main content
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 30.dp)
+                        .padding(top = screenHeight * 0.3f)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.Transparent)
                         ) {
-                            Box(modifier = Modifier.fillMaxWidth()) {
-                                DottedLine(
-                                    width = screenWidth * 0.8f,
-                                    modifier = Modifier.align(Alignment.Center)
-                                )
-
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 12.dp)
+                                    .verticalScroll(rememberScrollState())
+                                    .clipToBounds()
+                            ) {
                                 FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 12.dp)
+                                        .padding(top = 8.dp)
+                                        .padding(start = 30.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     selectedWords.forEach { word ->
                                         ClickableTextWordBox(
@@ -217,97 +220,103 @@ fun SentenceBuilderPage(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(screenHeight * 0.05f))
-
-                            DottedLine(width = screenWidth * 0.8f)
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                                modifier = Modifier.fillMaxWidth()
+                            // Fixed dashed lines and pencil icon
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp)
+                                    .zIndex(1f)
+                                    .padding(horizontal = 5.dp)
                             ) {
-                                // اینجا فقط کلماتی که در selectedWords نیستن رو نشون می‌دیم
-                                sentenceState?.wordPool?.forEach { word ->
-                                    if (!selectedWords.contains(word)) {
-                                        ClickableTextWordBox(
-                                            word = word,
-                                            isSelected = false,
-                                            onClick = {
-                                                selectedWords = selectedWords.toMutableList().apply {
-                                                    add(word)
-                                                }
-                                            }
-                                        )
-                                    }
+                                Row(
+                                    modifier = Modifier.offset(y = 15.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.pen),
+                                        contentDescription = "Pencil Icon",
+                                        modifier = Modifier.size(26.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    DottedLine(
+                                        width = screenWidth * 0.9f - 18.dp,
+                                        modifier = Modifier.weight(1.2f)
+                                    )
                                 }
-                            }
-                        }
-                    }
 
-                    Spacer(modifier = Modifier.height(screenHeight * 0.03f))
-
-
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        wordList.forEach { word ->
-                            if (!selectedWords.contains(word)) {
-                                ClickableTextWordBox(
-                                    word = word,
-                                    isSelected = false,
-                                    onClick = {
-                                        selectedWords =
-                                            selectedWords.toMutableList().apply { add(word) }
-                                    }
+                                DottedLine(
+                                    width = screenWidth * 0.96f,
+                                    modifier = Modifier
+                                        .align(Alignment.TopCenter)
+                                        .offset(y = 76.dp)
                                 )
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-
-                    if (!showResultBox) {
-                        Button(
-                            onClick = {
-                                val isCurrentSentenceCorrect =
-                                    selectedWords.joinToString(" ") == correctSentence
-                                isCorrect = isCurrentSentenceCorrect
-                                showResultBox = true
-                                if (isCurrentSentenceCorrect) {
-                                    viewModel.incrementCorrect(1)
-                                } else {
-                                    viewModel.incrementWrong(1)
-                                }
-                                viewModel.recordMemoryGameResult(
-                                    correct = if (isCurrentSentenceCorrect) 1 else 0,
-                                    wrong = if (!isCurrentSentenceCorrect) 1 else 0,
-                                    timeInSeconds = timeInSeconds
-                                )
-                            },
-                            modifier = Modifier
-                                .align(Alignment.End)
-                                .padding( bottom = screenHeight * 0.19f)
-                                .width(screenWidth * 0.20f)
-                                .height(40.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF4D869C),
-                                contentColor = Color.White
-                            )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("تایید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+                            sentenceState?.wordPool?.forEach { word ->
+                                if (!selectedWords.contains(word)) {
+                                    ClickableTextWordBox(
+                                        word = word,
+                                        isSelected = false,
+                                        onClick = {
+                                            selectedWords = selectedWords.toMutableList().apply {
+                                                add(word)
+                                            }
+                                        }
+                                    )
+                                }
+                            }
                         }
-
                     }
+
+                    Spacer(modifier = Modifier.height(80.dp)) // Space for the fixed button
                 }
             }
         }
 
+        // Fixed Confirm Button
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = screenHeight * 0.19f, end = 30.dp)
+                .width(screenWidth * 0.20f)
+                .height(40.dp)
+                .zIndex(2f)
+        ) {
+            Button(
+                onClick = {
+                    val isCurrentSentenceCorrect = selectedWords.joinToString(" ") == correctSentence
+                    isCorrect = isCurrentSentenceCorrect
+                    showResultBox = true
+                    if (isCurrentSentenceCorrect) {
+                        viewModel.incrementCorrect(1)
+                    } else {
+                        viewModel.incrementWrong(1)
+                    }
+                    viewModel.recordMemoryGameResult(
+                        correct = if (isCurrentSentenceCorrect) 1 else 0,
+                        wrong = if (!isCurrentSentenceCorrect) 1 else 0,
+                        timeInSeconds = timeInSeconds
+                    )
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4D869C),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text("تایید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Result Box
         if (showResultBox) {
             val userSentence = selectedWords.joinToString(" ")
 
@@ -328,15 +337,12 @@ fun SentenceBuilderPage(
                     navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
                         popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                     }
-
                 },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
     }
 }
-
 
 @Composable
 fun ClickableTextWordBox(word: String, isSelected: Boolean, onClick: () -> Unit) {
@@ -344,7 +350,7 @@ fun ClickableTextWordBox(word: String, isSelected: Boolean, onClick: () -> Unit)
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .background(if (isSelected) Color.Gray else Color(0xFFCDE8E5))
-            .clickable(enabled = !isSelected) { onClick() }
+            .clickable { onClick() }
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
@@ -404,19 +410,20 @@ fun Result(
             .fillMaxWidth()
             .height(screenHeight * 0.19f)
             .padding(horizontal = 20.dp, vertical = 30.dp)
-            .background(color = Color(0xFF90CECE),RoundedCornerShape(25.dp))
+            .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
             .padding(horizontal = 15.dp, vertical = 5.dp)
-    ){
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .offset(y = 8.dp)
-        ){
+        ) {
             if (allCorrect) {
                 Text(
                     text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
                     fontFamily = iranSans,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
                     color = Color.Black,
                     textAlign = TextAlign.Right,
                     modifier = Modifier
@@ -441,6 +448,7 @@ fun Result(
                             text = correctSentence,
                             fontFamily = iranSans,
                             color = Color.Black,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Left,
                             modifier = Modifier.weight(1f)
@@ -467,6 +475,7 @@ fun Result(
                             fontFamily = iranSans,
                             color = Color.Black,
                             fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
                             textAlign = TextAlign.Left,
                             modifier = Modifier.weight(1f)
                         )
@@ -480,7 +489,7 @@ fun Result(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentWidth(Alignment.End) // ⬅️ دکمه را راست‌چین می‌کند
+                    .wrapContentWidth(Alignment.End)
                     .offset(y = (-14).dp)
                     .width(90.dp)
                     .height(30.dp)
@@ -511,7 +520,6 @@ fun Result(
                     }
                 }
             }
-
         }
     }
 }

@@ -245,7 +245,7 @@ fun VacancyPage(
         }
 
 
-        if (!showCompletedSentence) {
+      //  if (!showCompletedSentence) {
             Button(
                 onClick = {
                     isCorrect = userInput.text.trim().equals(correctAnswer, ignoreCase = true)
@@ -262,8 +262,8 @@ fun VacancyPage(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 30.dp, bottom = 180.dp)
-                    .width(screenWidth * 0.22f)
-                    .height(42.dp),
+                    .width(screenWidth * 0.20f)
+                    .height(40.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4D869C),
@@ -278,7 +278,7 @@ fun VacancyPage(
                 )
             }
 
-        }
+        //}
         // --- پایان بخش دکمه تایید ---
 
         if (showExitDialog) {
@@ -403,6 +403,7 @@ fun WinnerBoxVacancy(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentWidth(Alignment.End)
+                    .offset(y = (-14).dp)
                     .width(90.dp)
                     .height(30.dp)
                     .clip(RoundedCornerShape(10.dp))
