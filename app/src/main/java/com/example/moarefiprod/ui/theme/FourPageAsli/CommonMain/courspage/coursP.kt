@@ -62,7 +62,7 @@ fun tamrinpage(
             .background(Color.White)
             .padding(horizontal = screenWidth * 0.05f)
     ) {
-        BannerSection()
+        BannerSection(navController = navController)
 
         // متن دوره‌ها
         Text(
