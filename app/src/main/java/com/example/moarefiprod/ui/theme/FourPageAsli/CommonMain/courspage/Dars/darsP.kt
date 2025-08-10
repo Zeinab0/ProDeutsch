@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -261,11 +262,15 @@ fun LessonItemRowUI(
                         }
                     }
 
+                    CourseItemType.VIDEO -> {
+                        navController.navigate("video_page/$courseId/$lessonId/${item.id}")
+                        Log.d("LessonItemRowUI", " Navigating to video contentId=${item.id}")
+                    }
+
                     CourseItemType.DOCUMENT -> {
                         navController.navigate("jozve_page/$courseId/$lessonId/${item.id}")
                         Log.d("LessonItemRowUI", "📄 Navigating to Jozve with contentId=${item.id}")
                     }
-
                     else -> {
                         Log.d("LessonItemRowUI", "🟡 Unsupported content type: ${item.type}")
                     }
