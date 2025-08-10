@@ -45,6 +45,9 @@ import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseItemType
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
 
 
 @Composable
@@ -240,22 +243,32 @@ fun LessonItemRowUI(
     val gameIds by gameViewModel.gameIds.collectAsState()
     val isClickable = item.type == CourseItemType.QUIZ_SET && gameIds.isNotEmpty()
 
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = isClickable) {
-                if (isClickable) {
-                    val game = gameViewModel.getGameAt(currentGameIndex)
-
-                    if (game != null) {
-                        navController.navigate("GameHost/$courseId/$lessonId/${item.id}/$currentGameIndex")
-                        currentGameIndex++
-                    } else {
-                        Log.e("LessonItemRowUI", "❌ No more games or game not found at index $currentGameIndex")
-                        currentGameIndex = 0
+            .clickable {
+                when (item.type) {
+                    CourseItemType.QUIZ_SET -> {
+                        val game = gameViewModel.getGameAt(currentGameIndex)
+                        if (game != null) {
+                            navController.navigate("GameHost/$courseId/$lessonId/${item.id}/$currentGameIndex")
+                            Log.d("LessonItemRowUI", "🎯 Start Quiz → $courseId | $lessonId | ${item.id}")
+                            currentGameIndex++
+                        } else {
+                            Log.e("LessonItemRowUI", "❌ No more games found")
+                            currentGameIndex = 0
+                        }
                     }
-                } else {
-                    Log.d("LessonItemRowUI", "⏳ Waiting for games to load...")
+
+                    CourseItemType.DOCUMENT -> {
+                        navController.navigate("jozve_page/$courseId/$lessonId/${item.id}")
+                        Log.d("LessonItemRowUI", "📄 Navigating to Jozve with contentId=${item.id}")
+                    }
+
+                    else -> {
+                        Log.d("LessonItemRowUI", "🟡 Unsupported content type: ${item.type}")
+                    }
                 }
             }
             .shadow(6.dp, cardShape, clip = true)
