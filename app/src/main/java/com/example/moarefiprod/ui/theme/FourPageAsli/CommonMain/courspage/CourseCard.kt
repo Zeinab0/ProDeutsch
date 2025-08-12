@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.iranSans
+import android.net.Uri
 
 @Composable
 fun CourseCard(
@@ -78,10 +79,15 @@ fun CourseCard(
 
                 Button(
                     onClick = {
-                        navController.navigate("course_detail/${course.id}") {
+                        val encodedUrl = Uri.encode(course.imageUrl) // مهم: encode
+                        navController.navigate("course_detail/${course.id}?imageUrl=$encodedUrl") {
                             launchSingleTop = true
                             restoreState = true
                         }
+//                        navController.navigate("course_detail/${course.id}") {
+//                            launchSingleTop = true
+//                            restoreState = true
+//                        }
                     },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier

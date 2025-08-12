@@ -58,7 +58,7 @@ fun StoryScreen(navController: NavController) {
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    var selectedFilter by remember { mutableStateOf("همه") }
+    var selectedFilter by remember { mutableStateOf("Alle") }
     val stories = remember { mutableStateOf<List<Story>>(emptyList()) }
     val centerIndex = remember { mutableStateOf(0) }
 
@@ -71,7 +71,7 @@ fun StoryScreen(navController: NavController) {
     val storyList = stories.value
 
     val filteredStories = remember(storyList, selectedFilter) {
-        if (selectedFilter == "همه") {
+        if (selectedFilter == "Alle") {
             storyList
         } else {
             storyList.filter {
@@ -112,13 +112,13 @@ fun StoryScreen(navController: NavController) {
         SearchBar()
 
         Text(
-            text = "جدیدترین ها",
+            text = "Aktuelles",
             fontSize = 12.sp,
             fontFamily = iranSans,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .padding(end = 27.dp, top = 20.dp)
-                .align(Alignment.End)
+                .padding(start = 27.dp, top = 20.dp)
+                .align(Alignment.Start)
         )
 
         Spacer(modifier = Modifier.height(5.dp))
@@ -218,9 +218,9 @@ fun StoryScreen(navController: NavController) {
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.Start
         ) {
-            listOf("B2", "B1", "A2", "A1", "رایگان", "همه").forEach { label ->
+            listOf("B2", "B1", "A2", "A1", "Frei", "Alle").forEach { label ->
                 FilterChip(
                     text = label,
                     selected = selectedFilter == label,
@@ -334,7 +334,7 @@ fun StoryCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "شروع",
+                    text = "Start",
                     fontSize = buttonTextSize.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = iranSans,

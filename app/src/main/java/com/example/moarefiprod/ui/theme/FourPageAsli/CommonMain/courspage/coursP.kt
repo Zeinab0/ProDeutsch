@@ -66,14 +66,14 @@ fun tamrinpage(
 
         // متن دوره‌ها
         Text(
-            text = ":دوره‌ها",
+            text = " Kurse: ",
             fontSize = (screenWidth * 0.035f).value.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             color = Color.Black,
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentWidth(align = Alignment.End)
+                .wrapContentWidth(align = Alignment.Start)
                 .padding(top = 10.dp)
         )
 
@@ -82,9 +82,9 @@ fun tamrinpage(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.Start
         ) {
-            val filters = listOf("جدید", "رایگان", "همه")
+            val filters = listOf("Neu", "Frei", "Alle")
             filters.forEach { filter ->
                 Spacer(modifier = Modifier.width(8.dp))
                 FilterChips(
@@ -97,8 +97,8 @@ fun tamrinpage(
 
         // نمایش دوره‌ها با فیلتر
         val filteredCourses = when (selectedFilter) {
-            "رایگان" -> allCourses.filter { it.price == 0 }
-            "جدید" -> allCourses.filter { it.isNew }
+            "Frei" -> allCourses.filter { it.price == 0 }
+            "Neu" -> allCourses.filter { it.isNew }
             else -> allCourses
         }
 

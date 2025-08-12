@@ -230,7 +230,7 @@ fun StoryDetailScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // دکمه خرید
-                    if (!isPurchased && price != "رایگان") {
+                    if (!isPurchased && price != "Frei") {
                         Box(
                             modifier = Modifier
                                 .width(screenWidth * 0.33f)
@@ -285,6 +285,5 @@ fun StoryDetailScreen(
                 )
             }
         }
-
      }
 }

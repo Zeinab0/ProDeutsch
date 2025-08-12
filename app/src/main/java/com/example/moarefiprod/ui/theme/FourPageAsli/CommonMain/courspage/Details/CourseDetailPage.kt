@@ -28,6 +28,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Detail
 fun CourseDetailPage(
     navController: NavController,
     courseId: String,
+    headerImageUrl: String = "", // جدید
     courseViewModel: CourseViewModel = viewModel()
 ) {
     val courseState by courseViewModel.selectedCourse.collectAsState()
@@ -127,7 +128,7 @@ fun CourseDetailPage(
                     .padding(bottom = paddingValues.calculateBottomPadding())
                     .background(Color.White)
             ) {
-                CourseHeaderSection(navController = navController, courseSath = course.sath)
+                CourseHeaderSection(navController = navController, imageUrl = headerImageUrl ,courseSath = course.sath)
 
                 Column(
                     modifier = Modifier

@@ -601,14 +601,28 @@ class MainActivity : ComponentActivity() {
                 //بازی های مربوط به گرامر
                 //دکمه های برگشت
 
-
                 composable(
-                    route = "courseDetail/{courseId}",
-                    arguments = listOf(navArgument("courseId") { type = NavType.StringType })
-                ) {
-                    val courseId = it.arguments?.getString("courseId") ?: ""
-                    CourseDetailPage(navController = navController, courseId = courseId)
+                    route = "course_detail/{courseId}?imageUrl={imageUrl}",
+                    arguments = listOf(
+                        navArgument("courseId") { type = NavType.StringType },
+                        navArgument("imageUrl") { type = NavType.StringType; defaultValue = "" }
+                    )
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+                    val headerImageUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
+                    CourseDetailPage(
+                        navController = navController,
+                        courseId = courseId,
+                        headerImageUrl = headerImageUrl
+                    )
                 }
+//                composable(
+//                    route = "courseDetail/{courseId}",
+//                    arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+//                ) {
+//                    val courseId = it.arguments?.getString("courseId") ?: ""
+//                    CourseDetailPage(navController = navController, courseId = courseId)
+//                }
 
                 composable("jozve_page/{courseId}/{lessonId}/{contentId}") { backStackEntry ->
                     val courseId = backStackEntry.arguments?.getString("courseId") ?: ""

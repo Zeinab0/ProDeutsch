@@ -35,9 +35,10 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Ca
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.NewLabel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.flashCard
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
-
 
 @Composable
 fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
@@ -51,6 +52,7 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
     val idkCount = words.count { it.status == WordStatus.IDK }
     val newCount = words.count { it.status == WordStatus.NEW }
 
+
     var selectedStatuses by remember { mutableStateOf(setOf<WordStatus>()) }
 
     val purchasedCourses = listOf(
@@ -61,8 +63,6 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
         Cards("b1", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 1, "۱۴ جلسه", "cours1"),
         Cards("b1_2", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 12, "۱۴ جلسه", "cours1"),
     )
-
-
 
     Column(
         modifier = Modifier
@@ -176,10 +176,21 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
                 }
             }
         }
-
-
-
     }
-
 }
 
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun MyFlashCardScreenPreview() {
+    val navController = rememberNavController()
+
+    val sampleWords = listOf(
+        Word(id = "1", text = "Haus", translation = "خانه", status = WordStatus.CORRECT),
+        Word(id = "2", text = "Baum", translation = "درخت", status = WordStatus.WRONG),
+        Word(id = "3", text = "Auto", translation = "ماشین", status = WordStatus.IDK),
+        Word(id = "4", text = "Katze", translation = "گربه", status = WordStatus.NEW),
+        Word(id = "5", text = "Hund", translation = "سگ", status = WordStatus.CORRECT)
+    )
+
+    MyFlashCardScreen(navController = navController, words = sampleWords)
+}

@@ -20,19 +20,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 
 @Composable
-fun CourseHeaderSection(navController: NavController, courseSath: String) {
+fun CourseHeaderSection(navController: NavController, courseSath: String,
+                        imageUrl: String,
+) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
     val imageSectionHeight = screenHeight * 0.3f
 
     Box(modifier = Modifier.fillMaxWidth().height(imageSectionHeight)) {
-        Image(
-            painter = painterResource(id = R.drawable.course_pic),
+        AsyncImage(
+            model = imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier

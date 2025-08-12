@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -274,41 +275,39 @@ fun TextPicPage(
                 }
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (!showResultBox && !showFinalDialog) {
+                if (!showFinalDialog) {
                     Button(
                         onClick = {
-                            correctCount = data.words.count { word ->
-                                word.isCorrect && selectedWords.contains(word.word)
+                            if (!showResultBox) {
+                                correctCount = data.words.count { it.isCorrect && selectedWords.contains(it.word) }
+                                wrongCount = selectedWords.count { w ->
+                                    data.words.find { it.word == w }?.isCorrect == false
+                                }
+                                showResultBox = true
+                                grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
                             }
-                            wrongCount = selectedWords.count { word ->
-                                data.words.find { it.word == word }?.isCorrect == false
-                            }
-                            showResultBox = true
-                            // اضافه کردن این خط برای ثبت زمان
-                            grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
                         },
+                        enabled = !showResultBox, // دکمه دیده میشه ولی بعد از نمایش نتیجه غیرفعال میشه
                         modifier = Modifier
                             .align(Alignment.End)
-                            .padding(bottom = screenHeight * 0.19f, end = screenWidth * 0.06f)
+                            .padding(
+                                bottom = if (showResultBox) 0.dp else resultBoxHeight, // ثابت موندن جای دکمه
+                                end = screenWidth * 0.06f
+                            )
                             .width(screenWidth * 0.20f)
                             .height(40.dp),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4D869C),
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFF4D869C).copy(alpha = 0.6f),
+                            disabledContentColor = Color.White
                         )
                     ) {
-                        Text(
-                            text = "تأیید",
-                            fontFamily = iranSans,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = "تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
                     }
                 }
             }
-
-
-
 
             if (showResultBox) {
                 Box(
@@ -316,25 +315,25 @@ fun TextPicPage(
                         .fillMaxWidth()
                         .background(color = Color(0xFFFFFFFF))
                         .align(Alignment.BottomCenter)
-                ){
+                ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(screenHeight * 0.19f)
                             .padding(horizontal = 20.dp, vertical = 30.dp)
                             .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
-                            .padding(horizontal = 15.dp, vertical = 5.dp)
+                            .padding(horizontal = 15.dp, vertical = 12.dp)
+                            .animateContentSize()               // ارتفاع براساس محتوا
+                            .heightIn(max = screenHeight * 0.5f) // اختیاری: سقف ارتفاع
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .offset(y = 8.dp)
+                                .padding(bottom = 42.dp) // جا برای دکمه (34dp ارتفاع + 8dp فاصله)
                         ) {
-                            val totalCorrectCount = data.words.count { it.isCorrect }
-                            val unanswered = totalCorrectCount - correctCount
+                            val total = data.words.size
+                            val unanswered = (total - (correctCount + wrongCount)).coerceAtLeast(0)
 
-                            if (wrongCount == 0 && correctCount == totalCorrectCount) {
-                                // ✅ همه جواب‌های درست انتخاب شده و هیچ غلطی نبوده
+                            if (wrongCount == 0 && correctCount == total) {
                                 Text(
                                     text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
                                     fontFamily = iranSans,
@@ -348,14 +347,14 @@ fun TextPicPage(
                             } else {
                                 InfoRow("تعداد درست", correctCount)
                                 InfoRow("تعداد اشتباه", wrongCount)
-                                InfoRow("تعداد نزده", unanswered.coerceAtLeast(0)) // جلوگیری از منفی شدن
+                                InfoRow("تعداد نزده", unanswered)
                             }
                         }
 
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .offset(y = (-13).dp)
+                                .padding(8.dp)                 // جایگزین offset منفی
                                 .width(98.dp)
                                 .height(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
@@ -368,7 +367,6 @@ fun TextPicPage(
                                             popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                                         }
                                     }
-
                                     selectedWords.clear()
                                     showResultBox = false
                                     correctCount = 0
@@ -384,11 +382,10 @@ fun TextPicPage(
                                     text = if (isLastGame) "تمام" else "بریم بعدی",
                                     fontFamily = iranSans,
                                     color = Color.White,
-                                    fontSize = 13.sp,
-                                    modifier = Modifier.padding(start = if (isLastGame) 0.dp else 8.dp)
+                                    fontSize = 13.sp
                                 )
-
                                 if (!isLastGame) {
+                                    Spacer(Modifier.width(8.dp))
                                     Icon(
                                         painter = painterResource(id = R.drawable.nextbtn),
                                         contentDescription = null,

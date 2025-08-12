@@ -80,14 +80,14 @@ fun flashcardpage(navController: NavController){
     ){
 
         Text(
-            text = ":کلمات من",
+            text = "Meine Worte:",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp, bottom = 8.dp)
-                .wrapContentWidth(align = Alignment.End)
+                .wrapContentWidth(align = Alignment.Start)
         )
         LazyRow(
             modifier = Modifier
@@ -104,7 +104,7 @@ fun flashcardpage(navController: NavController){
 
 
         Text(
-            text = "...موارد بیشتر",
+            text = "...Weitere Artikel",
             fontSize = 10.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
@@ -119,23 +119,23 @@ fun flashcardpage(navController: NavController){
 
         // ✅ متن راست‌چین
         Text(
-            text = ":دوره‌ها",
+            text = "Kurse:",
             fontSize = (screenWidth * 0.035f).value.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             color = Color.Black,
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentWidth(align = Alignment.End)
+                .wrapContentWidth(align = Alignment.Start)
                 .padding(top = 10.dp)
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.Start
         ) {
-            val filters = listOf("جدید", "رایگان", "همه")
+            val filters = listOf("Neu", "Frei", "Alle")
             filters.forEach { filter ->
                 Spacer(modifier = Modifier.width(8.dp))
                 FilterChips(
@@ -146,8 +146,8 @@ fun flashcardpage(navController: NavController){
             }
         }
         val filteredCards = when (selectedFilter) {
-            "رایگان" -> cards.filter { it.price == "رایگان" }
-            "جدید" -> cards.filter { it.isNew }
+            "Frei" -> cards.filter { it.price == "Frei" }
+            "Neu" -> cards.filter { it.isNew }
             else -> cards
         }
 
@@ -167,15 +167,10 @@ fun flashcardpage(navController: NavController){
                     }
                 }
             }
-
         }
-
     }
-
-
-
-
 }
+
 fun fetchCardsFromFirebase(onResult: (List<Cards>) -> Unit) {
     val db = FirebaseFirestore.getInstance()
     db.collection("flashcards").get()

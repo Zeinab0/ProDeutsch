@@ -24,7 +24,6 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Wo
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun ChartPager(
     correct: Int,
