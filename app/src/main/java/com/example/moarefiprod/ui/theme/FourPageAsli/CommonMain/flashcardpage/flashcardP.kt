@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,13 +30,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.NewLabel
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -80,31 +81,32 @@ fun flashcardpage(navController: NavController){
     ){
 
         Text(
-            text = "Meine Worte:",
+            text = " : کلمات من",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp, bottom = 8.dp)
-                .wrapContentWidth(align = Alignment.Start)
+                .wrapContentWidth(align = Alignment.End)
         )
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(125.dp),
-            reverseLayout = true,
-            contentPadding = PaddingValues(horizontal = 0.dp),
-            horizontalArrangement = Arrangement.spacedBy(15.dp)
-        ) {
-            items(wordCards) { card ->
-                WordCard(card)
+
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(125.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp), // فاصله از هر دو لبه
+                horizontalArrangement = Arrangement.spacedBy(15.dp)
+            ) {
+                items(wordCards) { card ->
+                    WordCard(card, navController)
+                }
             }
         }
 
-
         Text(
-            text = "...Weitere Artikel",
+            text = "...موارد بیشتر",
             fontSize = 10.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
@@ -119,23 +121,23 @@ fun flashcardpage(navController: NavController){
 
         // ✅ متن راست‌چین
         Text(
-            text = "Kurse:",
+            text = ": دوره ها",
             fontSize = (screenWidth * 0.035f).value.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             color = Color.Black,
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentWidth(align = Alignment.Start)
+                .wrapContentWidth(align = Alignment.End)
                 .padding(top = 10.dp)
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.End
         ) {
-            val filters = listOf("Neu", "Frei", "Alle")
+            val filters = listOf("جدید", "رایگان", "همه")
             filters.forEach { filter ->
                 Spacer(modifier = Modifier.width(8.dp))
                 FilterChips(
@@ -146,12 +148,10 @@ fun flashcardpage(navController: NavController){
             }
         }
         val filteredCards = when (selectedFilter) {
-            "Frei" -> cards.filter { it.price == "Frei" }
-            "Neu" -> cards.filter { it.isNew }
+            "رایگان" -> cards.filter { it.price == "رایگان" }
+            "جدید" -> cards.filter { it.isNew }
             else -> cards
         }
-
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()

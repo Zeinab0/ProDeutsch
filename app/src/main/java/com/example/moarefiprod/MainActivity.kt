@@ -60,6 +60,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars.Jozve
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars.VideoScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.updateWordStatusInFirestore
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GameHost
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
@@ -185,6 +186,10 @@ class MainActivity : ComponentActivity() {
                     HörenLevelDetailPage(navController = navController, level = level)
                 }
 
+                composable("my_flashcards") {
+                    MyFlashCardScreen(navController = navController) // فعلاً لیست خالی
+                }
+
                 composable(
                     "audio_test/{level}/{exerciseId}",
                     arguments = listOf(
@@ -300,7 +305,6 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-
                 composable(
                     route = "reading_screen/{storyId}?isPurchased={isPurchased}",
                     arguments = listOf(
@@ -368,7 +372,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // بخش مربوط به داستان
-
 
                 composable("word_progress_page") {
                     WordProgressPage(navController = navController)

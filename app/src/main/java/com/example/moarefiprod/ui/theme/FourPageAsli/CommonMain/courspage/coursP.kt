@@ -56,6 +56,7 @@ fun tamrinpage(
             Log.d("TamrinPage", "Course: ${course.title}, isNew: ${course.isNew}")
         }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,14 +67,14 @@ fun tamrinpage(
 
         // متن دوره‌ها
         Text(
-            text = " Kurse: ",
+            text = " : دوره ها ",
             fontSize = (screenWidth * 0.035f).value.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = iranSans,
             color = Color.Black,
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentWidth(align = Alignment.Start)
+                .wrapContentWidth(align = Alignment.End)
                 .padding(top = 10.dp)
         )
 
@@ -82,9 +83,9 @@ fun tamrinpage(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.End
         ) {
-            val filters = listOf("Neu", "Frei", "Alle")
+            val filters = listOf("جدید", "رایگان", "همه")
             filters.forEach { filter ->
                 Spacer(modifier = Modifier.width(8.dp))
                 FilterChips(
@@ -97,10 +98,12 @@ fun tamrinpage(
 
         // نمایش دوره‌ها با فیلتر
         val filteredCourses = when (selectedFilter) {
-            "Frei" -> allCourses.filter { it.price == 0 }
-            "Neu" -> allCourses.filter { it.isNew }
+            "" -> allCourses.filter { it.price == 0 }
+            "" -> allCourses.filter { it.isNew }
             else -> allCourses
         }
+
+        val orderedCourses = remember(filteredCourses) { filteredCourses.sortedBy { it.order } }
 
         if (isLoading) {
             Text("در حال بارگذاری...", color = Color.Gray, modifier = Modifier.fillMaxWidth().padding(16.dp))
@@ -120,14 +123,20 @@ fun tamrinpage(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            items(filteredCourses) { course ->
+            items(orderedCourses) { course ->  // ⬅️ به جای filteredCourses
                 Box {
                     CourseCard(course = course, navController = navController)
-                    if (course.isNew) {
-                        NewLabel()
-                    }
+                    if (course.isNew) NewLabel()
                 }
             }
+//            items(filteredCourses) { course ->
+//                Box {
+//                    CourseCard(course = course, navController = navController)
+//                    if (course.isNew) {
+//                        NewLabel()
+//                    }
+//                }
+//            }
         }
     }
 }

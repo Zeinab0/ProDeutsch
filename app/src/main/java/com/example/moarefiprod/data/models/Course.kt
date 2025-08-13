@@ -10,6 +10,7 @@ import java.util.Date
 @Parcelize
 data class Course(
     val id: String = "",
+    val headerTitle: String = "",
     val title: String = "",
     val description: String = "",
     val sath: String = "",
@@ -17,13 +18,29 @@ data class Course(
     val teadad: Int = 0,
     val price: Int = 0,
     val imageUrl: String = "",
+
+    @get:PropertyName("isNew")
     val isNew: Boolean = false,
+
+    @get:PropertyName("isFree")
     val isFree: Boolean = false,
+
+    @get:PropertyName("isInProgress")
     val isInProgress: Boolean = false,
+
+    @get:PropertyName("isCompleted")
     val isCompleted: Boolean = false,
+
+    @get:PropertyName("isUnlocked")
     val isUnlocked: Boolean = false,
+
     val publishedAt: Date = Date(),
+
+    @get:PropertyName("isPurchased")
     val isPurchased: Boolean = false,
+
+    @PropertyName("order") val order: Int = 0,
+
     val lessons: List<CourseLesson> = emptyList()
 ) : Parcelable
 
@@ -37,7 +54,8 @@ data class CourseLesson(
     @PropertyName("isUnlocked") val isUnlocked: Boolean = false,
     val isCompleted: Boolean = false,
     val isInProgress: Boolean = false,
-    @PropertyName("order") val order: Int = 0
+    @PropertyName("order") val order: Int = 0,
+    val imageUrl: String = ""
 ) : Parcelable
 
 @Parcelize

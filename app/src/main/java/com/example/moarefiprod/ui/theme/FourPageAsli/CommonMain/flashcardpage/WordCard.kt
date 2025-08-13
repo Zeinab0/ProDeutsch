@@ -21,18 +21,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.moarefiprod.iranSans
 
 @Composable
-fun WordCard(card: Cards) {
+fun WordCard(card: Cards, navController: NavController)  {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -50,7 +50,7 @@ fun WordCard(card: Cards) {
             .height(cardHeight),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(5.dp),
-        shape = RoundedCornerShape(0.dp)
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(
             modifier = Modifier
@@ -73,13 +73,13 @@ fun WordCard(card: Cards) {
                 modifier = Modifier
                     .width(cardWidth * 0.85f)
                     .height(imageHeight)
-                    .background(Color(0xFF7C7C7C))
-                    .clip(RectangleShape),
+                    .clip(RoundedCornerShape(8.dp)) // اول کلیپ
+                    .background(Color(0xFF7C7C7C)), // بعد بک‌گراند
                 contentScale = ContentScale.Crop
             )
 
             Button(
-                onClick = { /* TODO */ },
+                onClick = { navController.navigate("my_flashcards") },
                 contentPadding = PaddingValues(0.dp),
                 shape = RoundedCornerShape(4.dp),
                 modifier = Modifier

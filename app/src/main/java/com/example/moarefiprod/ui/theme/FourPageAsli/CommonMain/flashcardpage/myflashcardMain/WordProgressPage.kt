@@ -79,9 +79,6 @@ fun WordProgressPage(navController: NavController) {
         }
     }
 
-
-
-
     val allWords = words
 
     val wrongCount = allWords.count { it.status == WordStatus.WRONG }

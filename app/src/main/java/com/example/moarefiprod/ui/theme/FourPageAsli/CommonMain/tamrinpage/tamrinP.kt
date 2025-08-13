@@ -20,53 +20,29 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Ne
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.flashCard
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseCard
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.fetchCardsFromFirebase
 import java.util.Date
-
+import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
-fun courspage(onShowDialog: () -> Unit, navController: NavController) {
+fun courspage(
+    onShowDialog: () -> Unit,
+    navController: NavController,
+    viewModel: CourseViewModel = viewModel()
+) {
     var showDialog by remember { mutableStateOf(false) }
+    val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-//    val allCourses = listOf(
-//        Course(
-//            "A1 آموزش آلمانی سطح", // id (پیش‌فرض "")
-//            "با این دوره، می‌توانید به راحتی آلمانی را یاد بگیرید!", // title
-//            "", // description
-//            "بدون پیش‌نیاز", // sath
-//            "۱۰ ساعت و ۳۰ دقیقه", // zaman
-//            12, // teadad
-//            120, // price
-//            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
-//            true, // isNew
-//            false, // isFree
-//            Date(), // publishedAt
-//            false, // isPurchased
-//            emptyList() // lessons
-//        ),
-//        Course(
-//            "A2 آموزش آلمانی سطح", // id (پیش‌فرض "")
-//            "ادامه مسیر یادگیری آلمانی با نکات بیشتر", // title
-//            "", // description
-//            "نیازمند A1", // sath
-//            "۹ ساعت", // zaman
-//            10, // teadad
-//            0, // price
-//            "https://example.com/cours1.jpg", // imageUrl (جایگزین R.drawable.cours1)
-//            true, // isNew
-//            true, // isFree
-//            Date(), // publishedAt
-//            false, // isPurchased
-//            emptyList() // lessons
-//        )
-//    )
+    // فلش‌کارت‌های جدید
+    var newCards by remember { mutableStateOf<List<Cards>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        fetchCardsFromFirebase { list ->
+            newCards = list.filter { it.isNew }
+        }
+    }
 
-    val allCards = listOf(
-        Cards("a1_2", "A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", 1, "۱۲ جلسه", "cours1"),
-        Cards("a2_2", "A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", 1, "۱۰ جلسه", "cours1"),
-        Cards("b1", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 1, "۱۴ جلسه", "cours1"),
-        )
-
-//    val newCourses = allCourses.filter { it.isNew }
-    val newCards = allCards.filter { it.isNew }
+    // دوره‌های جدید
+    val newCourses by viewModel.newCourses.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -100,30 +76,39 @@ fun courspage(onShowDialog: () -> Unit, navController: NavController) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 16.dp)
+                    .navigationBarsPadding(),                  // ← محتوای صفحه از زیر نوار پایین میاد بیرون
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = bottomInset + 96.dp)   // ← فاصله‌ی مطمئن
             ) {
-//                items(newCourses) { course ->
-//                    Box {
-//                        CourseCard(course = course, navController = navController)
-//                        if (course.isNew) {
-//                            NewLabel()
-//                        }
-//                    }
+                // دوره‌های جدید
+//                item {
+//                    Text("دوره‌های جدید", fontFamily = iranSans, fontSize = 12.sp,
+//                        modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
 //                }
-
-                items(newCards) { card ->
+                items(newCourses, key = { it.id }) { course ->
+                    Box {
+                        CourseCard(course = course, navController = navController)
+                        if (course.isNew) {
+                            NewLabel()
+                            // یا:
+                            // NewLabel(Modifier.align(Alignment.TopEnd).zIndex(1f))
+                        }
+                    }
+                }
+                items(newCards, key = { it.id }) { card ->
                     Box {
                         flashCard(cards = card, navController = navController)
                         if (card.isNew) {
                             NewLabel()
+                            // یا:
+                            // NewLabel(Modifier.align(Alignment.TopEnd).zIndex(1f))
                         }
                     }
                 }
             }
         }
 
-        // پاپ‌آپ با لایه محو روی همه‌چی (opacity 50%)
         if (showDialog) {
             Box(
                 modifier = Modifier

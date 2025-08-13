@@ -27,6 +27,13 @@ import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.iranSans
 import android.net.Uri
 
+
+private fun formatTomanK(price: Int): String {
+    if (price <= 0) return "رایگان"
+    val k = price / 1000
+    return "$k هزار تومان"
+}
+
 @Composable
 fun CourseCard(
     course: Course,
@@ -61,14 +68,15 @@ fun CourseCard(
 
             Column(
                 modifier = Modifier
-                    .width(60.dp)
+                    .width(95.dp)                    // مثل فلش‌کارت
                     .align(Alignment.Bottom)
-                    .padding(bottom = 10.dp),
+                    .padding(bottom = 10.dp, start = 10.dp, end = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                val priceText = formatTomanK(course.price)
                 Text(
-                    text = if (course.price == 0) "رایگان" else "${course.price} هزار تومان",
+                    text = priceText,
                     fontSize = 10.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
@@ -79,30 +87,24 @@ fun CourseCard(
 
                 Button(
                     onClick = {
-                        val encodedUrl = Uri.encode(course.imageUrl) // مهم: encode
+                        val encodedUrl = Uri.encode(course.imageUrl)
                         navController.navigate("course_detail/${course.id}?imageUrl=$encodedUrl") {
                             launchSingleTop = true
                             restoreState = true
                         }
-//                        navController.navigate("course_detail/${course.id}") {
-//                            launchSingleTop = true
-//                            restoreState = true
-//                        }
                     },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(22.dp),
+                        .height(22.dp),               // مثل فلش‌کارت
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C))
                 ) {
                     Text(
                         text = "شروع دوره",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
+                        modifier = Modifier.fillMaxWidth(),
                         color = Color.White,
-                        fontSize = 8.sp,
+                        fontSize = 8.sp,              // مثل فلش‌کارت
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
@@ -114,14 +116,14 @@ fun CourseCard(
                 modifier = Modifier
                     .padding(0.dp, 10.dp, 10.dp, 10.dp)
                     .fillMaxHeight()
-                    .width(200.dp),
+                    .weight(1f),          // به‌جای width ثابت
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = course.title,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontFamily = iranSans,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -152,7 +154,7 @@ fun CourseCard(
                             append(course.sath)
                         }
                     },
-                    fontSize = 6.sp,
+                    fontSize = 10.sp,
                     fontFamily = iranSans,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Right,
@@ -169,7 +171,7 @@ fun CourseCard(
                             append(course.zaman)
                         }
                     },
-                    fontSize = 6.sp,
+                    fontSize = 10.sp,
                     fontFamily = iranSans,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Right,
@@ -186,7 +188,7 @@ fun CourseCard(
                             append(course.teadad.toString())
                         }
                     },
-                    fontSize = 6.sp,
+                    fontSize = 10.sp,
                     fontFamily = iranSans,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Right,
@@ -198,7 +200,7 @@ fun CourseCard(
 }
 
 @Composable
-fun NewLabel() {
+fun NewLabel(modifier: Modifier = Modifier) {
     Box(
         modifier = Modifier
             .offset(x = (-10).dp, y = 6.dp)

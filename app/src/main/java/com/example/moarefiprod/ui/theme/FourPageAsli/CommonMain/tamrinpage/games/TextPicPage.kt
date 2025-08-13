@@ -84,8 +84,6 @@ fun TextPicPage(
         )
     }
 
-
-
     Box(modifier = Modifier.fillMaxSize()) {
         // Header
         var showExitDialog by remember { mutableStateOf(false) }

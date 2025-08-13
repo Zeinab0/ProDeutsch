@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.data.models.CourseItem
@@ -79,7 +82,6 @@ fun DarsDetails(
         } ?: Log.e("DarsDetails", "❌ No QUIZ_SET item found to load games.")
     }
 
-
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -107,15 +109,30 @@ fun DarsDetails(
                     .padding(bottom = paddingValues.calculateBottomPadding())
                     .background(Color.White)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.dars_pic),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(imageSectionHeight)
-                        .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
-                    contentScale = ContentScale.Crop
-                )
+//                Image(
+//                    painter = painterResource(id = R.drawable.dars_pic),
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(imageSectionHeight)
+//                        .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
+//                    contentScale = ContentScale.Crop
+//                )
+
+                val bannerModifier = Modifier
+                    .fillMaxWidth()
+                    .height(imageSectionHeight)
+                    .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(currentLesson.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = bannerModifier
+                    )
 
                 IconButton(
                     onClick = {
@@ -140,7 +157,6 @@ fun DarsDetails(
                         modifier = Modifier.size(screenWidth * 0.09f)
                     )
                 }
-
 
                 Column(
                     modifier = Modifier

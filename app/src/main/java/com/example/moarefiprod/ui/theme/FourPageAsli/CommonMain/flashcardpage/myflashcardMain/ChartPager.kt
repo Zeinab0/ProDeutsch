@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
 import com.google.accompanist.pager.*
-import kotlinx.coroutines.launch
 
 @Composable
 fun ChartPager(

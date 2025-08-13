@@ -2,8 +2,6 @@ package com.example.moarefiprod.repository
 
 import android.util.Log
 import com.example.moarefiprod.data.models.Course
-import com.example.moarefiprod.data.models.CourseItem
-import com.example.moarefiprod.data.models.CourseLesson
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -60,7 +58,4 @@ class FirestoreRepository {
             emptyList()
         }
     }
-
-
-
 }

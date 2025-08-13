@@ -31,38 +31,46 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Cards
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.NewLabel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.flashCard
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.LaunchedEffect
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QueryDocumentSnapshot
 
 @Composable
-fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
+fun MyFlashCardScreen(
+    navController: NavController,
+    vm: com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.viewmodel.FlashcardViewModel = viewModel()
+) {
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    val total = words.size
-    val correctCount = words.count { it.status == WordStatus.CORRECT }
-    val wrongCount = words.count { it.status == WordStatus.WRONG }
-    val idkCount = words.count { it.status == WordStatus.IDK }
-    val newCount = words.count { it.status == WordStatus.NEW }
+    val myCards by vm.myCards.collectAsState()
 
+    // همهٔ کلماتِ تمام کارت‌های کاربر
+    var allWords by remember { mutableStateOf<List<Word>>(emptyList()) }
+
+    // وقتی کارت‌ها لود/تغییر کردند، همهٔ کلمات مرتبط را از فایراستور بگیر
+    LaunchedEffect(myCards) {
+        val cardIds = myCards.map { it.id }
+        fetchAllWordsForCards(cardIds) { loaded ->
+            allWords = loaded
+        }
+    }
+
+    val total       = allWords.size
+    val correctCnt  = allWords.count { it.status == WordStatus.CORRECT }
+    val wrongCnt    = allWords.count { it.status == WordStatus.WRONG }
+    val idkCnt      = allWords.count { it.status == WordStatus.IDK }
+    val newCnt      = allWords.count { it.status == WordStatus.NEW }
 
     var selectedStatuses by remember { mutableStateOf(setOf<WordStatus>()) }
-
-    val purchasedCourses = listOf(
-        Cards("a1", "A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", 20, "۱۲ جلسه", "cours1"),
-        Cards("a2", "A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", 2, "۱۰ جلسه", "cours1"),
-        Cards("a1_2", "A1 آموزش آلمانی سطح", "آشنایی با پایه‌ها", 1, "۱۲ جلسه", "cours1"),
-        Cards("a2_2", "A2 آموزش آلمانی سطح", "سطح پیشرفته‌تر", 1, "۱۰ جلسه", "cours1"),
-        Cards("b1", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 1, "۱۴ جلسه", "cours1"),
-        Cards("b1_2", "B1 آموزش آلمانی سطح", "شروع مکالمات روان", 12, "۱۴ جلسه", "cours1"),
-    )
 
     Column(
         modifier = Modifier
@@ -89,23 +97,6 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
                     modifier = Modifier.size(screenWidth * 0.09f)
                 )
             }
-
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier
-                    .padding(
-                        end = screenWidth * 0.03f,
-                        top = screenHeight * 0.05f
-                    )
-                    .align(Alignment.TopEnd)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.calendar),
-                    contentDescription = "Back",
-                    tint = Color.Black,
-                    modifier = Modifier.size(screenWidth * 0.055f)
-                )
-            }
         }
         Text(
             text = "وضعیت",
@@ -117,34 +108,26 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentWidth(Alignment.End)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
                 .padding(top = 20.dp)
         )
 
         ChartPager(
-            correct = correctCount,
-            wrong = wrongCount,
-            idk = idkCount,
-            new = newCount,
-            total = total,
+            correct = correctCnt,
+            wrong   = wrongCnt,
+            idk     = idkCnt,
+            new     = newCnt,
+            total   = total,
             selected = selectedStatuses,
-            onStatusToggle = { status ->
-                selectedStatuses = if (selectedStatuses.contains(status)) {
-                    selectedStatuses - status
-                } else {
-                    selectedStatuses + status
-                }
+            onStatusToggle = { s ->
+                selectedStatuses = if (s in selectedStatuses) selectedStatuses - s else selectedStatuses + s
             },
             weeklyData = listOf(
-                "جمعه" to 25,
-                "پنج شنبه" to 10,
-                "چهارشنبه" to 18,
-                "سه‌شنبه" to 32,
-                "دوشنبه" to 22,
-                "یکشنبه" to 12,
-                "شنبه" to 5
+                "جمعه" to 25, "پنج شنبه" to 10, "چهارشنبه" to 18,
+                "سه‌شنبه" to 32, "دوشنبه" to 22, "یکشنبه" to 12, "شنبه" to 5
             )
         )
+
         Text(
             text = "کلمات من",
             fontSize = (screenWidth * 0.04f).value.sp,
@@ -155,7 +138,7 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentWidth(Alignment.End)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
                 .padding(top = 20.dp)
         )
 
@@ -167,30 +150,55 @@ fun MyFlashCardScreen(navController: NavController, words: List<Word>) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            items(purchasedCourses) { cards ->
-                Box {
-                    flashCard(cards = cards, navController = navController)
-                    if (cards.isNew) {
-                        NewLabel()
-                    }
-                }
+            items(myCards, key = { it.id }) { card ->
+                flashCard(
+                    cards = card,
+                    navController = navController,
+                    viewModel = vm,
+                    manageMode = true
+                )
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun MyFlashCardScreenPreview() {
-    val navController = rememberNavController()
+fun fetchAllWordsForCards(
+    cardIds: List<String>,
+    onResult: (List<Word>) -> Unit
+) {
+    if (cardIds.isEmpty()) { onResult(emptyList()); return }
 
-    val sampleWords = listOf(
-        Word(id = "1", text = "Haus", translation = "خانه", status = WordStatus.CORRECT),
-        Word(id = "2", text = "Baum", translation = "درخت", status = WordStatus.WRONG),
-        Word(id = "3", text = "Auto", translation = "ماشین", status = WordStatus.IDK),
-        Word(id = "4", text = "Katze", translation = "گربه", status = WordStatus.NEW),
-        Word(id = "5", text = "Hund", translation = "سگ", status = WordStatus.CORRECT)
-    )
+    val db = FirebaseFirestore.getInstance()
 
-    MyFlashCardScreen(navController = navController, words = sampleWords)
+    // تمام ساب‌کالکشن‌های "words" را می‌خوانیم
+    db.collectionGroup("words")
+        .get()
+        .addOnSuccessListener { result ->
+            val idSet = cardIds.toSet()
+
+            val words = result.mapNotNull { doc: QueryDocumentSnapshot ->
+                try {
+                    // id کارتِ والد این کلمه:
+                    val parentCardId = doc.reference.parent.parent?.id
+
+                    if (parentCardId != null && parentCardId in idSet) {
+                        Word(
+                            id = doc.id,
+                            text = doc.getString("text") ?: "",
+                            translation = doc.getString("translation") ?: "",
+                            status = when ((doc.getString("status") ?: "").uppercase()) {
+                                "CORRECT" -> WordStatus.CORRECT
+                                "WRONG"   -> WordStatus.WRONG
+                                "IDK"     -> WordStatus.IDK
+                                else      -> WordStatus.NEW
+                            }
+                        )
+                    } else null
+                } catch (_: Exception) { null }
+            }
+
+            onResult(words)
+        }
+        .addOnFailureListener { onResult(emptyList()) }
 }
+
