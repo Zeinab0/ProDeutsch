@@ -128,7 +128,6 @@ fun flashCard(
                         Button(
                             onClick = {
                                 println("start clicked")  // برای تست لاگ
-
                                 // 1) آیدی کارت را بده به صفحه مقصد
                                 navController.currentBackStackEntry
                                     ?.savedStateHandle

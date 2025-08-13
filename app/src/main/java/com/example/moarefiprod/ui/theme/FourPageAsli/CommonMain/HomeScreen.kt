@@ -42,8 +42,12 @@ fun HomeScreen(navController: NavController,userViewModel: UserProfileViewModel)
     val screenHeight = configuration.screenHeightDp.dp
 
     var isDrawerOpen by remember { mutableStateOf(false) }
-
     val showCompleteProfileDialog = remember { mutableStateOf(false) }
+
+    var homeQuery by remember { mutableStateOf("") }
+    var exerciseQuery by remember { mutableStateOf("") }   // تمرین‌ها
+    var coursesQuery by remember { mutableStateOf("") }    // دوره‌ها
+    var flashcardsQuery by remember { mutableStateOf("") } // فلش‌کارت‌ها
 
     LaunchedEffect(Unit) {
         val user = FirebaseAuth.getInstance().currentUser
@@ -91,17 +95,30 @@ fun HomeScreen(navController: NavController,userViewModel: UserProfileViewModel)
 
 
                 Spacer(modifier = Modifier.height(8.dp))
-                SearchBar()
+
+                val (activeQuery, onQueryChange, placeholder) = when (selectedIndex) {
+                    0 -> Triple(homeQuery, { s: String -> homeQuery = s }, ":جستجو در خانه")
+                    1 -> Triple(exerciseQuery, { s: String -> exerciseQuery = s }, ":جستجو دوره")
+                    2 -> Triple(coursesQuery, { s: String -> coursesQuery = s }, ":جستجو تمرین")
+                    else -> Triple(flashcardsQuery, { s: String -> flashcardsQuery = s }, ":جستجو فلش‌کارت")
+                }
+                SearchBar(
+                    query = activeQuery,
+                    onQueryChange = onQueryChange,
+                    placeholder = placeholder,
+                    onSearch = { /* ... */ }
+                )
 
                 // ⬇ صفحه‌ها
                 when (selectedIndex) {
-                    0 -> mainpage()
-                    1 -> tamrinpage(navController = navController)
+                    0 -> mainpage(query = homeQuery) // امضای این‌ها باید یه پارامتر query داشته باشه (پایین توضیح دادم)
+                    1 -> tamrinpage(navController = navController, query = exerciseQuery)
                     2 -> courspage(
                         onShowDialog = { showDialog = true },
-                        navController = navController
+                        navController = navController,
+                        query = coursesQuery
                     )
-                    3 -> flashcardpage(navController = navController)
+                    3 -> flashcardpage(navController = navController, query = flashcardsQuery)
                 }
             }
         }
@@ -155,7 +172,5 @@ fun HomeScreen(navController: NavController,userViewModel: UserProfileViewModel)
                 viewModel = userViewModel
             )
         }
-
-
     }
 }

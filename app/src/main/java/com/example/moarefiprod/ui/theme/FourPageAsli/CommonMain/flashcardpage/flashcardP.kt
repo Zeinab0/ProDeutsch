@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -22,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,41 +37,59 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.NewLabel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.viewmodel.FlashcardViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun flashcardpage(navController: NavController){
+fun flashcardpage(
+    navController: NavController,
+    query: String = "" // ← از HomeScreen پاس بده (flashcardsQuery)
+) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    var selectedFilter by remember { mutableStateOf("همه") } // ✅ مقدار اولیه
+    var selectedFilter by remember { mutableStateOf("همه") }
+
+    val vm: FlashcardViewModel = viewModel()
+    LaunchedEffect(Unit) { vm.listenAllCards() }
+    val allCards by vm.allCards.collectAsState()
 
 
-    var allCards by remember { mutableStateOf<List<Cards>>(emptyList()) }
+    // بخش "کلمات من" (تو کارت‌هایی که count > 0 دارند)
+    val wordCards = remember(allCards) { allCards.filter { it.count > 0 } }
 
-    LaunchedEffect(Unit) {
-        fetchCardsFromFirebase {
-            allCards = it
+    // سرچ
+    val q = remember(query) { query.trim().lowercase() }
+
+    val filteredWordCards = remember(wordCards, q) {
+        if (q.isEmpty()) wordCards
+        else wordCards.filter { c ->
+            val t = c.title.lowercase()
+            val d = c.description.lowercase()
+            t.contains(q) || d.contains(q)
+        }
+    }
+    // فیلتر تب‌ها (جدید/رایگان/همه) + سرچ
+    val filteredCardsByTab = remember(allCards, selectedFilter) {
+        when (selectedFilter) {
+            "رایگان" -> allCards.filter { it.price == "رایگان" }
+            "جدید"   -> allCards.filter { it.isNew }
+            else     -> allCards
         }
     }
 
-// جدا کردن لیست مورد نیاز برای WordCard از Cards
-    val wordCards = allCards.filter { it.count > 0 } // یا هر شرطی که مد نظرته
-
-
-    var cards by remember { mutableStateOf<List<Cards>>(emptyList()) }
-
-    LaunchedEffect(Unit) {
-        fetchCardsFromFirebase {
-            cards = it
-            println("🔥 ${it.size} کارت لود شد")
-            it.forEach { card ->
-                println("📦 ${card.title} | ${card.image}")
-            }
+    val filteredCards = remember(filteredCardsByTab, q) {
+        if (q.isEmpty()) filteredCardsByTab
+        else filteredCardsByTab.filter { c ->
+            val t = c.title.lowercase()
+            val d = c.description.lowercase()
+            t.contains(q) || d.contains(q)
         }
     }
 
@@ -77,9 +97,9 @@ fun flashcardpage(navController: NavController){
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(horizontal = screenWidth * 0.05f) // ✅ پدینگ کلی برای هماهنگی بهتر
-    ){
-
+            .padding(horizontal = screenWidth * 0.05f)
+    ) {
+        // --- کلمات من ---
         Text(
             text = " : کلمات من",
             fontSize = 14.sp,
@@ -96,10 +116,10 @@ fun flashcardpage(navController: NavController){
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(125.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp), // فاصله از هر دو لبه
+                contentPadding = PaddingValues(horizontal = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(15.dp)
             ) {
-                items(wordCards) { card ->
+                items(filteredWordCards, key = { it.id }) { card ->
                     WordCard(card, navController)
                 }
             }
@@ -114,12 +134,10 @@ fun flashcardpage(navController: NavController){
                 .fillMaxWidth()
                 .padding(start = 10.dp, top = 6.dp)
                 .wrapContentWidth(align = Alignment.Start)
-                .clickable {
-                    navController.navigate("my_flashcards")
-                }
+                .clickable { navController.navigate("my_flashcards") }
         )
 
-        // ✅ متن راست‌چین
+        // --- دوره‌ها/فلش‌کارت‌ها ---
         Text(
             text = ": دوره ها",
             fontSize = (screenWidth * 0.035f).value.sp,
@@ -131,6 +149,7 @@ fun flashcardpage(navController: NavController){
                 .wrapContentWidth(align = Alignment.End)
                 .padding(top = 10.dp)
         )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,11 +166,7 @@ fun flashcardpage(navController: NavController){
                 )
             }
         }
-        val filteredCards = when (selectedFilter) {
-            "رایگان" -> cards.filter { it.price == "رایگان" }
-            "جدید" -> cards.filter { it.isNew }
-            else -> cards
-        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -159,11 +174,17 @@ fun flashcardpage(navController: NavController){
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            items(filteredCards) { cards ->
+            items(filteredCards, key = { it.id }) { card ->
                 Box {
-                    flashCard(cards = cards, navController = navController)
-                    if (cards.isNew) {
-                        NewLabel()
+                    flashCard(cards = card, navController = navController)
+                    if (card.isNew) {
+                        // برچسب فقط یک‌جا و به‌صورت Overlay
+                        NewLabel(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .offset(x = (-12).dp, y = 8.dp)
+                                .zIndex(1f)
+                        )
                     }
                 }
             }

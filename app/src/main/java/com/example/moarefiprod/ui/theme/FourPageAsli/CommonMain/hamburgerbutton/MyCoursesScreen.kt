@@ -33,6 +33,18 @@ fun MyCoursesScreen(
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
+    // 🔎 state جستجو (فعلاً استفاده نمی‌کنیم؛ برای فیلتر بعدی آماده است)
+    var query by remember { mutableStateOf("") }
+
+//    val q = remember(query) { query.trim() }
+//    val filtered = remember(myCourses, q) {
+//        if (q.isEmpty()) myCourses
+//        else myCourses.filter { c ->
+//            (c.title?.contains(q, ignoreCase = true) == true) ||
+//                    (c.description?.contains(q, ignoreCase = true) == true)
+//        }
+//    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,7 +61,7 @@ fun MyCoursesScreen(
                 ),
             contentAlignment = Alignment.TopStart
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = onBackClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.backbtn),
                     contentDescription = "Back",
@@ -61,8 +73,12 @@ fun MyCoursesScreen(
 
         Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
-        // 🔎 سرچ‌بار (اگر پیاده‌سازی نشده، حذف یا جایگزین کن)
-        SearchBar()
+        // ✅ حتماً از SearchBar سفارشی خودت استفاده کن (نه متریال۳)
+        com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = ":جستجوی دوره‌های من"
+        )
 
         Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
@@ -81,11 +97,18 @@ fun MyCoursesScreen(
 
         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
-        // 🧩 کارت دوره
+        // 🧩 کارت دوره (نمونه‌ی ثابت)
         CourseCardCustom()
     }
 }
 
+//val filtered = remember(myCourses, query) {
+//    if (query.isBlank()) myCourses
+//    else myCourses.filter { c ->
+//        c.title.contains(query, ignoreCase = true) ||
+//                c.description.contains(query, ignoreCase = true)
+//    }
+//}
 
 @Composable
 fun CourseCardCustom() {

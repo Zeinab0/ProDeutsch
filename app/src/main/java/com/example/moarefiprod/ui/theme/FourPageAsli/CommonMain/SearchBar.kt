@@ -1,6 +1,7 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,56 +33,61 @@ import com.example.moarefiprod.iranSans
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar() {
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholder: String,
+    onSearch: () -> Unit = {}
+) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    var searchText by remember { mutableStateOf("") }
 
     OutlinedTextField(
-        value = searchText,
-        onValueChange = { searchText = it },
+        value = query,
+        onValueChange = onQueryChange,
         placeholder = {
             Text(
-                text = ":جستجو دوره",
+                text = placeholder,
                 textAlign = TextAlign.Right,
                 modifier = Modifier.fillMaxWidth(),
-                fontSize = (screenWidth * 0.04f).value.sp, // ✅ اندازه فونت پویا
+                fontSize = (screenWidth * 0.04f).value.sp,
                 color = Color(0xFF90CECE),
                 fontFamily = iranSans,
                 fontWeight = FontWeight.ExtraLight,
             )
         },
         textStyle = TextStyle(
-            fontSize = (screenWidth * 0.045f).value.sp, // ✅ متن کمی بزرگ‌تر
+            fontSize = (screenWidth * 0.045f).value.sp,
             fontFamily = iranSans,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF4D869C),
-            textAlign = TextAlign.Right, // ✅ نوشتن از سمت راست
+            textAlign = TextAlign.Right,
         ),
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Text, // ✅ برای ورودی فارسی
-            autoCorrect = true // ✅ فعال‌سازی تصحیح خودکار
+            keyboardType = KeyboardType.Text
         ),
         shape = RoundedCornerShape(screenWidth * 0.04f),
         colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = Color(0xFF4D869C), // ✅ رنگ آبی در حالت فوکوس
-            unfocusedBorderColor = Color(0xFF90CECE), // ✅ رنگ خاکستری در حالت غیرفعال
-            cursorColor = Color(0xFF4D869C), // ✅ تغییر رنگ نشانگر تایپ
+            focusedBorderColor = Color(0xFF4D869C),
+            unfocusedBorderColor = Color(0xFF90CECE),
+            cursorColor = Color(0xFF4D869C),
         ),
         trailingIcon = {
             Icon(
                 painter = painterResource(id = R.drawable.search),
                 tint = Color(0xFF90CECE),
                 contentDescription = "search Icon",
-                modifier = Modifier.size(screenWidth * 0.055f) // ✅ تنظیم اندازه آیکون نسبت به صفحه
+                modifier = Modifier
+                    .size(screenWidth * 0.055f)
+                    .padding(end = 6.dp)
+                    .clickable { onSearch() } // کلیک روی آیکون
             )
         },
         modifier = Modifier
-            .fillMaxWidth(1f) // ✅ عرض متناسب با صفحه و وسط‌چین شده
+            .fillMaxWidth()
             .height(screenHeight * 0.065f)
             .padding(horizontal = screenWidth * 0.06f)
             .background(Color(0xffF1FFFF), RoundedCornerShape(screenWidth * 0.04f))
     )
 }
-

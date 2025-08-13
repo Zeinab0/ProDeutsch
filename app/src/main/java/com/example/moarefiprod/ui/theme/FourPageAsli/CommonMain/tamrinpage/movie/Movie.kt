@@ -3,6 +3,7 @@ package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movi
 import android.util.Log
 import androidx.annotation.Keep
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 @Keep
 data class Movie(
@@ -16,7 +17,6 @@ data class Movie(
     val videoUrl: String = ""
 
 )
-
 
 fun getMoviesFromFirestore(
     onResult: (List<Movie>) -> Unit
@@ -40,3 +40,16 @@ fun getMoviesFromFirestore(
         }
 
 }
+
+ fun listenMoviesLive(onChange: (List<Movie>) -> Unit): ListenerRegistration {
+    return FirebaseFirestore.getInstance()
+        .collection("movies")
+        .addSnapshotListener { snap, e ->
+            if (e != null) return@addSnapshotListener
+            val list = snap?.documents?.mapNotNull { d ->
+                d.toObject(Movie::class.java)?.copy(id = d.id)
+            } ?: emptyList()
+            onChange(list)
+        }
+}
+

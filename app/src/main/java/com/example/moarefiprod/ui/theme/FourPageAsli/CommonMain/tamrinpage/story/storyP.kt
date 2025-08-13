@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +53,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.FilterChip
 import kotlinx.coroutines.delay
 
+
 @Composable
 fun StoryScreen(navController: NavController) {
     val configuration = LocalConfiguration.current
@@ -62,25 +64,39 @@ fun StoryScreen(navController: NavController) {
     val stories = remember { mutableStateOf<List<Story>>(emptyList()) }
     val centerIndex = remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        getStoriesFromFirestore { result ->
-            stories.value = result
-        }
+    // ✅ لایف‌سایکل‌-سیف: روی ورود گوش می‌دیم، روی خروج لغو می‌کنیم
+    DisposableEffect(Unit) {
+        val reg = listenStoriesLive { stories.value = it }
+        onDispose { reg.remove() }
     }
 
     val storyList = stories.value
 
-    val filteredStories = remember(storyList, selectedFilter) {
-        if (selectedFilter == "Alle") {
-            storyList
-        } else {
-            storyList.filter {
-                it.level == selectedFilter || it.price == selectedFilter
-            }
+    // 🔍 سرچ محلی
+    var query by remember { mutableStateOf("") }
+    val q: String = remember(query) { query.trim() }
+
+    // 1) فیلتر چیپ‌ها
+    val filteredByTab: List<Story> = remember(storyList, selectedFilter) {
+        when (selectedFilter) {
+            "Alle" -> storyList
+            "Frei" -> storyList.filter { it.price.equals("Frei", true) || it.price == "رایگان" }
+            else   -> storyList.filter { it.level == selectedFilter || it.price == selectedFilter }
         }
     }
 
-
+    // 2) فیلتر سرچ روی نتیجهٔ بالا
+    val filteredStories: List<Story> = remember(filteredByTab, q) {
+        if (q.isEmpty()) filteredByTab else filteredByTab.filter { s ->
+            listOfNotNull(
+                s.title,
+                s.level,
+                s.price,
+                // اگر در مدل Story فیلد دیگری مثل description داری، اضافه کن:
+//                s.description
+            ).any { it.contains(q, ignoreCase = true) }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -88,11 +104,9 @@ fun StoryScreen(navController: NavController) {
             .background(Color.White)
     ) {
         // Header
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             IconButton(
-                onClick = {navController.popBackStack()},
+                onClick = { navController.popBackStack() },
                 modifier = Modifier
                     .padding(
                         start = screenWidth * 0.03f,
@@ -109,7 +123,12 @@ fun StoryScreen(navController: NavController) {
             }
         }
 
-        SearchBar()
+        // ✅ از سرچ‌بار سفارشی پروژه استفاده کن (نه SearchBar متریال)
+        SearchBar(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = ":جستجوی داستان"
+        )
 
         Text(
             text = "Aktuelles",
@@ -124,8 +143,7 @@ fun StoryScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(5.dp))
 
         if (storyList.size >= 3) {
-
-            val visibleItems = remember(centerIndex.value) {
+            val visibleItems = remember(centerIndex.value, storyList) {
                 val size = storyList.size
                 val left = (centerIndex.value - 1 + size) % size
                 val right = (centerIndex.value + 1) % size
@@ -133,15 +151,14 @@ fun StoryScreen(navController: NavController) {
             }
 
             LaunchedEffect(storyList.size) {
-                while (true) {
+                while (storyList.isNotEmpty()) {
                     delay(3000)
                     centerIndex.value = (centerIndex.value + 1) % storyList.size
                 }
             }
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -176,12 +193,9 @@ fun StoryScreen(navController: NavController) {
                             .clickable {
                                 navController.navigate("story_detail/${story.id}")
                             }
-
                     )
-
                 }
             }
-
         } else if (storyList.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -197,8 +211,6 @@ fun StoryScreen(navController: NavController) {
                                 navController.navigate("story_detail/${story.id}")
                             }
                     )
-
-
                     Spacer(modifier = Modifier.width(12.dp))
                 }
             }
@@ -208,12 +220,10 @@ fun StoryScreen(navController: NavController) {
                     .fillMaxWidth()
                     .height(screenHeight * 0.22f),
                 contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+            ) { CircularProgressIndicator() }
         }
 
-        // ⬇️ چیپ‌های فیلتر
+        // فیلتر چیپ‌ها
         Row(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -229,7 +239,7 @@ fun StoryScreen(navController: NavController) {
             }
         }
 
-        if (storyList.isNotEmpty()) {
+        if (filteredStories.isNotEmpty()) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
@@ -239,7 +249,7 @@ fun StoryScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(30.dp),
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
-                items(filteredStories) { story -> // ⬅️ فیلتر اعمال شد
+                items(filteredStories, key = { it.id }) { story ->
                     StoryCardB(
                         story = story,
                         title = story.title,
@@ -257,7 +267,10 @@ fun StoryScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                // اگر storyList خالیه یعنی هنوز لود نشده → لودینگ
+                // اگر storyList پره ولی filteredStories خالیه → “موردی یافت نشد”
+                if (storyList.isEmpty()) CircularProgressIndicator()
+                else Text("موردی یافت نشد", fontFamily = iranSans, color = Color.Gray)
             }
         }
     }

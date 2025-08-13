@@ -46,6 +46,11 @@ class FlashcardViewModel : ViewModel() {
 
     private var myCardsListener: ListenerRegistration? = null
 
+    private var allCardsListener: ListenerRegistration? = null
+
+    private val _allCards = MutableStateFlow<List<Cards>>(emptyList())
+    val allCards: StateFlow<List<Cards>> = _allCards.asStateFlow()
+
     init {
         listenMyCards()
     }
@@ -109,8 +114,33 @@ class FlashcardViewModel : ViewModel() {
 
     fun isCardEnrolled(cardId: String): Boolean = myCardIds.value.contains(cardId)
 
+    fun listenAllCards() {
+        allCardsListener?.remove()
+
+        allCardsListener = FirebaseFirestore.getInstance()
+            .collection("flashcards")
+            .addSnapshotListener { snap, e ->
+                if (e != null) return@addSnapshotListener
+                val list = snap?.documents?.mapNotNull { d ->
+                    try {
+                        Cards(
+                            id = d.id,
+                            title = d.getString("title") ?: "",
+                            description = d.getString("description") ?: "",
+                            count = (d.getLong("count") ?: 0).toInt(),
+                            price = d.getString("price") ?: "نامشخص",
+                            image = d.getString("image") ?: "",
+                            isNew = d.getBoolean("isNew") ?: false
+                        )
+                    } catch (_: Exception) { null }
+                } ?: emptyList()
+                _allCards.value = list
+            }
+    }
+
     override fun onCleared() {
         myCardsListener?.remove()
+        allCardsListener?.remove() // اینم اضافه بشه
         super.onCleared()
     }
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,8 @@ data class Song(
 
 class MusicViewModel : ViewModel() {
 
+    private var songsReg: ListenerRegistration? = null
+    private var singersReg: ListenerRegistration? = null
 
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs = _songs.asStateFlow()
@@ -40,16 +43,31 @@ class MusicViewModel : ViewModel() {
     }
 
     private fun loadSingers() {
-        FirebaseRepository.getSingers { data ->
-            _singers.value = data
-        }
+        singersReg?.remove()
+        singersReg = FirebaseFirestore.getInstance()
+            .collection("singers")
+            .addSnapshotListener { snap, e ->
+                if (e != null) return@addSnapshotListener
+                val data = snap?.documents?.mapNotNull { d ->
+                    d.toObject(Singer::class.java)?.copy(id = d.id)
+                } ?: emptyList()
+                _singers.value = data
+            }
     }
 
     private fun loadSongs() {
-        FirebaseRepository.getSongs { data ->
-            _songs.value = data
-        }
+        songsReg?.remove()
+        songsReg = FirebaseFirestore.getInstance()
+            .collection("songs")
+            .addSnapshotListener { snap, e ->
+                if (e != null) return@addSnapshotListener
+                val data = snap?.documents?.mapNotNull { d ->
+                    d.toObject(Song::class.java)?.copy(id = d.id)
+                } ?: emptyList()
+                _songs.value = data
+            }
     }
+
     fun toggleSongLike(
         userId: String,
         song: Song,
@@ -90,33 +108,23 @@ class MusicViewModel : ViewModel() {
             Log.e("LikeError", "خطا در ذخیره/حذف آهنگ: ${e.message}")
         }
     }
-    fun getLikedSongIdsForUser(
-        userId: String,
-        onComplete: (Set<String>) -> Unit
-    ) {
-        val likedSongsRef = FirebaseFirestore.getInstance()
-            .collection("users")
-            .document(userId)
+    fun getLikedSongIdsForUser(userId: String, onComplete: (Set<String>) -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("users").document(userId)
             .collection("likedSongs")
-
-        likedSongsRef.get().addOnSuccessListener { snapshot ->
-            val likedSongIds = snapshot.documents.mapNotNull { it.id }.toSet()
-            onComplete(likedSongIds)
-        }
+            .addSnapshotListener { snap, _ ->
+                val ids = snap?.documents?.map { it.id }?.toSet() ?: emptySet()
+                onComplete(ids)
+            }
     }
 
     fun getLikedSongsForUser(userId: String, onResult: (List<Song>) -> Unit) {
         FirebaseFirestore.getInstance()
-            .collection("users")
-            .document(userId)
+            .collection("users").document(userId)
             .collection("likedSongs")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                val likedSongs = snapshot.documents.mapNotNull { it.toObject(Song::class.java) }
-                onResult(likedSongs)
-            }
-            .addOnFailureListener {
-                onResult(emptyList())
+            .addSnapshotListener { snap, _ ->
+                val list = snap?.documents?.mapNotNull { it.toObject(Song::class.java) } ?: emptyList()
+                onResult(list)
             }
     }
 
@@ -137,6 +145,12 @@ class MusicViewModel : ViewModel() {
                 }
                 _singers.value = singerList
             }
+    }
+
+    override fun onCleared() {
+        songsReg?.remove()
+        singersReg?.remove()
+        super.onCleared()
     }
 
 
@@ -162,4 +176,5 @@ object FirebaseRepository {
                 onResult(result)
             }
     }
+
 }

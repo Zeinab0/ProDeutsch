@@ -38,6 +38,7 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material3.Text
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar
 
 
 @Composable
@@ -54,19 +55,45 @@ fun MusicScreen(navController: NavController) {
     var likedSongs by remember { mutableStateOf(listOf<Song>()) }
     var likedSongIds by remember { mutableStateOf(setOf<String>()) }
 
+    // لایک‌ها
     LaunchedEffect(userId) {
         userId?.let { uid ->
-            viewModel.getLikedSongsForUser(uid) {
-                likedSongs = it
-            }
+            viewModel.getLikedSongsForUser(uid) { likedSongs = it }
+            viewModel.getLikedSongIdsForUser(uid) { ids -> likedSongIds = ids }
         }
     }
 
-    LaunchedEffect(userId) {
-        userId?.let {
-            viewModel.getLikedSongIdsForUser(it) { ids ->
-                likedSongIds = ids
-            }
+    // 🔍 سرچ مخصوص همین صفحه
+    var query by remember { mutableStateOf("") }
+    val q: String = remember(query) { query.trim() }   // مقدار معمولی؛ بدون by
+
+// ❤️ فیلترِ لیست موردعلاقه‌ها
+    val filteredLiked: List<Song> = remember(likedSongs, q) {
+        if (q.isEmpty()) likedSongs else likedSongs.filter { s ->
+            listOf(
+                s.title,
+                s.artist,
+                s.lyrics
+            ).any { it.contains(q, ignoreCase = true) }
+        }
+    }
+
+// 👤 فیلتر خواننده‌ها
+    val filteredSingers: List<Singer> = remember(singers, q) {
+        if (q.isEmpty()) singers else singers.filter { sg ->
+            sg.name.contains(q, ignoreCase = true)
+        }
+    }
+
+// 🎵 فیلتر همهٔ آهنگ‌ها (و ست کردن isFavorite از روی likedSongIds)
+    val filteredSongs: List<Song> = remember(songs, likedSongIds, q) {
+        val base = songs.map { it.copy(isFavorite = likedSongIds.contains(it.id)) }
+        if (q.isEmpty()) base else base.filter { s ->
+            listOf(
+                s.title,
+                s.artist,
+                s.lyrics
+            ).any { it.contains(q, ignoreCase = true) }
         }
     }
 
@@ -92,14 +119,18 @@ fun MusicScreen(navController: NavController) {
             }
         }
 
-        // SearchBar
-        com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar()
+        // 🔍 سرچ‌بار — stateless
+        SearchBar(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = ":جستجوی آهنگ / خواننده"
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .padding(horizontal = screenWidth * 0.06f) // 24.dp تقریباً
+                .padding(horizontal = screenWidth * 0.06f)
         ) {
             // Meine Favoriten
             Text(
@@ -112,24 +143,20 @@ fun MusicScreen(navController: NavController) {
                     .align(Alignment.Start)
             )
 
-
             LazyRow {
-                items(likedSongs.take(5)) { song ->
+                items(filteredLiked.take(5)) { song ->
                     FavoriteSongCard(song = song) {
                         navController.navigate("detail/${song.id}")
                     }
                 }
-
                 item {
                     Box(
                         modifier = Modifier
-                            .width(screenWidth * 0.4f) // حدود 160.dp
-                            .height(screenHeight * 0.1f) // حدود 80.dp
+                            .width(screenWidth * 0.4f)
+                            .height(screenHeight * 0.1f)
                             .clip(RoundedCornerShape(screenWidth * 0.03f))
                             .background(Color(0xFFE0E0E0))
-                            .clickable {
-                                navController.navigate("favorites")
-                            },
+                            .clickable { navController.navigate("favorites") },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -149,14 +176,10 @@ fun MusicScreen(navController: NavController) {
                 fontFamily = iranSans,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .padding(
-                        top = screenHeight * 0.02f,
-                        bottom = screenHeight * 0.01f
-                    )
+                    .padding(top = screenHeight * 0.02f, bottom = screenHeight * 0.01f)
                     .align(Alignment.Start)
             )
-
-            FamousSingersRow(singers = singers, navController = navController)
+            FamousSingersRow(singers = filteredSingers, navController = navController)
 
             Text(
                 text = "Alle",
@@ -164,23 +187,17 @@ fun MusicScreen(navController: NavController) {
                 fontFamily = iranSans,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .padding(
-                        top = screenHeight * 0.02f,
-                        bottom = screenHeight * 0.01f
-                    )
+                    .padding(top = screenHeight * 0.02f, bottom = screenHeight * 0.01f)
                     .align(Alignment.Start)
             )
 
-
+            // همه آهنگ‌ها (بعد از فیلتر)
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
             ) {
-                items(songs) { song ->
-                    val isFavorite = likedSongIds.contains(song.id)
-                    val updatedSong = song.copy(isFavorite = isFavorite)
-
+                items(filteredSongs, key = { it.id }) { song ->
                     SongItem(
-                        song = updatedSong,
+                        song = song,
                         onClick = { navController.navigate("detail/${song.id}") },
                         onLikeClick = { clickedSong ->
                             val newState = !clickedSong.isFavorite

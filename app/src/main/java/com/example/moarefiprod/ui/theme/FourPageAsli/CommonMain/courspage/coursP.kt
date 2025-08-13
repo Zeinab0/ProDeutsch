@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -33,29 +34,66 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.moarefiprod.iranSans
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun tamrinpage(
     navController: NavController,
+    query: String = "",
     viewModel: CourseViewModel = viewModel()
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
 
-    // مدیریت فیلتر
+    // فیلتر تب‌ها
     var selectedFilter by remember { mutableStateOf("همه") }
 
-    // جمع‌آوری داده‌ها از ViewModel
+    // داده‌ها از ویومدل
     val allCourses by viewModel.allCourses.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val isLoading  by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
+    // لاگ کمکی (اختیاری)
     LaunchedEffect(allCourses) {
-        allCourses.forEach { course ->
-            Log.d("TamrinPage", "Course: ${course.title}, isNew: ${course.isNew}")
+        allCourses.forEach { c ->
+            Log.d("TamrinPage", "Course: ${c.title}, isNew=${c.isNew}, price=${c.price}")
         }
     }
+
+    // کمک‌تابع: نرمال‌سازی قیمت برای فیلتر «رایگان»
+    fun isFree(price: Any?): Boolean {
+        val s = price?.toString()?.trim()?.lowercase() ?: return false
+        return s == "0" || s == "free" || s == "frei" || s == "رایگان" || s == "مجانی"
+    }
+
+    // ---------- فیلتر + سرچ ----------
+    val filteredByTab = remember(allCourses, selectedFilter) {
+        when (selectedFilter) {
+            "رایگان" -> allCourses.filter { isFree(it.price) }
+            "جدید"   -> allCourses.filter { it.isNew }
+            else     -> allCourses
+        }
+    }
+
+    val q = remember(query) { query.trim().lowercase() }
+    val filteredByQuery = remember(filteredByTab, q) {
+        if (q.isEmpty()) filteredByTab
+        else {
+            filteredByTab.filter { c ->
+                // title/description ممکنه نال باشن؟ با ?.
+                (c.title?.lowercase()?.contains(q) == true) ||
+                        (c.description?.lowercase()?.contains(q) == true)
+            }
+        }
+    }
+
+    // مرتب‌سازی امن بر اساس order (اگر نبود، ته لیست)
+    val orderedCourses = remember(filteredByQuery) {
+        filteredByQuery.sortedBy { it.order ?: Int.MAX_VALUE }
+    }
+    // ----------------------------------
 
     Column(
         modifier = Modifier
@@ -65,7 +103,6 @@ fun tamrinpage(
     ) {
         BannerSection(navController = navController)
 
-        // متن دوره‌ها
         Text(
             text = " : دوره ها ",
             fontSize = (screenWidth * 0.035f).value.sp,
@@ -78,15 +115,13 @@ fun tamrinpage(
                 .padding(top = 10.dp)
         )
 
-        // فیلترها
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            val filters = listOf("جدید", "رایگان", "همه")
-            filters.forEach { filter ->
+            listOf("جدید", "رایگان", "همه").forEach { filter ->
                 Spacer(modifier = Modifier.width(8.dp))
                 FilterChips(
                     text = filter,
@@ -96,23 +131,23 @@ fun tamrinpage(
             }
         }
 
-        // نمایش دوره‌ها با فیلتر
-        val filteredCourses = when (selectedFilter) {
-            "" -> allCourses.filter { it.price == 0 }
-            "" -> allCourses.filter { it.isNew }
-            else -> allCourses
-        }
-
-        val orderedCourses = remember(filteredCourses) { filteredCourses.sortedBy { it.order } }
-
         if (isLoading) {
-            Text("در حال بارگذاری...", color = Color.Gray, modifier = Modifier.fillMaxWidth().padding(16.dp))
+            Text(
+                "در حال بارگذاری...",
+                color = Color.Gray,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
         }
+
         errorMessage?.let { message ->
             Text(
                 text = message,
                 color = Color.Red,
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             )
         }
 
@@ -123,20 +158,20 @@ fun tamrinpage(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            items(orderedCourses) { course ->  // ⬅️ به جای filteredCourses
+            items(orderedCourses, key = { it.id }) { course ->
                 Box {
                     CourseCard(course = course, navController = navController)
-                    if (course.isNew) NewLabel()
+
+                    if (course.isNew) {
+                        NewLabel(
+                            modifier = Modifier
+                                .align(AbsoluteAlignment.TopLeft)
+                                .zIndex(1f)
+                                .offset(x = (-12).dp, y = 8.dp)
+                        )
+                    }
                 }
             }
-//            items(filteredCourses) { course ->
-//                Box {
-//                    CourseCard(course = course, navController = navController)
-//                    if (course.isNew) {
-//                        NewLabel()
-//                    }
-//                }
-//            }
         }
     }
 }

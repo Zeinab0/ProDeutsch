@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +56,6 @@ import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar
 import kotlinx.coroutines.delay
 
-
 @Composable
 fun MovieScreen(navController: NavController) {
     val configuration = LocalConfiguration.current
@@ -63,30 +63,53 @@ fun MovieScreen(navController: NavController) {
     val screenHeight = configuration.screenHeightDp.dp
 
     var selectedFilter by remember { mutableStateOf("همه") }
-    val movies = remember { mutableStateOf<List<Movie>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        getMoviesFromFirestore { result ->
-            movies.value = result
+    // داده‌ها
+    val moviesState = remember { mutableStateOf<List<Movie>>(emptyList()) }
+
+    // 🔴 قبلاً LaunchedEffect(Unit) با getMoviesFromFirestore داشتی — حذف شد
+    // 🟢 جایگزین: گوش‌دادن زنده به فایربیس
+    DisposableEffect(Unit) {
+        val reg = listenMoviesLive { list ->
+            Log.d("Firestore", "Live movies: ${list.size}")
+            moviesState.value = list
         }
+        onDispose { reg.remove() }
     }
 
-    LaunchedEffect(Unit) {
-        getMoviesFromFirestore { result ->
-            Log.d("Firestore", "Loaded movies: $result")
-            movies.value = result
-        }
-    }
+    val movieList = moviesState.value
 
-    val movieList = movies.value
+    // سرچ مخصوص همین صفحه
+    var query by remember { mutableStateOf("") }
+    val q: String = remember(query) { query.trim() }
+
+    // شاخص اسلایدر بالا
     val centerIndex = remember { mutableStateOf(0) }
 
-    val filteredMovies = remember(movieList, selectedFilter) {
-        if (selectedFilter == "همه") {
-            movieList
-        } else {
-            movieList.filter {
-                it.level == selectedFilter || it.price == selectedFilter
+    // 1) فیلتر تب‌ها (چیپ‌ها)
+    val filteredByTab: List<Movie> = remember(movieList, selectedFilter) {
+        when (selectedFilter) {
+            "همه" -> movieList
+            "رایگان" -> movieList.filter {
+                it.price.equals("رایگان", true) || it.price.equals("Frei", true) || it.price.equals("Free", true)
+            }
+            else -> movieList.filter { m ->
+                m.level.equals(selectedFilter, true) || m.price.equals(selectedFilter, true)
+            }
+        }
+    }
+
+    // 2) فیلتر سرچ روی نتیجهٔ تب‌ها
+    val filteredMovies: List<Movie> = remember(filteredByTab, q) {
+        if (q.isEmpty()) filteredByTab
+        else {
+            filteredByTab.filter { m ->
+                listOf(
+                    m.title,
+                    m.level,
+                    m.price,
+                    m.description // اگر ندارى، خط را بردار
+                ).any { it.contains(q, ignoreCase = true) }
             }
         }
     }
@@ -97,9 +120,7 @@ fun MovieScreen(navController: NavController) {
             .background(Color.White)
     ) {
         // Header
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             IconButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
@@ -118,7 +139,12 @@ fun MovieScreen(navController: NavController) {
             }
         }
 
-        SearchBar()
+        // 🔍 سرچ فقط برای فیلم‌ها (سفارشی خودت)
+       SearchBar(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = ":جستجوی فیلم"
+        )
 
         Text(
             text = "جدیدترین ها",
@@ -132,9 +158,9 @@ fun MovieScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(5.dp))
 
+        // اسلایدر سه‌تایی بالا (از کل لیست یا اگر خواستی از filteredMovies)
         if (movieList.size >= 3) {
-
-            val visibleItems = remember(centerIndex.value) {
+            val visibleItems = remember(centerIndex.value, movieList) {
                 val size = movieList.size
                 val left = (centerIndex.value - 1 + size) % size
                 val right = (centerIndex.value + 1) % size
@@ -142,15 +168,14 @@ fun MovieScreen(navController: NavController) {
             }
 
             LaunchedEffect(movieList.size) {
-                while (true) {
+                while (movieList.isNotEmpty()) {
                     delay(3000)
                     centerIndex.value = (centerIndex.value + 1) % movieList.size
                 }
             }
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -188,7 +213,6 @@ fun MovieScreen(navController: NavController) {
                     )
                 }
             }
-
         } else if (movieList.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -198,10 +222,9 @@ fun MovieScreen(navController: NavController) {
                     MovieCard(
                         isCenter = true,
                         title = movie.title,
-                        modifier = Modifier
-                            .clickable {
-                                navController.navigate("movie_detail/${movie.id}")
-                            }
+                        modifier = Modifier.clickable {
+                            navController.navigate("movie_detail/${movie.id}")
+                        }
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 }
@@ -217,7 +240,7 @@ fun MovieScreen(navController: NavController) {
             }
         }
 
-        // ⬇️ چیپ‌های فیلتر
+        // چیپ‌های فیلتر
         Row(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -233,7 +256,8 @@ fun MovieScreen(navController: NavController) {
             }
         }
 
-        if (movieList.isNotEmpty()) {
+        // گرید پایین با فیلتر نهایی (تب + سرچ)
+        if (filteredMovies.isNotEmpty()) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
@@ -243,7 +267,7 @@ fun MovieScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(30.dp),
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
-                items(filteredMovies) { movie -> // ⬅️ فیلتر اعمال شد
+                items(filteredMovies, key = { it.id }) { movie ->
                     VideoCard(
                         title = movie.title,
                         level = movie.level,
@@ -260,7 +284,7 @@ fun MovieScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                Text("موردی یافت نشد", fontFamily = iranSans, color = Color.Gray)
             }
         }
     }
