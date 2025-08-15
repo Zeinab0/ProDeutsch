@@ -24,17 +24,14 @@ import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
-
 
 @Composable
 fun VacancyPage(
@@ -168,14 +165,8 @@ fun VacancyPage(
                         .padding(end = 4.dp)
                 )
             }
-
-
-
         }
 
-
-
-        // 📝 Column برای فیلد ورودی و دکمه تایید
         // این Column در بخش میانی و پایین صفحه قرار می‌گیرد
         Column(
             modifier = Modifier
@@ -242,9 +233,6 @@ fun VacancyPage(
             )
 
         }
-
-
-      //  if (!showCompletedSentence) {
             Button(
                 onClick = {
                     isCorrect = userInput.text.trim().equals(correctAnswer, ignoreCase = true)
@@ -276,8 +264,6 @@ fun VacancyPage(
                     fontSize = 14.sp
                 )
             }
-
-        //}
         // --- پایان بخش دکمه تایید ---
 
         if (showExitDialog) {

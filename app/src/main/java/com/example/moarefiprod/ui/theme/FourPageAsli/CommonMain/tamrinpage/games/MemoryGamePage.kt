@@ -308,7 +308,6 @@ fun MemoryGamePage(
                 isLastGame = gameIndex + 1 >= grammarViewModel.gameListSize(),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                   // .padding(bottom = screenHeight * 0.3f)
             )
         }
 

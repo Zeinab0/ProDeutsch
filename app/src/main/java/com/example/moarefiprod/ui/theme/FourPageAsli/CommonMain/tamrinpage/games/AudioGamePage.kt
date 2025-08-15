@@ -1,7 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
 import android.media.MediaPlayer
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -260,7 +259,6 @@ fun AudioRecognitionPage(
                     .padding(bottom = 0.dp)
             )
         }
-
 
         // دکمه تایید
        // if (!showResultBox && selectedAnswerIndex >= 0) {
