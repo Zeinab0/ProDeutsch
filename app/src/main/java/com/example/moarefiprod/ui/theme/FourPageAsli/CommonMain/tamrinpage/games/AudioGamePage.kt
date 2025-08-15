@@ -188,9 +188,6 @@ fun AudioRecognitionPage(
                 )
 
             }
-
-
-
             Spacer(modifier = Modifier.height(85.dp))
 
             Column(

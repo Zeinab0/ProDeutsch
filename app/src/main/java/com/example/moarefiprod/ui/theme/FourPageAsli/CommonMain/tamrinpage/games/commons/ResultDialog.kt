@@ -44,12 +44,28 @@ fun ResultDialog(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // بخش اول - تیتر
                 Text(
-                    text = "خسته نباشید دوست خوبم\nدوس داری نتیجه ازمونت رو ببینی؟\nزمان کل بازی‌ها: $formattedTime",
+                    text = "^_^ خسته نباشید دوست خوبم",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = iranSans,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.End)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // بخش دوم - توضیحات
+                Text(
+                    text = "دوس داری بریم آزمون بعدی؟\nزمان کل بازی‌ها: $formattedTime",
+                    fontSize = 12.sp,
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.ExtraLight,
+                    textAlign = TextAlign.Right,
+                    color = Color.Gray,
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentWidth(Alignment.End)

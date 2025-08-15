@@ -125,32 +125,32 @@ fun GameHost(
 
     when (currentGame.type) {
         "MEMORY_GAME" -> {
-            viewModel.loadMemoryGame(pathType, courseId, lessonId, contentId, currentGame.id)
+          //  viewModel.loadMemoryGame(pathType, courseId, lessonId, contentId, currentGame.id)
 
             MemoryGamePage(navController,pathType, courseId, lessonId, contentId, currentGame.id, gameIndex, grammarGames.size, viewModel)
         }
 
         "TEXT_PIC" -> {
-            viewModel.loadTextPicGame(pathType, courseId, lessonId, contentId, currentGame.id)
+          //  viewModel.loadTextPicGame(pathType, courseId, lessonId, contentId, currentGame.id)
 
             TextPicPage(navController, courseId, lessonId, contentId, currentGame.id, gameIndex, grammarGames.size, viewModel)
         }
 
         "SENTENCE" -> {
-            viewModel.loadSentenceGame(pathType, courseId, lessonId, contentId, currentGame.id)
+           // viewModel.loadSentenceGame(pathType, courseId, lessonId, contentId, currentGame.id)
 
             SentenceBuilderPage(navController, courseId, lessonId, contentId, currentGame.id, gameIndex, grammarGames.size, viewModel)
         }
 
         "MULTIPLE_CHOICE" -> {
-            viewModel.loadMultipleChoiceGame(
-                pathType = pathType,
-                courseId = courseId,
-                gameId = currentGame.id,
-                index = gameIndex,
-                lessonId = lessonId,
-                contentId = contentId
-            )
+//            viewModel.loadMultipleChoiceGame(
+//                pathType = pathType,
+//                courseId = courseId,
+//                gameId = currentGame.id,
+//                index = gameIndex,
+//                lessonId = lessonId,
+//                contentId = contentId
+//            )
 
             MultipleChoicePage(
                 navController = navController,
@@ -165,7 +165,7 @@ fun GameHost(
         }
 
         "QUESTION_STORY" -> {
-            viewModel.loadQuestionStoryGame(pathType, courseId, lessonId, contentId, currentGame.id)
+          //  viewModel.loadQuestionStoryGame(pathType, courseId, lessonId, contentId, currentGame.id)
 
             QuestionStoryPage(
                 navController = navController,
@@ -188,7 +188,7 @@ fun GameHost(
         }
 
         "VACANCY" -> {
-            viewModel.loadVacancyGame(pathType, courseId, lessonId, contentId, currentGame.id)
+          //  viewModel.loadVacancyGame(pathType, courseId, lessonId, contentId, currentGame.id)
 
             VacancyPage(
                 navController = navController,
@@ -211,7 +211,7 @@ fun GameHost(
         }
 
         "AUDIO_RECOGNITION" -> {
-            viewModel.loadAudioRecognitionGame(pathType, courseId, lessonId, contentId, currentGame.id)
+          //  viewModel.loadAudioRecognitionGame(pathType, courseId, lessonId, contentId, currentGame.id)
 
             AudioRecognitionPage(
                 navController = navController,
@@ -234,7 +234,7 @@ fun GameHost(
         }
 
         "CONNECT_WORDS" -> {
-            viewModel.loadConnectWordsGame(pathType, courseId, lessonId, contentId, currentGame.id)
+          viewModel.loadConnectWordsGame(pathType, courseId, lessonId, contentId, currentGame.id)
 
             ConnectWordsPage(
                 navController = navController,

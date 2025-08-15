@@ -180,47 +180,55 @@ fun ConnectWordsPage(
             selectedAudios[word] == correctPairs[word]
         }
 
-        Button(
-            onClick = {
-                showResultBox = true
-                isCorrect = userIsCorrect
-                resultStatus = newResultStatus
-
-                resultList = words.map { word ->
-                    val selectedAudio = selectedAudios[word] ?: ""
-                    val correctAudio = correctPairs[word] ?: ""
-                    val userSentence = gameState.audioTexts[selectedAudio] ?: "---"
-                    val correctSentence = gameState.audioTexts[correctAudio] ?: "---"
-                    val isCorrect = selectedAudio == correctAudio
-                    val translation = gameState.wordTranslations[word] ?: ""
-
-                    Log.d("TranslationCheck", "Translation for $word: $translation")
-
-                    ConnectResult(
-                        word = word,
-                        selectedAudioUrl = selectedAudio,
-                        correctAudioUrl = correctAudio,
-                        userSentence = userSentence,
-                        correctSentence = correctSentence,
-                        isCorrect = isCorrect,
-                        translation = translation
-                    )
-                }
-            },
-            //enabled = allSelected,
-            enabled = true,
+        Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 30.dp, bottom = 180.dp)
+                .padding(bottom = 180.dp, end = 30.dp)
                 .width(screenWidth * 0.20f)
-                .height(40.dp),
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (allSelected) Color(0xFF4D869C) else Color.Gray,
-                contentColor = Color.White
-            )
+                .height(40.dp)
         ) {
-            Text(text = "تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+            Button(
+                onClick = {
+                    if (!showResultBox) { // ✅ جلوگیری از کلیک دوباره
+                        showResultBox = true
+                        isCorrect = userIsCorrect
+                        resultStatus = newResultStatus
+
+                        resultList = words.map { word ->
+                            val selectedAudio = selectedAudios[word] ?: ""
+                            val correctAudio = correctPairs[word] ?: ""
+                            val userSentence = gameState.audioTexts[selectedAudio] ?: "---"
+                            val correctSentence = gameState.audioTexts[correctAudio] ?: "---"
+                            val isCorrect = selectedAudio == correctAudio
+                            val translation = gameState.wordTranslations[word] ?: ""
+
+                            Log.d("TranslationCheck", "Translation for $word: $translation")
+
+                            ConnectResult(
+                                word = word,
+                                selectedAudioUrl = selectedAudio,
+                                correctAudioUrl = correctAudio,
+                                userSentence = userSentence,
+                                correctSentence = correctSentence,
+                                isCorrect = isCorrect,
+                                translation = translation
+                            )
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4D869C), // ✅ رنگ ثابت
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.fillMaxSize() // همون سایز Box
+            ) {
+                Text(
+                    text = "تأیید",
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         if (showResultBox) {
@@ -445,14 +453,14 @@ fun ConnectWordsResultBox(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+               Spacer(modifier = Modifier.height(2.dp))
             }
 
             // دکمه پایین سمت چپ
             Box(
                 modifier = Modifier
                     .align(Alignment.End)
-                    .offset(y = (-14).dp)
+                    .offset(y = (-3).dp)
                     .width(90.dp)
                     .height(30.dp)
                     .clip(RoundedCornerShape(10.dp))

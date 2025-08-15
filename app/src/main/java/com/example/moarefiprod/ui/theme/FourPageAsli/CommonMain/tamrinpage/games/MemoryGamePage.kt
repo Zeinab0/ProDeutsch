@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,10 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,7 +91,7 @@ fun MemoryGamePage(
     }
     if (!isDataLoaded) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("در حال بارگذاری...", fontFamily = iranSans)
+            Text("...در حال بارگذاری", fontFamily = iranSans)
         }
         return
     }
@@ -309,7 +308,7 @@ fun MemoryGamePage(
                 isLastGame = gameIndex + 1 >= grammarViewModel.gameListSize(),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = screenHeight * 0.03f)
+                   // .padding(bottom = screenHeight * 0.3f)
             )
         }
 
@@ -391,51 +390,57 @@ fun MemoryGameResultBox(
     isLastGame: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val allCorrect = wrongCount == 0 && correctCount == total
+    val unanswered = (total - (correctCount + wrongCount)).coerceAtLeast(0)
+
+    val baseHeight = screenHeight * 0.19f     // همان ارتفاع حالت درست
+    val maxDynamic = screenHeight * 0.5f      // سقف ارتفاع در حالت غلط
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .offset(y = 8.dp)
-            .height(160.dp)
-            .padding(16.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF90CECE)),
-        contentAlignment = Alignment.Center
+            // ✅ اگر درست بود: ارتفاع ثابت — اگر غلط بود: بسته به محتوا
+            .then(if (allCorrect) Modifier.height(baseHeight) else Modifier.wrapContentHeight())
+            .padding(horizontal = 20.dp, vertical = 30.dp)
+            .background(color = Color(0xFF90CECE), shape = RoundedCornerShape(25.dp))
+            .padding(horizontal = 15.dp, vertical = 5.dp)
+            // ✅ در حالت غلط سقف ارتفاع تعیین کن که خیلی بلند نشه
+            .then(if (!allCorrect) Modifier.heightIn(max = maxDynamic) else Modifier)
+            .animateContentSize() // انیمیشن تغییر اندازه
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            // ✅ Arrangement را به Top تغییر دهید تا کنترل کامل روی فواصل داشته باشید
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.End
+                .fillMaxWidth()
+                .offset(y = 8.dp),
         ) {
-            // متن‌ها
-            if (wrongCount == 0) {
+            if (allCorrect) {
                 Text(
-                    text = "آفرین 🎉 همه رو درست زدی!",
+                    text = "آفرین \uD83C\uDF89 درست انتخاب کردی",
                     fontFamily = iranSans,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    style = TextStyle(textDirection = TextDirection.Rtl),
                     textAlign = TextAlign.Right,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.End)
                 )
             } else {
                 InfoRowMemory("تعداد کلمات درست", correctCount)
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 InfoRowMemory("تعداد کلمات غلط", wrongCount)
+                Spacer(modifier = Modifier.height(4.dp))
+                InfoRowMemory("تعداد نزده", unanswered)
             }
 
-            // ✅ یک Spacer با ارتفاع ثابت بین متن و دکمه قرار دهید
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(25.dp))
 
-            // دکمه "بریم بعدی"
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentWidth(Alignment.End)
-                    // ✅ offset دکمه را کمتر کنید تا کمتر به پایین حرکت کند
-                    .offset(y = (-5).dp)
+                    .offset(y = (-14).dp)
                     .width(90.dp)
                     .height(30.dp)
                     .clip(RoundedCornerShape(10.dp))
@@ -453,7 +458,6 @@ fun MemoryGameResultBox(
                         color = Color.White,
                         fontSize = 12.sp
                     )
-
                     if (!isLastGame) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
@@ -468,6 +472,7 @@ fun MemoryGameResultBox(
         }
     }
 }
+
 
 @Composable
 fun InfoRowMemory(label: String, count: Int) {

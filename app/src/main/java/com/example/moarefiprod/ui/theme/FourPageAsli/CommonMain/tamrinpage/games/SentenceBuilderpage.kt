@@ -119,7 +119,7 @@ fun SentenceBuilderPage(
         when {
             sentenceState == null -> {
                 Text(
-                    text = "در حال بارگذاری...",
+                    text = "...در حال بارگذاری",
                     color = Color.Gray,
                     fontFamily = iranSans,
                     modifier = Modifier.align(Alignment.Center)
@@ -210,9 +210,12 @@ fun SentenceBuilderPage(
                                         ClickableTextWordBox(
                                             word = word,
                                             isSelected = true,
+                                            enabled = !showResultBox, // ⬅ اینجا اضافه شد
                                             onClick = {
-                                                selectedWords = selectedWords.toMutableList().apply {
-                                                    remove(word)
+                                                if (!showResultBox) {
+                                                    selectedWords = selectedWords.toMutableList().apply {
+                                                        remove(word)
+                                                    }
                                                 }
                                             }
                                         )
@@ -264,9 +267,12 @@ fun SentenceBuilderPage(
                                     ClickableTextWordBox(
                                         word = word,
                                         isSelected = false,
+                                        enabled = !showResultBox, // ⬅ اینجا اضافه شد
                                         onClick = {
-                                            selectedWords = selectedWords.toMutableList().apply {
-                                                add(word)
+                                            if (!showResultBox) {
+                                                selectedWords = selectedWords.toMutableList().apply {
+                                                    add(word)
+                                                }
                                             }
                                         }
                                     )
@@ -284,7 +290,7 @@ fun SentenceBuilderPage(
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = screenHeight * 0.19f, end = 30.dp)
+                .padding(bottom = screenHeight * 0.19f, end = screenWidth * 0.06f)
                 .width(screenWidth * 0.20f)
                 .height(40.dp)
                 .zIndex(2f)
@@ -305,10 +311,13 @@ fun SentenceBuilderPage(
                         timeInSeconds = timeInSeconds
                     )
                 },
+                enabled = !showResultBox,
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4D869C),
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF4D869C), // همون رنگ اصلی
+                    disabledContentColor = Color.White          // همون رنگ متن
                 ),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -344,13 +353,23 @@ fun SentenceBuilderPage(
     }
 }
 
+// نسخه جدید کلیک‌پذیر با کنترل فعال/غیرفعال
 @Composable
-fun ClickableTextWordBox(word: String, isSelected: Boolean, onClick: () -> Unit) {
+fun ClickableTextWordBox(
+    word: String,
+    isSelected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) Color.Gray else Color(0xFFCDE8E5))
-            .clickable { onClick() }
+            .background(
+                if (isSelected) Color.Gray
+                else if (enabled) Color(0xFFCDE8E5)
+                else Color(0xFFE6E6E6)
+            )
+            .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
@@ -420,7 +439,7 @@ fun Result(
         ) {
             if (allCorrect) {
                 Text(
-                    text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
+                    text = "آفرین \uD83C\uDF89درست انتخاب کردی",
                     fontFamily = iranSans,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
@@ -431,6 +450,32 @@ fun Result(
                         .wrapContentWidth(Alignment.End)
                 )
             } else {
+
+                if (userSentence != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.cross),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = userSentence,
+                        fontFamily = iranSans,
+                        color = Color.Black,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Left,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+                Spacer(modifier = Modifier.height(4.dp))
                 if (correctSentence != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -455,34 +500,9 @@ fun Result(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(4.dp))
 
-                if (userSentence != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.cross),
-                            contentDescription = null,
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = userSentence,
-                            fontFamily = iranSans,
-                            color = Color.Black,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Left,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(25.dp))
 
             val isLastGame = gameIndex + 1 == totalGames
 

@@ -226,7 +226,7 @@ fun MultipleChoicePage(
                     bottom = screenHeight * 0.19f
                 )
                 .width(screenWidth * 0.20f)
-                .height(30.dp)
+                .height(40.dp)
                 .zIndex(2f)
         ) {
             Button(
@@ -336,26 +336,43 @@ fun MultipleChoicePage(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
+                        // برای صفحهٔ عادی: والد صفحه باید Box با fillMaxSize بده
                         Box(
-                            modifier = Modifier
-                                .align(Alignment.End)
-                                .padding(bottom = screenHeight * 0.19f, end = screenWidth * 0.06f)
-                                .width(screenWidth * 0.20f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF7AB2B2))
-                                .height(40.dp)
-                                .clickable {
-                                    Log.d("MultipleChoicePage", "Final dialog confirmed. Navigating to $returnRoute")
-                                    showFinalResultDialog = false
-                                    navController.navigate(returnRoute)
-                                },
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.fillMaxSize(), // خیلی مهم
+                            contentAlignment = Alignment.BottomEnd
                         ) {
-                            Text(
-                                text = "تأیید",
-                                color = Color.White,
-                                fontFamily = iranSans
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(bottom = screenHeight * 0.19f, end = 30.dp)
+                                    .width(screenWidth * 0.20f)
+                                    .height(40.dp)
+                                    .zIndex(2f)
+                                // .background(Color(0x2200FF00)) // برای دیباگ
+                            ) {
+                                Button(
+                                    onClick = {
+                                        Log.d("MultipleChoicePage", "Final dialog confirmed. Navigating to $returnRoute")
+                                        showFinalResultDialog = false
+                                        navController.navigate(returnRoute)
+                                    },
+                                    enabled = !showResultBox, // مثل دکمه‌ی اول
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF4D869C),
+                                        contentColor = Color.White,
+                                        disabledContainerColor = Color(0xFF4D869C),
+                                        disabledContentColor = Color.White
+                                    ),
+                                    contentPadding = PaddingValues(0.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Text(
+                                        text = "تأیید",
+                                        fontFamily = iranSans,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
                 }

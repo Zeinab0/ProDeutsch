@@ -40,13 +40,12 @@ import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
 
-
 @Composable
 fun StepProgressBarWithExit(
     navController: NavController,
     currentStep: Int,
     totalSteps: Int,
-    returnRoute: String, // ✅ مسیر برگشت
+    returnRoute: String,
     modifier: Modifier = Modifier,
     onRequestExit: () -> Unit
 ) {
@@ -54,6 +53,9 @@ fun StepProgressBarWithExit(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+
+    // ✅ گارد کوچک: اگر currentStep خارج از بازه پاس شد، همین‌جا اصلاحش کن
+    val safeStep = currentStep.coerceIn(0, (totalSteps - 1).coerceAtLeast(0))
 
     Box(
         modifier = modifier
@@ -64,7 +66,6 @@ fun StepProgressBarWithExit(
                 top = screenHeight * 0.05f
             )
     ) {
-        // نوار پیشرفت (پایین‌تر از دکمه)
         Row(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -78,16 +79,15 @@ fun StepProgressBarWithExit(
                         .height(6.dp)
                         .clip(RoundedCornerShape(5.dp))
                         .background(
-                            if (index <= currentStep) Color(0xFF4D869C)
+                            if (index <= safeStep) Color(0xFF4D869C)
                             else Color(0xFFE0F2F1)
                         )
                 )
             }
         }
 
-        // دکمه برگشت
         IconButton(
-            onClick = { onRequestExit() }, // 👈 فقط تریگر کن
+            onClick = { onRequestExit() },
             modifier = Modifier.align(Alignment.TopStart)
         ) {
             Icon(
@@ -111,8 +111,6 @@ fun StepProgressBarWithExit(
         )
     }
 }
-
-
 
 @Composable
 fun ExitConfirmationDialog(

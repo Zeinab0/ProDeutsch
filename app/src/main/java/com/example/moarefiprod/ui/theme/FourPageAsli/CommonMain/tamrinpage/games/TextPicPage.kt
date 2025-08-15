@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
@@ -51,7 +52,10 @@ fun TextPicPage(
     val screenHeight = configuration.screenHeightDp.dp
     val textPicData by grammarViewModel.textPicData.collectAsState()
     val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
-    var selectedWords by remember { mutableStateOf(mutableListOf<String>()) }
+
+    // ❗️ تغییر اصلی: به جای mutableStateOf(mutableListOf()) از mutableStateListOf استفاده می‌کنیم
+    val selectedWords = remember { mutableStateListOf<String>() } // ← تغییر
+
     var correctCount by remember { mutableStateOf(0) }
     var wrongCount by remember { mutableStateOf(0) }
     var timeInSeconds by remember { mutableStateOf(0) }
@@ -76,7 +80,7 @@ fun TextPicPage(
 
     LaunchedEffect(gameId) {
         grammarViewModel.loadTextPicGame(
-            pathType = pathType,       // تشخیص مسیر که در GameHost ساخته بودیم
+            pathType = pathType,
             courseId = courseId,
             lessonId = lessonId,
             contentId = contentId,
@@ -88,22 +92,23 @@ fun TextPicPage(
         // Header
         var showExitDialog by remember { mutableStateOf(false) }
 
-        // تشخیص مسیر برگشت
         val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
             "darsDetails/$courseId/$lessonId"
         } else {
             "grammar_page"
         }
 
-        Box(modifier = Modifier.fillMaxSize()
-            .align(Alignment.TopCenter)
-            .zIndex(3f),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.TopCenter)
+                .zIndex(3f),
         ){
             StepProgressBarWithExit(
                 navController = navController,
                 currentStep = gameIndex,
                 totalSteps = totalGames,
-                returnRoute = returnRoute, // ✅ ارسال مسیر درست
+                returnRoute = returnRoute,
                 modifier = Modifier.fillMaxSize(),
                 onRequestExit = { showExitDialog = true }
             )
@@ -112,7 +117,7 @@ fun TextPicPage(
                 ExitConfirmationDialog(
                     onConfirmExit = {
                         navController.navigate(returnRoute) {
-                            popUpTo("home") { inclusive = false } // اختیاری برای پاکسازی
+                            popUpTo("home") { inclusive = false }
                         }
                         showExitDialog = false
                     },
@@ -121,7 +126,6 @@ fun TextPicPage(
             }
         }
         // Header
-
 
         textPicData?.let { data ->
             Image(
@@ -177,26 +181,43 @@ fun TextPicPage(
                                 rowWords.forEach { word ->
                                     val isSelected = selectedWords.contains(word.word)
 
-                                    val backgroundBrush = if (showResultBox) {
-                                        if (word.isCorrect) {
-                                            if (isSelected) Brush.radialGradient(
-                                                colors = listOf(
-                                                    Color(0xFF6ABBBB), // بنفش تیره
-                                                    Color(0xFF6ABBBB)  // بنفش روشن
-                                                ),
-                                                radius = 130f
-                                            ) else Brush.radialGradient(
-                                                colors = listOf(
-                                                    Color(0x1ACDE8E5),
-                                                    Color(0xFF6ABBBB)
-                                                ),
-                                                radius = 150f
-                                            )
+                                    // ❗️Brush را فقط وقتی وابستگی‌ها تغییر کنند محاسبه کن
+                                    val backgroundBrush = remember(isSelected, showResultBox, word.isCorrect) {
+                                        if (showResultBox) {
+                                            if (word.isCorrect) {
+                                                if (isSelected) Brush.radialGradient(
+                                                    colors = listOf(
+                                                        Color(0xFF6ABBBB),
+                                                        Color(0xFF6ABBBB)
+                                                    ),
+                                                    radius = 130f
+                                                ) else Brush.radialGradient(
+                                                    colors = listOf(
+                                                        Color(0x1ACDE8E5),
+                                                        Color(0xFF6ABBBB)
+                                                    ),
+                                                    radius = 150f
+                                                )
+                                            } else {
+                                                if (isSelected) Brush.radialGradient(
+                                                    colors = listOf(
+                                                        Color(0xFF6ABBBB),
+                                                        Color(0xFF6ABBBB)
+                                                    ),
+                                                    radius = 130f
+                                                ) else Brush.radialGradient(
+                                                    colors = listOf(
+                                                        Color(0x1ACDE8E5),
+                                                        Color(0xFF6ABBBB)
+                                                    ),
+                                                    radius = 150f
+                                                )
+                                            }
                                         } else {
                                             if (isSelected) Brush.radialGradient(
                                                 colors = listOf(
-                                                    Color(0xFF6ABBBB), // بنفش تیره
-                                                    Color(0xFF6ABBBB)  // بنفش روشن
+                                                    Color(0xFF6ABBBB),
+                                                    Color(0xFF6ABBBB)
                                                 ),
                                                 radius = 130f
                                             ) else Brush.radialGradient(
@@ -207,21 +228,8 @@ fun TextPicPage(
                                                 radius = 150f
                                             )
                                         }
-                                    } else {
-                                        if (isSelected) Brush.radialGradient(
-                                            colors = listOf(
-                                                Color(0xFF6ABBBB), // بنفش تیره
-                                                Color(0xFF6ABBBB)  // بنفش روشن
-                                            ),
-                                            radius = 130f
-                                        ) else Brush.radialGradient(
-                                            colors = listOf(
-                                                Color(0x1ACDE8E5),
-                                                Color(0xFF6ABBBB)
-                                            ),
-                                            radius = 150f
-                                        )
                                     }
+
                                     val borderColor = if (showResultBox) {
                                         if (word.isCorrect && isSelected) Color(0xFF14CB00)
                                         else if (!word.isCorrect && isSelected) Color(0xFFD32F2F)
@@ -285,122 +293,60 @@ fun TextPicPage(
                                 grammarViewModel.recordMemoryGameResult(correctCount, wrongCount, timeInSeconds)
                             }
                         },
-                        enabled = !showResultBox, // دکمه دیده میشه ولی بعد از نمایش نتیجه غیرفعال میشه
+                        enabled = !showResultBox,
                         modifier = Modifier
-                            .align(Alignment.End)
+                            .align(Alignment.End) // مثل بقیه
                             .padding(
-                                bottom = if (showResultBox) 0.dp else resultBoxHeight, // ثابت موندن جای دکمه
-                                end = screenWidth * 0.06f
+                                bottom = if (showResultBox) 0.dp else resultBoxHeight,
+                                end = 10.dp // یکسان با دکمه‌های قبلی
                             )
                             .width(screenWidth * 0.20f)
-                            .height(40.dp),
+                            .height(40.dp), // یکسان با بقیه
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4D869C),
                             contentColor = Color.White,
-                            disabledContainerColor = Color(0xFF4D869C).copy(alpha = 0.6f),
-                            disabledContentColor = Color.White
+                            disabledContainerColor = Color(0xFF4D869C), // ثابت مثل فعال
+                            disabledContentColor = Color.White          // ثابت مثل فعال
                         )
                     ) {
-                        Text(text = "تأیید", fontFamily = iranSans, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "تأیید",
+                            fontFamily = iranSans,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
             if (showResultBox) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color(0xFFFFFFFF))
-                        .align(Alignment.BottomCenter)
+                TextPicResultBox(
+                    visible = showResultBox,
+                    screenHeight = screenHeight,
+                    isLastGame = isLastGame,
+                    correctCount = correctCount,
+                    wrongCount = wrongCount,
+                    totalWords = data.words.size,
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 30.dp)
-                            .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
-                            .padding(horizontal = 15.dp, vertical = 12.dp)
-                            .animateContentSize()               // ارتفاع براساس محتوا
-                            .heightIn(max = screenHeight * 0.5f) // اختیاری: سقف ارتفاع
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 42.dp) // جا برای دکمه (34dp ارتفاع + 8dp فاصله)
-                        ) {
-                            val total = data.words.size
-                            val unanswered = (total - (correctCount + wrongCount)).coerceAtLeast(0)
-
-                            if (wrongCount == 0 && correctCount == total) {
-                                Text(
-                                    text = "هوراااااااا\n ^_^ همرو درست جواب دادی",
-                                    fontFamily = iranSans,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Right,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentWidth(Alignment.End)
-                                )
-                            } else {
-                                InfoRow("تعداد درست", correctCount)
-                                InfoRow("تعداد اشتباه", wrongCount)
-                                InfoRow("تعداد نزده", unanswered)
-                            }
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(8.dp)                 // جایگزین offset منفی
-                                .width(98.dp)
-                                .height(34.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF4D869C))
-                                .clickable {
-                                    if (gameIndex + 1 >= totalGames) {
-                                        showFinalDialog = true
-                                    } else {
-                                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
-                                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
-                                        }
-                                    }
-                                    selectedWords.clear()
-                                    showResultBox = false
-                                    correctCount = 0
-                                    wrongCount = 0
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = if (isLastGame) "تمام" else "بریم بعدی",
-                                    fontFamily = iranSans,
-                                    color = Color.White,
-                                    fontSize = 13.sp
-                                )
-                                if (!isLastGame) {
-                                    Spacer(Modifier.width(8.dp))
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.nextbtn),
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
+                    // onPrimaryAction
+                    if (gameIndex + 1 >= totalGames) {
+                        showFinalDialog = true
+                    } else {
+                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
+                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                         }
                     }
+                    selectedWords.clear()
+                    showResultBox = false
+                    correctCount = 0
+                    wrongCount = 0
                 }
             }
 
-
             if (showFinalDialog) {
                 val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
-                    "lesson_detail/$courseId/$lessonId" // ✅ مسیر درست
+                    "lesson_detail/$courseId/$lessonId"
                 } else {
                     "grammar_page"
                 }
@@ -420,11 +366,101 @@ fun TextPicPage(
             }
         } ?: run {
             Text(
-                text = "داده‌ها بارگذاری نشد.",
-                color = Color.Red,
+                text = "...در حال بارگذاری",
+                color = Color.Gray,
                 fontFamily = iranSans,
                 modifier = Modifier.align(Alignment.Center)
             )
+        }
+    }
+}
+
+@Composable
+fun TextPicResultBox(
+    visible: Boolean,
+    screenHeight: Dp,
+    isLastGame: Boolean,
+    correctCount: Int,
+    wrongCount: Int,
+    totalWords: Int,
+    modifier: Modifier = Modifier,
+    onPrimaryAction: () -> Unit
+) {
+    if (!visible) return
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(color = Color(0xFFFFFFFF))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 30.dp)
+                .background(color = Color(0xFF90CECE), RoundedCornerShape(25.dp))
+                .padding(horizontal = 15.dp, vertical = 12.dp)
+                .animateContentSize()
+                .heightIn(max = screenHeight * 0.5f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 42.dp)
+            ) {
+                val total = totalWords
+                val unanswered = (total - (correctCount + wrongCount)).coerceAtLeast(0)
+
+                if (wrongCount == 0 && correctCount == total) {
+                    Text(
+                        text = "آفرین \uD83C\uDF89 همه رو درست انتخاب کردی",
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                    )
+                } else {
+                    InfoRow("تعداد درست", correctCount)
+                    InfoRow("تعداد اشتباه", wrongCount)
+                    InfoRow("تعداد نزده", unanswered)
+                }
+            }
+
+            // دکمه «بریم بعدی» / «تمام»
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .width(90.dp)
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF4D869C))
+                    .clickable { onPrimaryAction() },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (isLastGame) "تمام" else "بریم بعدی",
+                        fontFamily = iranSans,
+                        color = Color.White,
+                        fontSize = 13.sp
+                    )
+                    if (!isLastGame) {
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.nextbtn),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

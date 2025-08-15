@@ -30,24 +30,22 @@ fun AudioProgressVisualizerr(
     isPlaying: Boolean,
     isDisabled: Boolean,
     progress: Float, // ⬅️ مقدار بین 0.0 تا 1.0
-    barCount: Int = 28,
-//    barWidth: Dp = 2.dp,           // ← قابل تغییر
-//    barHeight: Dp = 12.dp,         // ← حداکثر ارتفاع
-//    spaceBetween: Dp = 1.dp,
+    barCount: Int = 36, // ⬅️ تعداد میله‌ها کمی بیشتر شد
     barColor: Color = Color(0xFFB7E5E4),
     barActiveColor: Color = Color(0xFF4DA3A3),
     barDisabledColor: Color = Color.Gray
 ) {
-    val heights = remember { List(barCount) { (16..48).random().dp } }
+    // ⬅️ ارتفاع‌ها کمی کوتاه‌تر شدند
+    val heights = remember { List(barCount) { (12..40).random().dp } }
 
     val activeBars = (progress * barCount).toInt().coerceIn(0, barCount)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .padding(start = 32.dp, end = 24.dp) // ⬅️ فاصله سمت چپ بیشتر شد تا از آیکون جدا بشه
             .height(50.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp), // ⬅️ فاصله بین میله‌ها کمی کمتر شد
         verticalAlignment = Alignment.CenterVertically
     ) {
         for (i in 0 until barCount) {
@@ -62,7 +60,7 @@ fun AudioProgressVisualizerr(
 
             Box(
                 modifier = Modifier
-                    .width(4.dp)
+                    .width(3.dp) // ⬅️ عرض کمی باریک‌تر برای جا شدن میله‌های بیشتر
                     .height(heights[i])
                     .clip(RoundedCornerShape(2.dp))
                     .background(animatedColor)
