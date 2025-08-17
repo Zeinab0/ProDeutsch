@@ -13,12 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,17 +51,53 @@ import androidx.compose.runtime.*
 
 
 
+// imports لازم:
+import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+
 @Composable
 fun MovieDetailScreen(
+    movieId: String,                 // 👈 جدید
     title: String ,
     description: String  ,
     level: String,
     price: String ,
     videoUrl: String,
+    imageUrl: String = "",          // اگر داری، پاس بده (برای نمایش بعدی در دوره‌های من)
     onBack: () -> Unit = {}
 ) {
-    val isFree = price == "رایگان"
-    var purchased by remember { mutableStateOf(isFree) } // اگر رایگانه، نیازی به خرید نیست
+
+    val ctx = LocalContext.current
+    val db = remember { FirebaseFirestore.getInstance() }
+    val uid = remember { FirebaseAuth.getInstance().currentUser?.uid }
+
+    val isFree = price.equals("رایگان", true) || price.equals("Frei", true) || price.equals("Free", true)
+    var purchased by remember { mutableStateOf(false) }   // 👈 دیگر خودکار خریداری‌شده نیست
+
+    DisposableEffect(uid, movieId) {
+        if (uid.isNullOrBlank() || movieId.isBlank()) {
+            // حتی در حالت no-op هم باید DisposableEffectResult برگردونیم
+            onDispose { /* no-op */ }
+        } else {
+            val ref = db.collection("users")
+                .document(uid)
+                .collection("purchased_movies")
+                .document(movieId)
+
+            val reg = ref.addSnapshotListener { snap, e ->
+                if (e == null) {
+                    purchased = purchased || (snap?.exists() == true)
+                }
+                // اگر خواستی خطا رو لاگ کن؛ مهم نیست چیزی برگردونی
+            }
+
+            // این مقدارِ برگشتیِ لازم برای DisposableEffectResult است
+            onDispose { reg.remove() }
+        }
+    }
+
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -76,9 +110,7 @@ fun MovieDetailScreen(
             .padding(horizontal = screenWidth * 0.03f)
     ) {
         // Header
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
@@ -104,9 +136,7 @@ fun MovieDetailScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                // ✅ پیش‌نمایش (فقط متنش محو میشه، فضا حفظ میشه)
-                val context = LocalContext.current
+                // پیش‌نمایش
                 Box(modifier = Modifier.height(20.dp)) {
                     if (!purchased && !isFree) {
                         Text(
@@ -121,7 +151,8 @@ fun MovieDetailScreen(
                     }
                 }
 
-// 🎥 پخش ویدیو (فقط این بخش ری‌کامپوز میشه)
+                // ویدیو (۵ ثانیه اگر نخریده)
+                val context = LocalContext.current
                 key(purchased) {
                     VideoPlayer(
                         url = videoUrl,
@@ -130,10 +161,7 @@ fun MovieDetailScreen(
                     )
                 }
 
-
-
-
-                // 📘 عنوان
+                // عنوان/توضیح/سطح/قیمت
                 Text(
                     text = title,
                     textAlign = TextAlign.Right,
@@ -144,7 +172,6 @@ fun MovieDetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // 📝 توضیحات
                 Text(
                     text = description,
                     textAlign = TextAlign.Right,
@@ -155,7 +182,6 @@ fun MovieDetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // 🎯 سطح
                 Text(
                     text = "سطح : $level",
                     fontFamily = iranSans,
@@ -166,7 +192,6 @@ fun MovieDetailScreen(
                     style = TextStyle(textDirection = TextDirection.Rtl)
                 )
 
-                // 💰 قیمت فقط قبل از خرید
                 if (!purchased && !isFree) {
                     Text(
                         text = "قیمت : $price",
@@ -174,8 +199,7 @@ fun MovieDetailScreen(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF75ABAB),
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Start,
                         style = TextStyle(textDirection = TextDirection.Rtl)
                     )
@@ -183,7 +207,7 @@ fun MovieDetailScreen(
 
                 Spacer(modifier = Modifier.height(55.dp))
 
-                // 🛒 دکمه خرید (فقط قبل از خرید)
+                // 🛒 دکمه خرید → ذخیره در users/{uid}/purchased_movies/{movieId}
                 if (!purchased && !isFree) {
                     Box(
                         modifier = Modifier
@@ -191,7 +215,44 @@ fun MovieDetailScreen(
                             .height(60.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF7AB2B2))
-                            .clickable { purchased = true },
+                            .clickable {
+                                if (uid.isNullOrBlank()) {
+                                    Toast.makeText(ctx, "ابتدا وارد حساب شوید", Toast.LENGTH_SHORT).show()
+                                    return@clickable
+                                }
+
+                                // movieId را تمیز و چک کن
+                                val mid = movieId.toString().trim()   // اگر nullable/Int بود هم حل می‌شود
+                                if (mid.isEmpty() || '/' in mid) {
+                                    Toast.makeText(ctx, "شناسه‌ی فیلم نامعتبر است", Toast.LENGTH_SHORT).show()
+                                    return@clickable
+                                }
+
+                                val ref = db.collection("users")
+                                    .document(uid)                      // ← فقط uid
+                                    .collection("purchased_movies")     // ← کالکشن
+                                    .document(mid)                      // ← فقط ID سند (بدون اسلش)
+
+                                val doc = mapOf(
+                                    "title" to title,
+                                    "description" to description,
+                                    "level" to level,
+                                    "duration" to "",           // اگر داری مقدار بده
+                                    "price" to price,
+                                    "imageUrl" to imageUrl,
+                                    "videoUrl" to videoUrl,
+                                    "purchasedAt" to FieldValue.serverTimestamp()
+                                )
+
+                                ref.set(doc)
+                                    .addOnSuccessListener {
+                                        purchased = true
+                                        Toast.makeText(ctx, "فیلم خریداری شد", Toast.LENGTH_SHORT).show()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(ctx, "خطا: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -204,37 +265,69 @@ fun MovieDetailScreen(
                         )
                     }
                 }
+
+                // اگر پولی و نخریده -> دکمه خرید (کدِ فعلی خودت باقی بماند)
+
+                if (isFree && !purchased) {
+                    Box(
+                        modifier = Modifier
+                            .width(140.dp)
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF7AB2B2))
+                            .clickable {
+                                if (uid.isNullOrBlank()) {
+                                    Toast.makeText(ctx, "ابتدا وارد حساب شوید", Toast.LENGTH_SHORT).show()
+                                    return@clickable
+                                }
+                                val mid = movieId.toString().trim()
+                                if (mid.isEmpty() || '/' in mid) {
+                                    Toast.makeText(ctx, "شناسه‌ی فیلم نامعتبر است", Toast.LENGTH_SHORT).show()
+                                    return@clickable
+                                }
+
+                                val ref = db.collection("users")
+                                    .document(uid)
+                                    .collection("purchased_movies")
+                                    .document(mid)
+
+                                val doc = mapOf(
+                                    "title" to title,
+                                    "description" to description,
+                                    "level" to level,
+                                    "duration" to "",        // اگر داری مقدار بده
+                                    "price" to price,
+                                    "imageUrl" to imageUrl,
+                                    "videoUrl" to videoUrl,
+                                    "purchasedAt" to FieldValue.serverTimestamp()
+                                )
+
+                                ref.set(doc)
+                                    .addOnSuccessListener {
+                                        purchased = true
+                                        Toast.makeText(ctx, "به دوره‌های شما اضافه شد", Toast.LENGTH_SHORT).show()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(ctx, "خطا: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "شروع یادگیری",
+                            color = Color.White,
+                            fontFamily = iranSans,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
             }
         }
     }
 }
-
-@Composable
-fun MovieDetailWrapper(id: String, onBack: () -> Unit) {
-    var movie by remember { mutableStateOf<Movie?>(null) }
-
-    LaunchedEffect(id) {
-        getMoviesFromFirestore { allMovies ->
-            movie = allMovies.find { it.id == id }
-        }
-    }
-
-    if (movie == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else {
-        MovieDetailScreen(
-            title = movie!!.title,
-            description = movie!!.description,
-            level = movie!!.level,
-            price = movie!!.price,
-            videoUrl = movie!!.videoUrl,
-            onBack = onBack
-        )
-    }
-}
-
 
 
 

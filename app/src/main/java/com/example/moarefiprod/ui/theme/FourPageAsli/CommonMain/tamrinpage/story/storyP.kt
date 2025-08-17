@@ -51,6 +51,8 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.FilterChip
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 
 
@@ -95,6 +97,26 @@ fun StoryScreen(navController: NavController) {
                 // اگر در مدل Story فیلد دیگری مثل description داری، اضافه کن:
 //                s.description
             ).any { it.contains(q, ignoreCase = true) }
+        }
+    }
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val purchasedIdsState = remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    val purchasedIds = purchasedIdsState.value
+
+
+    DisposableEffect(uid) {
+        if (uid == null) {
+            purchasedIdsState.value = emptySet()
+            onDispose { }
+        } else {
+            val reg = FirebaseFirestore.getInstance()
+                .collection("users").document(uid)
+                .collection("purchased_stories")
+                .addSnapshotListener { snap, _ ->
+                    purchasedIdsState.value = snap?.documents?.map { it.id }?.toSet().orEmpty()
+                }
+            onDispose { reg.remove() }
         }
     }
 
@@ -250,12 +272,14 @@ fun StoryScreen(navController: NavController) {
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
                 items(filteredStories, key = { it.id }) { story ->
+                    val isPurchased = purchasedIds.contains(story.id)
                     StoryCardB(
                         story = story,
                         title = story.title,
                         level = story.level,
                         duration = story.duration,
                         price = story.price,
+                        purchased = isPurchased,              // 👈 اینجاست نکته
                         modifier = Modifier.clickable {
                             navController.navigate("story_detail/${story.id}")
                         }
@@ -368,9 +392,9 @@ fun StoryCardB(
     level: String,
     duration: String,
     price: String,
+    purchased: Boolean = false,            // 👈 جدید
     modifier: Modifier = Modifier,
-
-    ) {
+) {
     BoxWithConstraints(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -446,14 +470,16 @@ fun StoryCardB(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = price,
-                        fontSize = (fontScale * 1.0f).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (price == "رایگان") Color.Green else Color.Black,
-                        fontFamily = iranSans,
-                        style = TextStyle(textDirection = TextDirection.Rtl)
-                    )
+                    if (!purchased) {
+                        Text(
+                            text = price,
+                            fontSize = (fontScale * 1.0f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (price == "رایگان") Color.Green else Color.Black,
+                            fontFamily = iranSans,
+                            style = TextStyle(textDirection = TextDirection.Rtl)
+                        )
+                    }
                     Text(
                         text = "سطح: $level",
                         fontSize = (fontScale * 1.0f).sp,

@@ -377,10 +377,6 @@ fun MusicDetailScreen(songId: String , navController: NavController) {
                     )
                 }
 
-                val context = LocalContext.current
-                val firebaseUser = FirebaseAuth.getInstance().currentUser
-                val userId = firebaseUser?.uid
-
                 IconButton(onClick = {
                     if (userId.isNullOrEmpty()) {
                         Toast.makeText(context, "لطفاً ابتدا وارد شوید", Toast.LENGTH_SHORT).show()

@@ -54,6 +54,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.SearchBar
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 
 @Composable
@@ -113,6 +115,31 @@ fun MovieScreen(navController: NavController) {
             }
         }
     }
+
+
+    val uid = remember { FirebaseAuth.getInstance().currentUser?.uid }
+    val purchasedIdsState = remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    DisposableEffect(uid) {
+        if (uid == null) {
+            purchasedIdsState.value = emptySet()
+            onDispose { /* no-op */ }
+        } else {
+            val reg = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .collection("purchased_movies")
+                .addSnapshotListener { snap, _ ->
+                    purchasedIdsState.value = snap?.documents?.mapNotNull { it.id }?.toSet().orEmpty()
+                }
+            onDispose { reg.remove() }
+        }
+    }
+
+    val purchasedIds = purchasedIdsState.value
+
+
+
 
     Column(
         modifier = Modifier
@@ -268,16 +295,19 @@ fun MovieScreen(navController: NavController) {
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
                 items(filteredMovies, key = { it.id }) { movie ->
+                    val purchased = purchasedIds.contains(movie.id)
                     VideoCard(
                         title = movie.title,
                         level = movie.level,
                         duration = movie.duration,
                         price = movie.price,
+                        purchased = purchased,                 // 👈 جدید
                         modifier = Modifier.clickable {
                             navController.navigate("movie_detail/${movie.id}")
                         }
                     )
                 }
+
             }
         } else {
             Box(
@@ -403,10 +433,10 @@ fun VideoCard(
     level: String,
     duration: String,
     price: String,
-    imageRes: Int? = null ,// برای placeholder
+    purchased: Boolean = false,          // 👈 جدید
+    imageRes: Int? = null,
     modifier: Modifier = Modifier,
-
-    ) {
+){
     BoxWithConstraints(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -499,14 +529,18 @@ fun VideoCard(
 
                     Spacer(modifier = Modifier.height(spacingSmall / 2))
 
-                    Text(
-                        text = price,
-                        fontSize = (fontScale * 1.0f).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (price == "رایگان") Color.Green else Color.Black,
-                        fontFamily = iranSans,
-                        style = TextStyle(textDirection = TextDirection.Rtl)
-                    )
+
+                    if (!purchased) {
+                        Text(
+                            text = price,
+                            fontSize = (fontScale * 1.0f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (price == "رایگان") Color.Green else Color.Black,
+                            fontFamily = iranSans,
+                            style = TextStyle(textDirection = TextDirection.Rtl)
+                        )
+                    }
+
                 }
             }
         }

@@ -210,26 +210,47 @@ class MainActivity : ComponentActivity() {
                     val movieId = backStackEntry.arguments?.getString("movieId") ?: return@composable
 
                     var movie by remember { mutableStateOf<Movie?>(null) }
+                    var loading by remember { mutableStateOf(true) }
 
+                    // فقط برای نمایش، از خود داکیومنت می‌خونیم
                     LaunchedEffect(movieId) {
                         FirebaseFirestore.getInstance()
                             .collection("movies")
                             .document(movieId)
                             .get()
-                            .addOnSuccessListener {
-                                movie = it.toObject(Movie::class.java)
+                            .addOnSuccessListener { snap ->
+                                movie = snap.toObject(Movie::class.java)
+                                loading = false
+                            }
+                            .addOnFailureListener { _ ->
+                                loading = false
                             }
                     }
 
-                    movie?.let {
-                        MovieDetailScreen(
-                            title = it.title,
-                            level = it.level,
-                            price = it.price,
-                            description = it.description,
-                            videoUrl = it.videoUrl,
-                            onBack = { navController.popBackStack() }
-                        )
+                    when {
+                        loading -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                        movie != null -> {
+                            MovieDetailScreen(
+                                movieId   = movieId,           // 👈 مهم: از route پاس بده، نه it.id
+                                title     = movie!!.title,
+                                description = movie!!.description,
+                                level     = movie!!.level,
+                                price     = movie!!.price,
+                                videoUrl  = movie!!.videoUrl,
+                                imageUrl  = movie!!.imageUrl,
+                                onBack    = { navController.popBackStack() }
+                            )
+                        }
+                        else -> {
+                            // هندل خطا/عدم وجود
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("فیلم پیدا نشد", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
 

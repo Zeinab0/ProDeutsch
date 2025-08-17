@@ -42,6 +42,12 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldValue
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun StoryDetailScreen(
@@ -57,9 +63,28 @@ fun StoryDetailScreen(
 ) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-
-
     var isPurchased by rememberSaveable { mutableStateOf(false) }
+
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val db  = remember { FirebaseFirestore.getInstance() }
+
+    // ✅ سنجاق به لایف‌سایکل: با تغییر id یا uid دوباره وصل می‌شه
+    DisposableEffect(id, uid) {
+        if (uid == null || id.isBlank()) {
+            isPurchased = false
+            onDispose { }
+        } else {
+            val reg = db.collection("users")
+                .document(uid)
+                .collection("purchased_stories")
+                .document(id)
+                .addSnapshotListener { doc, _ ->
+                    isPurchased = (doc != null && doc.exists())
+                }
+            onDispose { reg.remove() }
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -227,26 +252,96 @@ fun StoryDetailScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // دکمه خرید
-                    if (!isPurchased && price != "Frei") {
+                    val ctx = LocalContext.current
+                    val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+                    // بررسی رایگان بودن
+                    val isFree = price.equals("رایگان", true) || price.equals("frei", true) || price.equals("free", true)
+
+// دکمه خرید (فقط پولی‌ها)
+                    if (!isPurchased && !isFree && price.isNotBlank()) {
                         Box(
                             modifier = Modifier
+                                .zIndex(3f)
                                 .width(screenWidth * 0.33f)
                                 .height(screenHeight * 0.07f)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFF7AB2B2))
-                                .clickable { isPurchased = true },
+                                .clickable {
+                                    if (uid.isNullOrBlank()) {
+                                        Toast.makeText(ctx, "ابتدا وارد حساب شوید", Toast.LENGTH_SHORT).show()
+                                        return@clickable
+                                    }
+
+                                    val db = FirebaseFirestore.getInstance()
+                                    val storyDoc = mapOf(
+                                        "title" to title,
+                                        "author" to author,
+                                        "duration" to duration,
+                                        "price" to price,
+                                        "imageUrl" to imageUrl,
+                                        "purchasedAt" to FieldValue.serverTimestamp()
+                                    )
+
+                                    db.collection("users").document(uid)
+                                        .collection("purchased_stories").document(id)
+                                        .set(storyDoc)
+                                        .addOnSuccessListener {
+                                            isPurchased = true
+                                            Toast.makeText(ctx, "داستان خریداری شد", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(ctx, "خطا در خرید: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "خرید",
-                                color = Color.White,
-                                fontFamily = iranSans,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
+                            Text("خرید", color = Color.White, fontFamily = iranSans, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                     }
+
+// دکمه افزودن به داستان‌های من (فقط رایگان‌ها)
+                    if (!isPurchased && isFree) {
+                        Box(
+                            modifier = Modifier
+                                .zIndex(3f)
+                                .width(screenWidth * 0.45f)
+                                .height(screenHeight * 0.07f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF7AB2B2))
+                                .clickable {
+                                    if (uid.isNullOrBlank()) {
+                                        Toast.makeText(ctx, "ابتدا وارد حساب شوید", Toast.LENGTH_SHORT).show()
+                                        return@clickable
+                                    }
+
+                                    val db = FirebaseFirestore.getInstance()
+                                    val storyDoc = mapOf(
+                                        "title" to title,
+                                        "author" to author,
+                                        "duration" to duration,
+                                        "price" to price, // می‌تونی "" بذاری
+                                        "imageUrl" to imageUrl,
+                                        "purchasedAt" to FieldValue.serverTimestamp()
+                                    )
+
+                                    db.collection("users").document(uid)
+                                        .collection("purchased_stories").document(id)
+                                        .set(storyDoc)
+                                        .addOnSuccessListener {
+                                            isPurchased = true
+                                            Toast.makeText(ctx, "به داستان‌های من اضافه شد", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(ctx, "خطا: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("افزودن به داستان‌های من", color = Color.White, fontFamily = iranSans, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                    }
+
 
                 }
             }
