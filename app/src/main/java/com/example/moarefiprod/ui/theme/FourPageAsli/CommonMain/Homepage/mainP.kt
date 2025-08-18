@@ -46,7 +46,7 @@ fun mainpage(query: String = "") {
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "tip: از نوار جستجو در تب‌های دیگر (دوره‌ها، فلش‌کارت‌ها…) استفاده کن",
+            text = " از نوار جستجو در تب‌های دیگر (دوره‌ها، فلش‌کارت‌ها…) استفاده کن",
             fontFamily = iranSans,
             fontSize = 10.sp,
             color = Color(0xFF90CECE)

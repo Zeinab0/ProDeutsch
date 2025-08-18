@@ -59,6 +59,7 @@ import com.example.moarefiprod.ui.theme.logofirst.Firstlogopage
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.CourseViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars.Jozve
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars.VideoScreen
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.courspage.Dars.WordsScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.updateWordStatusInFirestore
@@ -678,6 +679,18 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                composable("words_page/{courseId}/{lessonId}/{contentId}") { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+                    val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
+                    val contentId = backStackEntry.arguments?.getString("contentId") ?: ""
+
+                    WordsScreen(
+                        courseId = courseId,
+                        lessonId = lessonId,
+                        contentId = contentId,
+                        navController = navController
+                    )
+                }
 
             }
         }

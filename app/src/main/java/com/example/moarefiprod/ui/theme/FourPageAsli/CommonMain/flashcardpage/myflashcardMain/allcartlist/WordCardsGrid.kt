@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Word
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.WordStatus
-
 
 @Composable
 fun WordCardsGrid(words: List<Word>, modifier: Modifier = Modifier) {
@@ -59,12 +56,6 @@ fun WordCardsGrid(words: List<Word>, modifier: Modifier = Modifier) {
         }
     }
 }
-
-
-
-
-
-
 
 @Composable
 fun WordCardItem(word: Word, modifier: Modifier = Modifier) {
