@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,28 +54,15 @@ fun flashcardpage(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-
+    val q = remember(query) { query.trim().lowercase() }
     var selectedFilter by remember { mutableStateOf("همه") }
 
     val vm: FlashcardViewModel = viewModel()
     LaunchedEffect(Unit) { vm.listenAllCards() }
     val allCards by vm.allCards.collectAsState()
-
-
-    // بخش "کلمات من" (تو کارت‌هایی که count > 0 دارند)
     val wordCards = remember(allCards) { allCards.filter { it.count > 0 } }
 
-    // سرچ
-    val q = remember(query) { query.trim().lowercase() }
 
-    val filteredWordCards = remember(wordCards, q) {
-        if (q.isEmpty()) wordCards
-        else wordCards.filter { c ->
-            val t = c.title.lowercase()
-            val d = c.description.lowercase()
-            t.contains(q) || d.contains(q)
-        }
-    }
     // فیلتر تب‌ها (جدید/رایگان/همه) + سرچ
     val filteredCardsByTab = remember(allCards, selectedFilter) {
         when (selectedFilter) {
@@ -92,6 +80,27 @@ fun flashcardpage(
             t.contains(q) || d.contains(q)
         }
     }
+
+
+    val myCards     by vm.myCards.collectAsState()        // users/{uid}/my_flashcards
+    val purchasedIds by vm.purchasedIds.collectAsState()  // users/{uid}/purchases
+// دوره‌های اضافه‌شده به «کلمات من»
+    val myWordCourses = remember(myCards) { myCards.filter { it.count > 0 } }
+
+// دوره‌های خریداری‌شده (با id از purchases و جزئیات از allCards)
+    val purchasedWordCourses = remember(allCards, purchasedIds) {
+        allCards.filter { it.count > 0 && it.id in purchasedIds }
+    }
+// ادغام + حذف تکراری + جستجو
+    val filteredWordCards = remember(myWordCourses, purchasedWordCourses, q) {
+        val merged = (myWordCourses + purchasedWordCourses).distinctBy { it.id }
+        if (q.isEmpty()) merged else merged.filter { c ->
+            c.title.lowercase().contains(q) || c.description.lowercase().contains(q)
+        }
+    }
+
+
+
 
     Column(
         modifier = Modifier
@@ -111,19 +120,44 @@ fun flashcardpage(
                 .wrapContentWidth(align = Alignment.End)
         )
 
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(125.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(15.dp)
-            ) {
-                items(filteredWordCards, key = { it.id }) { card ->
-                    WordCard(card, navController)
+// اگر خالی نیست → LazyRow کارت‌ها
+        if (filteredWordCards.isNotEmpty()) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(125.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    items(filteredWordCards, key = { it.id }) { card ->
+                        WordCard(card, navController)
+                    }
+                }
+            }
+// اگر خالی بود → پیام راهنما
+        } else {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(125.dp)
+                        .padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "هنوز دورهٔ آموزش فلش‌کارتی نداری.\nاز قسمت پایین دوره اضافه کن.",
+                        fontSize = 12.sp,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF6B7280), // خاکستری ملایم
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
+
+
 
         Text(
             text = "...موارد بیشتر",

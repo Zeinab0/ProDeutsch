@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,15 +28,16 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.viewmodel.FlashcardViewModel
+
 
 @Composable
 fun flashCard(
@@ -44,13 +47,31 @@ fun flashCard(
     viewModel: FlashcardViewModel = viewModel()
 ) {
     val myCardIds by viewModel.myCardIds.collectAsState()
+    val purchasedIds by viewModel.purchasedIds.collectAsState()
+
     val inMyList = myCardIds.contains(cards.id)
+    val isPurchased = purchasedIds.contains(cards.id)
+    val isFree = cards.price.trim().equals("رایگان", ignoreCase = true)
+
+    // فقط دوره‌های رایگان با inMyList ادامه می‌شوند؛ دوره‌های پولی حتماً خرید لازم دارند
+    val purchasedJustNow = remember { mutableStateOf(false) }
+    val isContinue = isPurchased || (isFree && inMyList) || purchasedJustNow.value
+
+    // قیمت برای حالت «ادامه یادگیری» نمایش داده نشود
+    val showPrice = !isContinue
+
+    // برچسب و رنگ دکمه
+    val ctaLabel = when {
+        isContinue -> "ادامه یادگیری"
+        isFree     -> "اضافه به کلمات من"
+        else       -> "خرید"
+    }
+    val ctaColor = if (isContinue) Color(0xFF2E7D32) else Color(0xFF4D869C)
 
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardHeight = screenWidth * 0.3f
 
-
-    Box { // ← برای قرار دادن لیبل روی کارت
+    Box {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,15 +102,17 @@ fun flashCard(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = cards.price,
-                        fontSize = 10.sp,
-                        fontFamily = iranSans,
-                        fontWeight = FontWeight.Bold,
-                        color = if (cards.price == "رایگان") Color(0xFF2E7D32) else Color(0xFF000000),
-                        textAlign = TextAlign.Right,
-                        style = TextStyle(textDirection = TextDirection.Rtl)
-                    )
+                    if (showPrice) {
+                        Text(
+                            text = cards.price,
+                            fontSize = 10.sp,
+                            fontFamily = iranSans,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isFree) Color(0xFF2E7D32) else Color(0xFF000000),
+                            textAlign = TextAlign.Right,
+                            style = TextStyle(textDirection = TextDirection.Rtl)
+                        )
+                    }
 
                     if (manageMode && inMyList) {
                         Row(
@@ -127,27 +150,38 @@ fun flashCard(
                     } else {
                         Button(
                             onClick = {
-                                println("start clicked")  // برای تست لاگ
-                                // 1) آیدی کارت را بده به صفحه مقصد
-                                navController.currentBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("card_id", cards.id)
-
-                                // 2) برو به صفحه
-                                navController.navigate("word_progress_page")
-
-                                // 3) (اختیاری) بعد از ناوبری کارت را به «لیست من» اضافه کن
-                                viewModel.addCardToMyList(cards)
+                                when {
+                                    isContinue -> {
+                                        navController.currentBackStackEntry
+                                            ?.savedStateHandle
+                                            ?.set("card_id", cards.id)
+                                        navController.navigate("word_progress_page")
+                                    }
+                                    isFree -> {
+                                        // رایگان: اضافه به کلمات من + (اختیاری) ناوبری
+                                        viewModel.addCardToMyList(cards)
+                                        navController.currentBackStackEntry
+                                            ?.savedStateHandle
+                                            ?.set("card_id", cards.id)
+                                        navController.navigate("word_progress_page")
+                                    }
+                                    else -> {
+                                        // پولی: ثبت خرید + افزودن به «فلش‌کارت‌های من» + سبز شدن فوری
+                                        viewModel.markPurchased(cards.id)
+                                        viewModel.addCardToMyList(cards)
+                                        purchasedJustNow.value = true
+                                    }
+                                }
                             },
                             contentPadding = PaddingValues(0.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(22.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C))
+                            colors = ButtonDefaults.buttonColors(containerColor = ctaColor)
                         ) {
                             Text(
-                                text = "شروع دوره",
+                                text = ctaLabel,
                                 modifier = Modifier.fillMaxWidth(),
                                 color = Color.White,
                                 fontSize = 8.sp,
@@ -171,7 +205,10 @@ fun flashCard(
                         modifier = Modifier.fillMaxWidth(),
                         text = cards.title,
                         fontFamily = iranSans,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
+                        maxLines = 2,
+                        minLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         textAlign = TextAlign.Right,
@@ -184,13 +221,16 @@ fun flashCard(
                         modifier = Modifier.fillMaxWidth(),
                         text = cards.description,
                         fontFamily = iranSans,
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
+                        maxLines = 3,
+                        minLines = 3,
+                        overflow = TextOverflow.Ellipsis,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         style = TextStyle(textDirection = TextDirection.Rtl)
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
                         modifier = Modifier.fillMaxWidth(),
@@ -211,6 +251,7 @@ fun flashCard(
         }
     }
 }
+
 
 @Composable
 fun NewLabel(modifier: Modifier = Modifier) {

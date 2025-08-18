@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -41,7 +42,7 @@ fun WordCard(card: Cards, navController: NavController)  {
     val cardHeight = screenHeight * 0.18f
     val imageHeight = cardHeight * 0.32f
     val buttonHeight = cardHeight * 0.12f
-    val fontSizeTitle = screenWidth * 0.03f
+    val fontSizeTitle = screenWidth * 0.025f
     val fontSizeButton = screenWidth * 0.025f
 
     Card(
@@ -64,6 +65,8 @@ fun WordCard(card: Cards, navController: NavController)  {
                 fontSize = fontSizeTitle.value.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = iranSans,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
 

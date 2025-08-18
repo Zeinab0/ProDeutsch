@@ -1,12 +1,10 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ScrollableTabRow
@@ -16,7 +14,6 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
@@ -36,11 +33,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.foundation.lazy.grid.items // ← این مهمه
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.VideoCard
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.flashCard
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.viewmodel.FlashcardViewModel
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
 
 
 @Composable
@@ -56,7 +54,6 @@ fun MyCoursesScreen(
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
     var selected by remember { mutableStateOf(0) } // 0=همه، 1=کلمات، 2=آهنگ
     var query by remember { mutableStateOf("") }
-    var stories by remember { mutableStateOf(listOf<Story>()) }
 
 
     Column(
@@ -127,13 +124,15 @@ fun MyCoursesScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            // ⬇️ پارامتر navController اضافه شد
             LibrarySection(
                 userId = uid,
                 selectedIndex = selected,
                 query = query,
+                navController = navController, // ← اضافه شد
                 onSongClick = { song -> navController.navigate("detail/${song.id}") },
                 onStoryClick = { story -> navController.navigate("story_detail/${story.id}") },
-                onMovieClick = { movie -> navController.navigate("movie_detail/${movie.id}") } // ← جدید
+                onMovieClick = { movie -> navController.navigate("movie_detail/${movie.id}") }
             )
 
 
@@ -179,21 +178,23 @@ fun FilterChipsWithIndicatorRTL(
 @Composable
 fun LibrarySection(
     userId: String,
-    selectedIndex: Int,               // 0=همه، 1=کلمات، 2=آهنگ، 3=داستان، 4=فیلم
+    selectedIndex: Int,               // 0=کلمات، 1=آهنگ، 2=داستان، 3=فیلم
     query: String,
+    navController: NavController,     // ← اضافه شد
     onSongClick: (Song) -> Unit,
     onStoryClick: (Story) -> Unit,
-    onMovieClick: (Movie) -> Unit,    // برای ناوبری فیلم
-    viewModel: MusicViewModel = viewModel()
+    onMovieClick: (Movie) -> Unit,
+    viewModel: MusicViewModel = viewModel(),
+    flashVm: FlashcardViewModel = viewModel() // ← ویومدل فلش‌کارت
 ) {
     val db = remember { FirebaseFirestore.getInstance() }
 
-    var songs    by remember { mutableStateOf(emptyList<Song>()) }
-    var cards    by remember { mutableStateOf(emptyList<Map<String, Any>>()) }
-    var stories  by remember { mutableStateOf(emptyList<Story>()) }
-    var movies   by remember { mutableStateOf(emptyList<Movie>()) }
+    var songs   by remember { mutableStateOf(emptyList<Song>()) }
+    var cards   by remember { mutableStateOf(emptyList<Map<String, Any>>()) } // «کلمات من» (آیتم‌های منفرد)
+    var stories by remember { mutableStateOf(emptyList<Story>()) }
+    var movies  by remember { mutableStateOf(emptyList<Movie>()) }
 
-    // --- لیسنرهای زنده (کاربر-محور)
+    // --- لیسنرهای فعلی‌ات برای کاربر ---
     DisposableEffect(userId) {
         val userRef = db.collection("users").document(userId)
 
@@ -209,7 +210,7 @@ fun LibrarySection(
             }.orEmpty()
         }
 
-        val regCards = userRef.collection("my_flashcards").addSnapshotListener { s, _ ->
+        val regCards = userRef.collection("purchases_flashcards").addSnapshotListener { s, _ ->
             cards = s?.documents?.map { it.data ?: emptyMap() }.orEmpty()
         }
 
@@ -239,17 +240,15 @@ fun LibrarySection(
                     price = d.getString("price") ?: "",
                     videoUrl = d.getString("videoUrl") ?: "",
                     imageUrl = d.getString("imageUrl") ?: "",
-                    duration = d.getString("duration") ?: "" // اگر داری
+                    duration = d.getString("duration") ?: ""
                 )
             }.orEmpty()
         }
 
-        onDispose {
-            regSongs.remove(); regCards.remove(); regStories.remove(); regMovies.remove()
-        }
+        onDispose { regSongs.remove(); regCards.remove(); regStories.remove(); regMovies.remove() }
     }
 
-    // --- فیلتر جستجو
+    // --- سرچ روی لیست‌های فعلی‌ات ---
     val q = remember(query) { query.trim() }
     val filteredSongs = remember(songs, q) {
         if (q.isEmpty()) songs else songs.filter { it.title.contains(q, true) || it.artist.contains(q, true) }
@@ -271,19 +270,54 @@ fun LibrarySection(
         }
     }
 
-    // --- نمایش بر اساس تب
+    // --- دوره‌های آموزش کلمات (از خریدها) ---
+    // اطمینان از پر شدن مرجع کارت‌ها؛ اگه در ViewModelت داخل init نیست:
+    LaunchedEffect(Unit) { flashVm.listenAllCards() }  // در صورت لزوم
+
+
+    // 1) دوره‌های خریداری‌شده‌ی کلمات از دیتابیس
+    val purchased by flashVm.purchasedCards.collectAsState()
+    val purchasedWordCourses = remember(purchased, query) {
+        val q = query.trim()
+        val base = purchased.filter { it.count > 0 }   // کارت‌های آموزشی کلمات
+        if (q.isEmpty()) base else base.filter { c ->
+            c.title.contains(q, true) || c.description.contains(q, true)
+        }
+    }
+
+// 2) فیلتر امن برای آیتم‌های «کلمات» تا کارت خالی رندر نشه
+    val filteredCardsSafe = remember(filteredCards, query) {
+        val q = query.trim()
+        val base = filteredCards.mapNotNull { m ->
+            val front = (m["front"] ?: m["word"])?.toString()?.trim().orEmpty()
+            val back  = (m["back"]  ?: m["meaning"])?.toString()?.trim().orEmpty()
+            if (front.isBlank() && back.isBlank()) null else mapOf("front" to front, "back" to back)
+        }
+        if (q.isEmpty()) base else base.filter { m ->
+            m["front"].toString().contains(q, true) || m["back"].toString().contains(q, true)
+        }
+    }
+
+
     when (selectedIndex) {
-        0 -> { // کلمات
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(filteredCards.size) { i ->
-                    val item = filteredCards[i]
-                    FlashcardRow(
-                        front = item["front"]?.toString() ?: item["word"]?.toString().orEmpty(),
-                        back  = item["back"] ?.toString() ?: item["meaning"]?.toString().orEmpty()
+        0 -> { // کلمات (دوره‌های آموزش کلمات خریداری‌شده)
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(purchasedWordCourses.size) { i ->
+                    val card = purchasedWordCourses[i]
+                    // اگر می‌خوای key هم مثل تب آهنگ نباشه و پایدار باشه، می‌تونی از itemsIndexed + key استفاده کنی
+                    flashCard(
+                        cards = card,
+                        navController = navController,
+                        viewModel = flashVm
                     )
                 }
             }
         }
+
+
 
         1 -> { // آهنگ
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -313,13 +347,12 @@ fun LibrarySection(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredStories, key = { it.id }) { story ->
-                    // ⛔️ قیمت را نمایش نده
                     StoryCardB(
                         story = story,
                         title = story.title,
                         level = story.level,
                         duration = story.duration,
-                        price = "", // ← عمداً خالی
+                        price = "", // قیمت عمداً مخفی
                         modifier = Modifier.clickable { onStoryClick(story) }
                     )
                 }
@@ -334,34 +367,15 @@ fun LibrarySection(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredMovies, key = { it.id }) { m ->
-                    // ⛔️ قیمت را نمایش نده؛ بقیه اطلاعات دقیقاً از دیتابیس
                     VideoCard(
                         title = m.title,
                         level = m.level,
                         duration = m.duration,
-                        price = "", // ← عمداً خالی تا هیچ قیمتی دیده نشه
+                        price = "", // قیمت عمداً مخفی
                         modifier = Modifier.clickable { onMovieClick(m) }
                     )
                 }
             }
         }
-    }
-
-}
-
-
-@Composable
-fun FlashcardRow(front: String, back: String) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White)
-            .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(back,  fontFamily = iranSans, color = Color.Gray)
-        Text(front, fontFamily = iranSans, fontWeight = FontWeight.Bold)
     }
 }
