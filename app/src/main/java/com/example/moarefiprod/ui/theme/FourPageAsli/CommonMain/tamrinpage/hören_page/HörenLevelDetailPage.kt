@@ -22,8 +22,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,10 +57,11 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
     }
 
     val filteredExercises = when (selectedFilter) {
-        "مطالعه شده ها" -> exercises.filter { it.exercise.score != null }
-        "مطالعه نشده ها" -> exercises.filter { it.exercise.score == null }
-        else -> exercises
+        "مطالعه شده ها"   -> exercises.filter { it.exercise.score != null && it.exercise.score != -1 }
+        "مطالعه نشده ها" -> exercises.filter { it.exercise.score == null || it.exercise.score == -1 }
+        else             -> exercises
     }
+
     val exerciseToShow = if (dialogSource == "random") selectedExerciseRandom else selectedExerciseByClick
 
 
@@ -67,6 +70,7 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
+
         ) {
             // Header
             Box(
@@ -89,139 +93,161 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                     )
                 }
             }
-
-            Text(
-                text = ":دوره‌ها",
-                fontSize = (screenWidth * 0.035f).value.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = iranSans,
-                color = Color.Black,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(align = Alignment.End)
-                    .padding(top = 10.dp)
-            )
+                    .fillMaxSize()
+                    .padding(horizontal = screenWidth * 0.04f)
+                    .background(Color.White)
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.End
             ) {
-                val filters = listOf("مطالعه شده ها", "مطالعه نشده ها", "همه")
-                filters.forEach { filter ->
-                    Spacer(modifier = Modifier.width(8.dp))
-                    FilterChips(
-                        text = filter,
-                        selected = selectedFilter == filter,
-                        onClick = { selectedFilter = filter }
-                    )
+                Text(
+                    text = ":دوره‌ها",
+                    fontSize = (screenWidth * 0.035f).value.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = iranSans,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(align = Alignment.End)
+                        .padding(top = 10.dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    val filters = listOf("مطالعه شده ها", "مطالعه نشده ها", "همه")
+                    filters.forEach { filter ->
+                        Spacer(modifier = Modifier.width(8.dp))
+                        FilterChips(
+                            text = filter,
+                            selected = selectedFilter == filter,
+                            onClick = { selectedFilter = filter }
+                        )
+                    }
                 }
-            }
-
-            LazyVerticalGrid(
-                modifier = Modifier.fillMaxSize(),
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(10.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                horizontalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                items(filteredExercises) { item ->
-                    Box(
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFCDE8E5))
-                            .clickable { }
-                    ) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            AsyncImage(
-                                model = item.exercise.imageUrl,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(2f)
-                                    .padding(10.dp, 10.dp, 10.dp, 0.dp)
-                            )
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
-                                    .padding(horizontal = 8.dp),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = item.exercise.title,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    fontFamily = iranSans,
-                                    modifier = Modifier.align(Alignment.End)
+                LazyVerticalGrid(
+                    modifier = Modifier.fillMaxSize(),
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    items(filteredExercises) { item ->
+                        Box(
+                            modifier = Modifier
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFCDE8E5))
+                                .clickable { }
+                        ) {
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                AsyncImage(
+                                    model = item.exercise.imageUrl,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(2f)
+                                        .padding(10.dp, 10.dp, 10.dp, 0.dp)
                                 )
 
-                                val (statusText, statusColor) = when {
-                                    item.exercise.score == null -> "شروع" to Color(0xFF7AB2B2)
-                                    item.exercise.score < 60 -> "دوباره امتحان کن" to Color(0xFFFFA26D)
-                                    else -> "تکرار مجدد" to Color(0xFF00BD10)
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f)
+                                        .padding(horizontal = 8.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Column {
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(bottom = 6.dp, top = 6.dp)
-                                                .height(20.dp)
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .background(statusColor)
-                                                .padding(horizontal = 6.dp)
-                                                .clickable {
-                                                    selectedExerciseByClick = item
-                                                    dialogSource = "click"
-                                                    showDialog = true
-                                                },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = statusText,
-                                                color = Color.White,
-                                                fontSize = 10.sp,
-                                                fontFamily = iranSans,
-                                                maxLines = 1
-                                            )
-                                        }
+                                    Text(
+                                        text = item.exercise.title,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = iranSans,
+                                        maxLines = 1,
+                                        minLines = 1,
+                                        style = TextStyle(
+                                            textDirection = TextDirection.Rtl
+                                        ),
+                                        modifier = Modifier.align(Alignment.End)
+                                    )
+
+                                    val (statusText, statusColor) = when {
+                                        item.exercise.score == null || item.exercise.score == -1 -> "شروع" to Color(0xFF7AB2B2)
+                                        item.exercise.score < 60 -> "دوباره امتحان کن" to Color(0xFFFFA26D)
+                                        else -> "تکرار مجدد" to Color(0xFF00BD10)
                                     }
 
-                                    Column(
-                                        modifier = Modifier.padding(bottom = 6.dp),
-                                        horizontalAlignment = Alignment.End,
-                                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            text = if (item.exercise.score != null) "مطالعه شده" else "مطالعه نشده",
-                                            fontSize = 10.sp,
-                                            color = Color(0xFF828282),
-                                            fontFamily = iranSans,
-                                            fontWeight = FontWeight.Light
-                                        )
-                                        Text(
-                                            text = if (item.exercise.score != null) "نمره شما: ${item.exercise.score}/100" else "نمره ندارد",
-                                            fontSize = 10.sp,
-                                            color = Color.Black,
-                                            fontFamily = iranSans,
-                                            fontWeight = FontWeight.Light
-                                        )
+                                        Column {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(bottom = 6.dp, top = 6.dp)
+                                                    .height(20.dp)
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(statusColor)
+                                                    .padding(horizontal = 6.dp)
+                                                    .clickable {
+                                                        selectedExerciseByClick = item
+                                                        dialogSource = "click"
+                                                        showDialog = true
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = statusText,
+                                                    color = Color.White,
+                                                    fontSize = 10.sp,
+                                                    fontFamily = iranSans,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+
+                                        Column(
+                                            modifier = Modifier.padding(bottom = 6.dp),
+                                            horizontalAlignment = Alignment.End,
+                                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                                        ) {
+                                            Text(
+                                                text = if (item.exercise.score != null) "مطالعه شده" else "مطالعه نشده",
+                                                fontSize = 10.sp,
+                                                color = Color(0xFF828282),
+                                                fontFamily = iranSans,
+                                                fontWeight = FontWeight.Light
+                                            )
+                                            Text(
+                                                text = when {
+                                                    item.exercise.score == null -> "نمره ندارد"
+                                                    item.exercise.score == -1 -> "" // ⬅️ نمره -۱ نمایش داده نشه
+                                                    else -> "نمره شما: ${item.exercise.score}/100"
+                                                },
+                                                fontSize = 10.sp,
+                                                color = Color.Black,
+                                                style = TextStyle(
+                                                    textDirection = TextDirection.Rtl
+                                                ),
+                                                fontFamily = iranSans,
+                                                fontWeight = FontWeight.Light
+                                            )
+
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+
+
             }
+
+
         }
 
         Box(
@@ -291,6 +317,9 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = iranSans,
+                        style = TextStyle(
+                            textDirection = TextDirection.Rtl
+                        ),
                         textAlign = TextAlign.Right,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -305,7 +334,9 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                         fontSize = 12.sp,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.ExtraLight,
-                        textAlign = TextAlign.Right,
+                        style = TextStyle(
+                            textDirection = TextDirection.Rtl
+                        ),
                         color = Color.Gray,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -395,6 +426,9 @@ fun HörenLevelDetailPage(navController: NavController, level: String) {
                         fontWeight = FontWeight.ExtraLight,
                         textAlign = TextAlign.Right,
                         color = Color.Gray,
+                        style = TextStyle(
+                            textDirection = TextDirection.Rtl
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentWidth(Alignment.End)

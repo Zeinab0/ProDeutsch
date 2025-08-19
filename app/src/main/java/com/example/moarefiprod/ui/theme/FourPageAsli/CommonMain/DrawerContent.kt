@@ -137,7 +137,7 @@ fun DrawerContent(
             navController.navigate("my_courses_screen")
             onClose() // تا منو بسته بشه}
             }
-        DrawerItem("اعلان‌ها", hasSwitch = true)
+//        DrawerItem("اعلان‌ها", hasSwitch = true)
         DrawerItem("تغییر رمز عبور") {
             navController.navigate("change_password")
             onClose()

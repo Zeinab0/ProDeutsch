@@ -5,44 +5,51 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.navigation.NavController
+import com.example.moarefiprod.R
+
 
 @Composable
-fun AudioTestScreen(navController: NavController, level: String, exerciseId: String) {
-
+fun AudioTestScreen(
+    navController: NavController,
+    level: String,
+    exerciseId: String
+) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    val viewModel: AudioTestViewModel = viewModel()
-    val questions by viewModel.questions.collectAsState()
+
+    // ViewModels
+    val vm: AudioTestViewModel = viewModel()
+    val hörenVm: HörenViewModel = viewModel()
+
+    // Load audio + questions via UiState
+    LaunchedEffect(level, exerciseId) { vm.load(level, exerciseId) }
+    val ui by vm.uiState.collectAsState()
+
+    // Simple states
     var remainingPlays by remember { mutableStateOf(3) }
     var isPlaying by remember { mutableStateOf(false) }
     var currentQuestionIndex by remember { mutableStateOf(0) }
@@ -53,21 +60,23 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
     var showFinishDialog by remember { mutableStateOf(false) }
     var showResultDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadQuestions(level, exerciseId)
+    // Loading / Error / Empty
+    when {
+        ui.isLoading -> { LoadingView(); return }
+        ui.error != null -> { ErrorView(ui.error!!); return }
+        ui.questions.isEmpty() -> { EmptyQuestionsView(); return }
     }
 
+    val questions = ui.questions
+    val audioUrl = ui.audioUrl
+
+    // Prepare answers size based on questions
     LaunchedEffect(questions) {
         selectedAnswers.clear()
         selectedAnswers.addAll(List(questions.size) { -1 })
+        currentQuestionIndex = 0
     }
 
-    if (questions.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("در حال بارگذاری سوالات...", fontFamily = iranSans)
-        }
-        return
-    }
     val currentQuestion = questions[currentQuestionIndex]
 
     Column(
@@ -77,12 +86,10 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
             .padding(horizontal = screenWidth * 0.05f),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Header (Back)
         Box(modifier = Modifier.fillMaxWidth()) {
-
             IconButton(
-                onClick = {
-                    showExitDialog = true
-                },
+                onClick = { showExitDialog = true },
                 modifier = Modifier
                     .padding(top = screenHeight * 0.05f)
                     .align(Alignment.TopStart)
@@ -96,7 +103,7 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
             }
         }
 
-
+        // Progress bars (per question)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
@@ -104,19 +111,16 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
             questions.forEachIndexed { index, _ ->
                 val isCurrent = index == currentQuestionIndex
                 val isAnswered = selectedAnswers.getOrNull(index)?.let { it != -1 } == true
-
                 val bgColor = when {
                     isCurrent -> Color(0xFFCDE8E5)
                     isAnswered -> Color(0xFF4D869C)
                     else -> Color(0xFFCDE8E5)
                 }
-
                 val borderColor = if (isCurrent) Color(0xFF4D869C) else Color.Transparent
-
                 Box(
                     modifier = Modifier
                         .height(6.dp)
-                        .weight(1f) // ← مهم‌ترین بخش!
+                        .weight(1f)
                         .padding(horizontal = 2.dp)
                         .background(bgColor, RoundedCornerShape(8.dp))
                         .border(1.dp, borderColor, RoundedCornerShape(8.dp))
@@ -126,6 +130,7 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
 
         Spacer(modifier = Modifier.height(45.dp))
 
+        // Remaining plays
         Box(
             modifier = Modifier
                 .padding(top = 12.dp, start = 16.dp)
@@ -133,9 +138,9 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
                 .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
                 .padding(horizontal = 6.dp, vertical = 4.dp)
                 .align(Alignment.Start)
-        ) {
-            Text("تکرار مجاز: $remainingPlays", fontSize = 12.sp, fontFamily = iranSans)
-        }
+        ) { Text("تکرار مجاز: $remainingPlays", fontSize = 12.sp, fontFamily = iranSans) }
+
+        // Audio player (icon + tiny visualizer)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -145,10 +150,18 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
         ) {
             val context = LocalContext.current
             val mediaPlayer = remember { MediaPlayer() }
-            val audioUrl by viewModel.audioUrl.collectAsState()
-
-            var audioDuration by remember { mutableStateOf(10000) } // پیش‌فرض 10 ثانیه
             var progress by remember { mutableStateOf(0f) }
+
+            // Release player when screen leaves
+            DisposableEffect(Unit) {
+                onDispose {
+                    try {
+                        mediaPlayer.stop()
+                        mediaPlayer.reset()
+                    } catch (_: Exception) {}
+                    mediaPlayer.release()
+                }
+            }
 
             Icon(
                 painter = painterResource(id = R.drawable.volume),
@@ -156,36 +169,32 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
                 tint = if (remainingPlays == 0) Color.Gray else Color(0xFF4D869C),
                 modifier = Modifier
                     .size(40.dp)
-                    .clickable(enabled = !isPlaying && remainingPlays > 0 && !audioUrl.isNullOrEmpty()) {
+                    .clickable(enabled = !isPlaying && remainingPlays > 0 && audioUrl.isNotEmpty()) {
                         scope.launch {
                             try {
                                 isPlaying = true
                                 mediaPlayer.reset()
                                 mediaPlayer.setDataSource(audioUrl)
                                 mediaPlayer.setOnPreparedListener {
-                                    audioDuration = it.duration
                                     it.start()
-                                    isPlaying = true  // ⬅️ بعد از start()
-                                    println("✅ صدا پخش شد")
+                                    isPlaying = true
                                 }
                                 mediaPlayer.setOnCompletionListener {
-                                    println("✅ پخش تمام شد")
                                     isPlaying = false
                                     remainingPlays--
                                 }
-                                mediaPlayer.setOnErrorListener { _, what, extra ->
-                                    println("❌ خطا در پخش صدا: what=$what, extra=$extra")
+                                mediaPlayer.setOnErrorListener { _, _, _ ->
                                     isPlaying = false
                                     true
                                 }
                                 mediaPlayer.prepareAsync()
-                            } catch (e: Exception) {
-                                println("❌ خطای کلی در پخش: ${e.message}")
+                            } catch (_: Exception) {
                                 isPlaying = false
                             }
                         }
                     }
             )
+
             LaunchedEffect(isPlaying) {
                 while (isPlaying) {
                     if (mediaPlayer.isPlaying && mediaPlayer.duration > 0) {
@@ -196,18 +205,17 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
                 progress = 0f
             }
 
-            // این ویژوالایزر برای نشان دادن حالت در حال پخش
+            // ویژوالایزر دلخواه خودت
             AudioProgressVisualizerr(
                 isPlaying = isPlaying,
                 isDisabled = remainingPlays == 0,
                 progress = progress
             )
-
-
         }
 
         Spacer(modifier = Modifier.height(85.dp))
 
+        // Question + options
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -240,14 +248,11 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(backgroundColor)
-                            .clickable {
-                                selectedAnswers[currentQuestionIndex] = index
-                            }
+                            .clickable { selectedAnswers[currentQuestionIndex] = index }
                             .padding(12.dp)
                     ) {
                         Text("${index + 1}. $text", fontFamily = iranSans, color = textColor)
                     }
-
                 }
             }
 
@@ -265,36 +270,26 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
 
         Spacer(modifier = Modifier.height(194.dp))
 
+        // Finish button (compute score + save per-user)
         Box(
             modifier = Modifier
                 .padding(vertical = 24.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color(0xFF7AB2B2))
                 .clickable {
-                    // ✅ محاسبه نمره
                     val correctCount = questions.zip(selectedAnswers).count { (q, ans) ->
                         ans != -1 && q.correctIndex == ans
                     }
                     val score = ((correctCount.toDouble() / questions.size) * 100).toInt()
 
-                    // ✅ ذخیره در Firestore
-                    FirebaseFirestore.getInstance()
-                        .collection("hör_levels")
-                        .document(level)
-                        .collection("exercises")
-                        .document(exerciseId)
-                        .update("score", score)
-                        .addOnSuccessListener {
-//                            navController.popBackStack()
-                            showFinishDialog = true
-
-                        }
+                    // ذخیره نمره برای کاربر فعلی
+                    hörenVm.submitScore(exerciseId, score)
+                    showFinishDialog = true
                 }
                 .padding(horizontal = 24.dp, vertical = 12.dp)
-        ) {
-            Text("پایان آزمون", color = Color.White, fontFamily = iranSans)
-        }
+        ) { Text("پایان آزمون", color = Color.White, fontFamily = iranSans) }
     }
+
     if (showExitDialog) {
         Box(
             modifier = Modifier
@@ -541,15 +536,7 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
                                 .height(45.dp)
                                 .clickable {
                                     showResultDialog = false
-                                    FirebaseFirestore.getInstance()
-                                        .collection("hör_levels")
-                                        .document(level)
-                                        .collection("exercises")
-                                        .document(exerciseId)
-                                        .update("score", score)
-                                        .addOnSuccessListener {
-                                            navController.popBackStack()
-                                        }
+                                    navController.popBackStack()
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -562,8 +549,25 @@ fun AudioTestScreen(navController: NavController, level: String, exerciseId: Str
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+/* ---------- Helpers (ساده، برای رفع unresolved reference‌ها) ---------- */
+//
 @Composable
-fun AudioTestScreenPreview() {
-    AudioTestScreen(navController = rememberNavController(), level = "A1", exerciseId = "exercise_1")
+private fun LoadingView() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("در حال بارگذاری...", fontFamily = iranSans)
+    }
+}
+
+@Composable
+private fun ErrorView(msg: String) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("خطا: $msg", fontFamily = iranSans, color = Color.Red)
+    }
+}
+
+@Composable
+private fun EmptyQuestionsView() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("سوالی پیدا نشد.", fontFamily = iranSans)
+    }
 }
