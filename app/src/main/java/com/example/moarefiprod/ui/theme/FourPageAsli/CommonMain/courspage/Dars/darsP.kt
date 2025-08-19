@@ -287,6 +287,11 @@ fun LessonItemRowUI(
                         navController.navigate("jozve_page/$courseId/$lessonId/${item.id}")
                         Log.d("LessonItemRowUI", "📄 Navigating to Jozve with contentId=${item.id}")
                     }
+
+                    CourseItemType.WORDS -> {
+                        navController.navigate("words_page/$courseId/$lessonId/${item.id}")
+                    }
+
                     else -> {
                         Log.d("LessonItemRowUI", "🟡 Unsupported content type: ${item.type}")
                     }
