@@ -17,7 +17,7 @@ class UserHorenScoreRepository(
     fun listenScores(): Flow<Map<String, Int>> = callbackFlow {
         val uid = auth.currentUser?.uid
         if (uid == null) {
-            // ❌ قبلاً اینجا کانال رو می‌بستی، الان فقط خالی می‌فرستیم
+
             trySend(emptyMap())
             awaitClose { }
             return@callbackFlow

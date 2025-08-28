@@ -111,7 +111,7 @@ fun HomeScreen(navController: NavController,userViewModel: UserProfileViewModel)
 
                 // ⬇ صفحه‌ها
                 when (selectedIndex) {
-                    0 -> mainpage(query = homeQuery) // امضای این‌ها باید یه پارامتر query داشته باشه (پایین توضیح دادم)
+                    0 -> mainpage() // امضای این‌ها باید یه پارامتر query داشته باشه (پایین توضیح دادم)
                     1 -> tamrinpage(navController = navController, query = exerciseQuery)
                     2 -> courspage(
                         onShowDialog = { showDialog = true },
