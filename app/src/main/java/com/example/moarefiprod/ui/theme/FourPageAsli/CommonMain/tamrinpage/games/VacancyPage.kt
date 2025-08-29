@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,6 +33,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.navigation.NavController
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog // ⭐️ اضافه شده
+import kotlinx.coroutines.delay
 
 @Composable
 fun VacancyPage(
@@ -49,6 +52,10 @@ fun VacancyPage(
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
+    var gameTimeInSeconds by remember { mutableStateOf(0) }
+    var showResultBox by remember { mutableStateOf(false) }
+    var isTimerRunning by remember { mutableStateOf(true) }
+
     val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
     val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
         GrammerGameViewModel.GamePathType.COURSE
@@ -59,18 +66,26 @@ fun VacancyPage(
     LaunchedEffect(gameId) {
         grammarViewModel.loadVacancyGame(pathType, courseId, lessonId, contentId, gameId)
     }
+    // تایمر برای اندازه گیری زمان این بازی خاص
+    LaunchedEffect(gameId, isTimerRunning) {
+        gameTimeInSeconds = 0
+        while (isTimerRunning) {
+            delay(1000L)
+            gameTimeInSeconds++
+            Log.d("VacancyPage", "⏱ زمان همین بازی: $gameTimeInSeconds ثانیه")
+        }
+    }
 
     val vacancyData = grammarViewModel.vacancyGameState.collectAsState().value
     val sentence = vacancyData?.sentence ?: ""
     val correctAnswer = vacancyData?.correctAnswer ?: ""
     val translation = vacancyData?.translation ?: ""
+    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState() // ⭐️ اضافه شده
 
     var userInput by remember { mutableStateOf(TextFieldValue("")) }
-    var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var showCompletedSentence by remember { mutableStateOf(false) }
-
-
+    var showFinalDialog by remember { mutableStateOf(false) } // ⭐️ اضافه شده
     val sentenceParts = sentence.split("____")
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -92,8 +107,6 @@ fun VacancyPage(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // 📝 Row حاوی آیکون مداد و جمله
-        // این Row در بالای صفحه ثابت می‌ماند
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -144,12 +157,10 @@ fun VacancyPage(
                     maxLines = Int.MAX_VALUE,
                     minLines = 3,
                     modifier = Modifier
-                        .padding(start = 36.dp) // برای اینکه با آیکون تداخل نداشته باشه
-//                        .align(Alignment.TopStart)
+                        .padding(start = 36.dp)
                 )
                 Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
-                // 📘 ترجمه جمله
                 Text(
                     text = translation,
                     fontFamily = iranSans,
@@ -167,11 +178,10 @@ fun VacancyPage(
             }
         }
 
-        // این Column در بخش میانی و پایین صفحه قرار می‌گیرد
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = screenHeight * 0.66f), // تنظیم موقعیت پایین‌تر
+                .padding(top = screenHeight * 0.66f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (!showCompletedSentence) {
@@ -210,7 +220,6 @@ fun VacancyPage(
             }
         }
 
-        // 🖼️ باکس نتیجه در پایین صفحه
         if (showResultBox) {
             WinnerBoxVacancy(
                 isCorrect = isCorrect,
@@ -229,42 +238,72 @@ fun VacancyPage(
                         popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
                     }
                 },
+                onFinish = { // ⭐️ اضافه شده
+                    showFinalDialog = true
+                },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
 
         }
-            Button(
-                onClick = {
-                    isCorrect = userInput.text.trim().equals(correctAnswer, ignoreCase = true)
-                    showResultBox = true
-                    showCompletedSentence = true
+        Button(
+            onClick = {
+                isCorrect = userInput.text.trim().equals(correctAnswer, ignoreCase = true)
+                showResultBox = true
+                showCompletedSentence = true
+                isTimerRunning = false // تایمر را متوقف کن
 
-                    viewModel.recordAnswer(isCorrect == true)
-                    viewModel.recordMemoryGameResult(
-                        correct = if (isCorrect == true) 1 else 0,
-                        wrong = if (isCorrect == false) 1 else 0,
-                        timeInSeconds = viewModel.totalTimeInSeconds.value
-                    )
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 30.dp, bottom = 180.dp)
-                    .width(screenWidth * 0.20f)
-                    .height(40.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4D869C),
-                    contentColor = Color.White
-                ),
-            ) {
-                Text(
-                    text = "تایید",
-                    fontFamily = iranSans,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                Log.d("GameResult", "⏱ زمان همین بازی: $gameTimeInSeconds ثانیه")
+
+                // ثبت نتیجه و زمان این بازی خاص
+                viewModel.recordAnswer(isCorrect == true)
+                viewModel.recordMemoryGameResult(
+                    correct = if (isCorrect == true) 1 else 0,
+                    wrong = if (isCorrect == false) 1 else 0,
+                    timeInSeconds = gameTimeInSeconds // 👈 این زمان همین بازی است
                 )
+
+                Log.d("GameResult", "✅ زمان کل (بعد از ثبت): ${viewModel.totalTimeInSeconds.value} ثانیه")
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 30.dp, bottom = 180.dp)
+                .width(screenWidth * 0.20f)
+                .height(40.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF4D869C),
+                contentColor = Color.White
+            ),
+        ) {
+            Text(
+                text = "تایید",
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
+
+        // ⭐️ اضافه شده
+        if (showFinalDialog) {
+            val returnRouteForDialog = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "lesson_detail/$courseId/$lessonId"
+            } else {
+                "grammar_page"
             }
-        // --- پایان بخش دکمه تایید ---
+
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds,
+                returnRoute = returnRouteForDialog,
+                onDismiss = {
+                    showFinalDialog = false
+                    navController.navigate(returnRouteForDialog)
+                }
+            )
+        }
 
         if (showExitDialog) {
             ExitConfirmationDialog(
@@ -279,7 +318,6 @@ fun VacancyPage(
                 }
             )
         }
-
     }
 }
 
@@ -293,6 +331,7 @@ fun WinnerBoxVacancy(
     isLastGame: Boolean,
     returnRoute: String,
     onNext: () -> Unit,
+    onFinish: () -> Unit, // ⭐️ اضافه شده
     modifier: Modifier = Modifier
 ) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -311,7 +350,6 @@ fun WinnerBoxVacancy(
                 .offset(y = 8.dp)
         ) {
             if (isCorrect == false) {
-                // 🔴 جمله غلط
                 Row(
                     verticalAlignment = Alignment.Top,
                     modifier = Modifier.fillMaxWidth(),
@@ -334,7 +372,6 @@ fun WinnerBoxVacancy(
                     )
                 }
 
-                // ✅ جمله درست
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
@@ -358,7 +395,6 @@ fun WinnerBoxVacancy(
                 }
 
             } else if (isCorrect == true) {
-                // ✅ فقط جمله درست
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
@@ -383,7 +419,6 @@ fun WinnerBoxVacancy(
             }
             Spacer(modifier = Modifier.height(screenHeight * 0.018f))
 
-            // 🟢 دکمه بریم بعدی / تمام
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -395,9 +430,7 @@ fun WinnerBoxVacancy(
                     .background(Color(0xFF4D869C))
                     .clickable {
                         if (isLastGame) {
-                            navController.navigate(returnRoute) {
-                                popUpTo("home") { inclusive = false }
-                            }
+                            onFinish() // ⭐️ فراخوانی تابع جدید
                         } else {
                             onNext()
                         }
