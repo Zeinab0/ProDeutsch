@@ -24,8 +24,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.moarefiprod.data.models.Course
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moarefiprod.iranSans
 import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
+import androidx.compose.ui.text.style.TextOverflow
 
 
 private fun formatTomanK(price: Int): String {
@@ -37,12 +42,30 @@ private fun formatTomanK(price: Int): String {
 @Composable
 fun CourseCard(
     course: Course,
-    navController: NavController
+    navController: NavController,
+    viewModel: CourseViewModel
 ) {
+    val myCourses by viewModel.myCourses.collectAsState()
+    val purchasedIds by viewModel.purchasedCourseIds.collectAsState()
+
+    val inMyList = myCourses.any { it.id == course.id }
+    val purchased = purchasedIds.contains(course.id) || course.isPurchased
+    val isFree = course.price == 0
+
+    val purchasedJustNow = remember { mutableStateOf(false) }
+    val isContinue = purchased || (isFree && inMyList) || purchasedJustNow.value
+    val showPrice = !isContinue
+
+    val ctaLabel = when {
+        isContinue -> "ادامه یادگیری"
+        isFree -> "اضافه به دوره‌های من"
+        else -> "خرید"
+    }
+
+    val ctaColor = if (isContinue) Color(0xFF2E7D32) else Color(0xFF4D869C)
+
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardHeight = screenWidth * 0.3f
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
 
     Card(
         modifier = Modifier
@@ -52,9 +75,8 @@ fun CourseCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            // تصویر دوره
             AsyncImage(
                 model = course.imageUrl,
                 contentDescription = "Course Image",
@@ -62,49 +84,64 @@ fun CourseCard(
                     .fillMaxHeight()
                     .width(cardHeight)
                     .padding(10.dp)
-                    .clip(RoundedCornerShape(5.dp)),
+                    .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
 
+            // ستون دکمه‌ها و قیمت
             Column(
                 modifier = Modifier
-                    .width(95.dp)                    // مثل فلش‌کارت
+                    .width(95.dp)
                     .align(Alignment.Bottom)
                     .padding(bottom = 10.dp, start = 10.dp, end = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                val priceText = formatTomanK(course.price)
-                Text(
-                    text = priceText,
-                    fontSize = 10.sp,
-                    fontFamily = iranSans,
-                    fontWeight = FontWeight.Bold,
-                    color = if (course.price == 0) Color(0xFF2E7D32) else Color(0xFF000000),
-                    textAlign = TextAlign.Right,
-                    style = TextStyle(textDirection = TextDirection.Rtl)
-                )
+                if (showPrice) {
+                    Text(
+                        text = if (isFree) "رایگان" else formatTomanK(course.price),
+                        fontSize = 10.sp,
+                        fontFamily = iranSans,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isFree) Color(0xFF2E7D32) else Color.Black,
+                        textAlign = TextAlign.Right,
+                        style = TextStyle(textDirection = TextDirection.Rtl)
+                    )
+                }
 
                 Button(
                     onClick = {
-                        val encodedUrl = Uri.encode(course.imageUrl)
-                        navController.navigate("course_detail/${course.id}?imageUrl=$encodedUrl") {
-                            launchSingleTop = true
-                            restoreState = true
+                        when {
+                            isContinue -> {
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("course_id", course.id)
+                                navController.navigate("course_detail/${course.id}")
+                            }
+                            isFree -> {
+                                viewModel.addCourseToMyList(course)
+                                purchasedJustNow.value = true
+                            }
+                            else -> {
+                                viewModel.markCoursePurchased(course.id) {
+                                    viewModel.addCourseToMyList(course)
+                                    purchasedJustNow.value = true
+                                }
+                            }
                         }
                     },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(22.dp),               // مثل فلش‌کارت
+                        .height(22.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4D869C))
+                    colors = ButtonDefaults.buttonColors(containerColor = ctaColor)
                 ) {
                     Text(
-                        text = "شروع دوره",
+                        text = ctaLabel,
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.White,
-                        fontSize = 8.sp,              // مثل فلش‌کارت
+                        fontSize = 8.sp,
                         fontFamily = iranSans,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
@@ -112,71 +149,42 @@ fun CourseCard(
                 }
             }
 
+            // ستون اطلاعات دوره
             Column(
                 modifier = Modifier
                     .padding(0.dp, 10.dp, 10.dp, 10.dp)
                     .fillMaxHeight()
-                    .weight(1f),          // به‌جای width ثابت
+                    .weight(1f),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = course.title,
-                    fontSize = 14.sp,
                     fontFamily = iranSans,
+                    fontSize = 13.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     textAlign = TextAlign.Right,
                     style = TextStyle(textDirection = TextDirection.Rtl)
                 )
 
+                Spacer(modifier = Modifier.height(2.dp))
+
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = course.description,
-                    fontSize = 10.sp,
                     fontFamily = iranSans,
+                    fontSize = 9.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    textAlign = TextAlign.Right,
                     style = TextStyle(textDirection = TextDirection.Rtl)
                 )
 
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = iranSans)) {
-                            append("سطح دوره: ")
-                        }
-                        withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.sath)
-                        }
-                    },
-                    fontSize = 10.sp,
-                    fontFamily = iranSans,
-                    color = Color.DarkGray,
-                    textAlign = TextAlign.Right,
-                    style = TextStyle(textDirection = TextDirection.Rtl)
-                )
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = iranSans)) {
-                            append("مدت زمان دوره: ")
-                        }
-                        withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.zaman)
-                        }
-                    },
-                    fontSize = 10.sp,
-                    fontFamily = iranSans,
-                    color = Color.DarkGray,
-                    textAlign = TextAlign.Right,
-                    style = TextStyle(textDirection = TextDirection.Rtl)
-                )
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     modifier = Modifier.fillMaxWidth(),
@@ -185,14 +193,12 @@ fun CourseCard(
                             append("تعداد دروس: ")
                         }
                         withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontFamily = iranSans)) {
-                            append(course.teadad.toString())
+                            append("${course.teadad}")
                         }
                     },
                     fontSize = 10.sp,
-                    fontFamily = iranSans,
                     color = Color.DarkGray,
-                    textAlign = TextAlign.Right,
-                    style = TextStyle(textDirection = TextDirection.Rtl)
+                    textAlign = TextAlign.Right
                 )
             }
         }

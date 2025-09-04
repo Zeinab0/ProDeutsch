@@ -60,7 +60,6 @@ fun mainpage() {
                     .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
 
-
                 // محتوای میانی: مراحل + تصویر
                 Row(
                     modifier = Modifier
@@ -568,3 +567,5 @@ fun CourseItem(title: String, level: String, lessons: Int, progress: Float) {
 fun PreviewMiddleSection() {
     mainpage()
 }
+
+//val myCourses by viewModel.myCourses.collectAsState()

@@ -58,4 +58,35 @@ class FirestoreRepository {
             emptyList()
         }
     }
+
+    suspend fun getUserCourses(userId: String): List<Course> {
+        return try {
+            val snapshot = db.collection("users")
+                .document(userId)
+                .collection("myCourses")
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { document ->
+                document.toObject(Course::class.java)?.copy(id = document.id)
+            }
+        } catch (e: Exception) {
+            Log.e("FirestoreRepository", "Error getting user courses: ${e.localizedMessage}", e)
+            emptyList()
+        }
+    }
+
+    suspend fun addCourseToUser(userId: String, course: Course) {
+        try {
+            db.collection("users")
+                .document(userId)
+                .collection("myCourses")
+                .document(course.id)
+                .set(course.copy(isPurchased = true, isInMyCourses = true))
+                .await()
+        } catch (e: Exception) {
+            Log.e("FirestoreRepository", "Error adding course: ${e.localizedMessage}", e)
+        }
+    }
+
 }

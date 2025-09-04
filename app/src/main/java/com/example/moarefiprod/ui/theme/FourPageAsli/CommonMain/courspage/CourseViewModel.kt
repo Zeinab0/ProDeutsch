@@ -7,6 +7,7 @@ import com.example.moarefiprod.repository.FirestoreRepository
 import com.example.moarefiprod.data.models.Course
 import com.example.moarefiprod.data.models.CourseItem
 import com.example.moarefiprod.data.models.CourseLesson
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,8 @@ class CourseViewModel(
     private val repository: FirestoreRepository = FirestoreRepository()
 ) : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
     // State برای نگهداری لیست همه دوره‌ها
     private val _allCourses = MutableStateFlow<List<Course>>(emptyList())
     val allCourses: StateFlow<List<Course>> = _allCourses.asStateFlow()
@@ -30,18 +33,18 @@ class CourseViewModel(
     private val _newCourses = MutableStateFlow<List<Course>>(emptyList())
     val newCourses: StateFlow<List<Course>> = _newCourses.asStateFlow()
 
-    // ✅ State جدید: برای نگهداری جزئیات دوره فعلی که کاربر روی آن کلیک کرده است
+    // State برای نگهداری جزئیات دوره فعلی
     private val _selectedCourse = MutableStateFlow<Course?>(null)
     val selectedCourse: StateFlow<Course?> = _selectedCourse.asStateFlow()
 
-    // ✅ State جدید: برای نگهداری لیست دروس دوره انتخاب شده
+    // State برای نگهداری لیست دروس دوره انتخاب شده
     private val _selectedCourseLessons = MutableStateFlow<List<CourseLesson>>(emptyList())
     val selectedCourseLessons: StateFlow<List<CourseLesson>> = _selectedCourseLessons.asStateFlow()
 
     private val _selectedLessonItems = MutableStateFlow<List<CourseItem>>(emptyList())
     val selectedLessonItems: StateFlow<List<CourseItem>> = _selectedLessonItems.asStateFlow()
 
-    // State برای مدیریت وضعیت بارگذاری (مثلاً نمایش Progress Bar)
+    // State برای مدیریت وضعیت بارگذاری
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -49,11 +52,20 @@ class CourseViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    // دوره‌های شخصی کاربر (اضافه شده/خریداری شده)
+    private val _myCourses = MutableStateFlow<List<Course>>(emptyList())
+    val myCourses: StateFlow<List<Course>> = _myCourses.asStateFlow()
+
+    // آی‌دی دوره‌های خریداری‌شده
+    private val _purchasedCourseIds = MutableStateFlow<Set<String>>(emptySet())
+    val purchasedCourseIds: StateFlow<Set<String>> = _purchasedCourseIds.asStateFlow()
 
     init {
         loadAllCourses()
         loadFreeCourses()
         loadNewCourses()
+        listenMyCourses()
+        listenPurchasedCourses()
     }
 
     fun loadAllCourses() {
@@ -101,7 +113,6 @@ class CourseViewModel(
         }
     }
 
-    // ✅ تابع اصلاح شده برای بارگذاری جزئیات یک دوره خاص و دروس آن با زیربخش‌ها
     fun loadSelectedCourseDetailsAndLessons(courseId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -116,12 +127,11 @@ class CourseViewModel(
                 val lessonDocs = db.collection("Courses").document(courseId).collection("Lessons").get().await().toObjects(CourseLesson::class.java)
                 Log.d("CourseViewModel", "Lessons loaded: $lessonDocs")
 
-                // 3. بارگذاری زیربخش‌ها از Contents و مپ کردن به درس‌ها
-                val contentDocs = db.collection("Courses").document(courseId).collection("Lessons").get().await().toObjects(CourseLesson::class.java)
-                    .flatMap { lesson ->
-                        db.collection("Courses").document(courseId).collection("Lessons").document(lesson.id).collection("Contents")
-                            .get().await().toObjects(CourseItem::class.java).map { it.copy(lessonId = lesson.id) }
-                    }
+                // 3. بارگذاری زیربخش‌ها
+                val contentDocs = lessonDocs.flatMap { lesson ->
+                    db.collection("Courses").document(courseId).collection("Lessons").document(lesson.id).collection("Contents")
+                        .get().await().toObjects(CourseItem::class.java).map { it.copy(lessonId = lesson.id) }
+                }
                 Log.d("CourseViewModel", "Contents loaded: $contentDocs")
 
                 // 4. مپ کردن زیربخش‌ها به درس‌ها
@@ -132,7 +142,7 @@ class CourseViewModel(
                 Log.d("CourseViewModel", "Lessons with items: $lessonsWithItems")
 
             } catch (e: Exception) {
-                _errorMessage.value = "خطا در بارگذاری جزئیات دوره و دروس آن برای $courseId: ${e.localizedMessage}"
+                _errorMessage.value = "خطا در بارگذاری جزئیات دوره: ${e.localizedMessage}"
                 _selectedCourse.value = null
                 _selectedCourseLessons.value = emptyList()
                 Log.e("CourseViewModel", "Error loading data: ${e.message}")
@@ -161,12 +171,138 @@ class CourseViewModel(
                     )
                 }
 
-                _selectedLessonItems.value = items // به‌روزرسانی StateFlow
+                _selectedLessonItems.value = items
                 Log.d("CourseViewModel", "Contents loaded for lesson $lessonId: $items")
             } catch (e: Exception) {
-                Log.e("CourseViewModel", "Error loading Contents for lesson $lessonId: ${e.message}")
-                _errorMessage.value = e.message // اگه StateFlow برای خطا داری، اینو فعال کن
+                Log.e("CourseViewModel", "Error loading Contents: ${e.message}")
+                _errorMessage.value = e.message
             }
         }
     }
+
+    // --- متدهای مدیریت دوره‌های شخصی کاربر ---
+    private fun listenMyCourses() {
+        val uid = auth.currentUser?.uid ?: run {
+            _myCourses.value = emptyList()
+            return
+        }
+
+        db.collection("users").document(uid).collection("purchased_courses")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.e("CourseViewModel", "Error listening to my courses", e)
+                    return@addSnapshotListener
+                }
+
+                val list = snapshot?.documents?.mapNotNull { doc ->
+                    try {
+                        Course(
+                            id = doc.id,
+                            title = doc.getString("title") ?: "",
+                            description = doc.getString("description") ?: "",
+                            price = doc.getLong("price")?.toInt() ?: 0, // ✅ اصلاح شد
+                            imageUrl = doc.getString("imageUrl") ?: "", // ✅ اصلاح شد
+                            isNew = doc.getBoolean("isNew") ?: false,   // ✅ اصلاح شد
+                            isPurchased = doc.getBoolean("isPurchased") ?: false // ✅ اصلاح شد
+                            // سایر فیلدهای مدل Course رو اینجا اضافه کن
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: emptyList()
+
+                _myCourses.value = list
+                Log.d("CourseViewModel", "My courses updated: ${list.size} items")
+            }
+    }
+
+    private fun listenPurchasedCourses() {
+        val uid = auth.currentUser?.uid ?: run {
+            _purchasedCourseIds.value = emptySet()
+            return
+        }
+
+        db.collection("users").document(uid).collection("purchased_courses")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.e("CourseViewModel", "Error listening to purchased courses", e)
+                    return@addSnapshotListener
+                }
+
+                val ids = snapshot?.documents?.map { it.id }?.toSet() ?: emptySet()
+                _purchasedCourseIds.value = ids
+                Log.d("CourseViewModel", "Purchased IDs updated: ${ids.size} items")
+            }
+    }
+
+    fun addCourseToMyList(course: Course, onDone: (() -> Unit)? = null) {
+        val uid = auth.currentUser?.uid ?: return
+
+        val data = mapOf(
+            "title" to course.title,
+            "description" to course.description,
+            "price" to course.price,
+            "imageUrl" to course.imageUrl, // ✅ اصلاح شد
+            "isNew" to course.isNew,
+            "isPurchased" to false,
+            "addedAt" to System.currentTimeMillis()
+        )
+
+        db.collection("users").document(uid)
+            .collection("purchased_courses").document(course.id)
+            .set(data)
+            .addOnSuccessListener {
+                Log.d("CourseViewModel", "Course added to my list: ${course.title}")
+                onDone?.invoke()
+            }
+            .addOnFailureListener { e ->
+                Log.e("CourseViewModel", "Error adding course to my list", e)
+            }
+    }
+
+    fun removeCourseFromMyList(courseId: String, onDone: (() -> Unit)? = null) {
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(uid)
+            .collection("purchased_courses").document(courseId)
+            .delete()
+            .addOnSuccessListener {
+                Log.d("CourseViewModel", "Course removed from my list: $courseId")
+                onDone?.invoke()
+            }
+            .addOnFailureListener { e ->
+                Log.e("CourseViewModel", "Error removing course from my list", e)
+            }
+    }
+
+    fun markCoursePurchased(courseId: String, onDone: (() -> Unit)? = null) {
+        val uid = auth.currentUser?.uid ?: return
+
+        val data = mapOf(
+            "isPurchased" to true,
+            "purchasedAt" to System.currentTimeMillis()
+        )
+
+        db.collection("users").document(uid)
+            .collection("purchased_courses").document(courseId)
+            .set(data, com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener {
+                Log.d("CourseViewModel", "Course marked as purchased: $courseId")
+                onDone?.invoke()
+            }
+            .addOnFailureListener { e ->
+                Log.e("CourseViewModel", "Error marking course as purchased", e)
+            }
+    }
+
+    // بررسی آیا دوره در لیست کاربر است
+    fun isCourseInMyList(courseId: String): Boolean {
+        return _myCourses.value.any { it.id == courseId }
+    }
+
+    // بررسی آیا دوره خریداری شده است
+    fun isCoursePurchased(courseId: String): Boolean {
+        return _purchasedCourseIds.value.contains(courseId)
+    }
+
 }

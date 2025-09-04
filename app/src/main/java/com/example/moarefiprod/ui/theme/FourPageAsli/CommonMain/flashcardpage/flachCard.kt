@@ -252,7 +252,6 @@ fun flashCard(
     }
 }
 
-
 @Composable
 fun NewLabel(modifier: Modifier = Modifier) {
     Box(
