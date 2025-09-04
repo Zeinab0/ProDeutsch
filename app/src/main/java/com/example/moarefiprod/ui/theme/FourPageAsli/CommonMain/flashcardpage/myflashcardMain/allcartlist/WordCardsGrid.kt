@@ -4,10 +4,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,31 +33,31 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Wo
 fun WordCardsGrid(words: List<Word>, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(24.dp), // ✅ فاصله عمودی بین ردیف کارت‌ها
-        contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp) // بالا و پایین
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
     ) {
         items(words.chunked(2)) { rowWords ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp), // ✅ فاصله افقی از چپ و راست برای وسط‌چین شدن
-                horizontalArrangement = if (rowWords.size == 2)
-                    Arrangement.SpaceBetween
-                else
-                    Arrangement.Center
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.Center // 🔹 ردیف‌ها همیشه وسط
             ) {
                 rowWords.forEach { word ->
                     WordCardItem(
                         word = word,
                         modifier = Modifier
-                            .width(160.dp)
-                            .height(200.dp)
+                            .weight(1f) // 🔹 هر کارت نصف عرض ردیف
+                            .aspectRatio(0.95f) // 🔹 نسبت ارتفاع به عرض (مثلاً 3:4)
+                            .padding(horizontal = 8.dp) // فاصله مساوی بین کارت‌ها
                     )
                 }
             }
         }
     }
 }
+
+
 
 @Composable
 fun WordCardItem(word: Word, modifier: Modifier = Modifier) {
@@ -67,9 +69,7 @@ fun WordCardItem(word: Word, modifier: Modifier = Modifier) {
     }
 
     androidx.compose.material3.Card(
-        modifier = modifier, // ✅ اینجا تغییر دادم
-//            .width(160.dp)
-//            .height(200.dp),
+        modifier = modifier,
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(2.dp, color)
     ) {
@@ -77,7 +77,7 @@ fun WordCardItem(word: Word, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFEDEDED)),
-            verticalArrangement = Arrangement.Top,
+            verticalArrangement = Arrangement.SpaceBetween, // بخش بالا و وسط و پایین
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ✅ نوار بالا با متن وضعیت
@@ -98,36 +98,40 @@ fun WordCardItem(word: Word, modifier: Modifier = Modifier) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(44.dp))
-
-            // ✅ کلمه آلمانی - وسط کارت
-            androidx.compose.material3.Text(
-                text = word.text,
-                fontSize = 18.sp,
-                fontFamily = iranSans,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ✅ خط جداکننده
-            Box(
+            // ✅ محتوای وسط کارت (کلمه + خط + ترجمه)
+            Column(
                 modifier = Modifier
-                    .width(80.dp)
-                    .height(1.dp)
-                    .background(Color.LightGray)
-            )
+                    .fillMaxWidth()
+                    .weight(1f), // وسط چین بشه
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                androidx.compose.material3.Text(
+                    text = word.text,
+                    fontSize = 18.sp,
+                    fontFamily = iranSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // ✅ کلمه فارسی
-            androidx.compose.material3.Text(
-                text = word.translation,
-                fontSize = 14.sp,
-                color = Color.Gray,
-                fontFamily = iranSans
-            )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f) // 🔹 نصف عرض کارت
+                        .height(1.dp)
+                        .background(Color.LightGray)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                androidx.compose.material3.Text(
+                    text = word.translation,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    fontFamily = iranSans
+                )
+            }
         }
     }
 }

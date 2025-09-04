@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.iranSans
@@ -89,13 +90,15 @@ fun WordCardItem(word: Word) {
 
             Spacer(modifier = Modifier.height(44.dp))
 
-            // ✅ کلمه آلمانی - وسط کارت
+            // ✅ کلمه آلمانی - وسط کارت حتی در چند خط
             Text(
                 text = word.text,
                 fontSize = 18.sp,
                 fontFamily = iranSans,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
+                textAlign = TextAlign.Center, // 🔹 وسط‌چین
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -110,12 +113,14 @@ fun WordCardItem(word: Word) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ✅ کلمه فارسی
+            // ✅ کلمه فارسی - وسط کارت حتی در چند خط
             Text(
                 text = word.translation,
                 fontSize = 14.sp,
                 color = Color.Gray,
-                fontFamily = iranSans
+                fontFamily = iranSans,
+                textAlign = TextAlign.Center, // 🔹 وسط‌چین
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

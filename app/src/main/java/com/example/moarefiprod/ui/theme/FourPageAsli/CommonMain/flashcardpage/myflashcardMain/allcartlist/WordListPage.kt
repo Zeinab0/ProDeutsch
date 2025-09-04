@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -78,25 +79,26 @@ fun WordListPage(
         }
     }
 
+    val screenHeight = configuration.screenHeightDp.dp
+
     Scaffold(
         bottomBar = { BottomViewSwitcher(current = selectedView, onSelect = onViewChange) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .background(Color.White)
+                .padding(bottom = innerPadding.calculateBottomPadding()) // ✅ فقط فاصله پایین
+
         ) {
-            // 🔙 دکمه‌ی برگشت
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-            ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 IconButton(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier
-                        .padding(start = screenWidth * 0.03f)
+                        .padding(
+                            start = screenWidth * 0.03f,
+                            top = screenHeight * 0.05f
+                        )
                         .align(Alignment.TopStart)
                 ) {
                     Icon(
@@ -127,22 +129,25 @@ fun WordListPage(
                 ) {
                     items(
                         items = filteredWords,
-                        key = { it.text } // اگر id داری، از it.id استفاده کن
+                        key = { it.text }
                     ) { word ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min), // ✅ هر دو ستون هم‌اندازه میشن
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // ترجمه (چپ)
+                            // ستون آلمانی (چپ)
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
+                                    .fillMaxHeight() // ✅ پر کنه کل ارتفاع
                                     .border(1.dp, Color.Black)
                                     .padding(vertical = 10.dp, horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ) {
                                 Text(
-                                    text = word.translation,
+                                    text = word.text,
                                     fontFamily = iranSans,
                                     fontSize = 16.sp,
                                     textAlign = TextAlign.Start
@@ -157,16 +162,17 @@ fun WordListPage(
                                     .background(Color.LightGray)
                             )
 
-                            // واژه (راست)
+                            // ستون فارسی (راست)
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
+                                    .fillMaxHeight() // ✅ پر کنه کل ارتفاع
                                     .border(1.dp, Color.Black)
                                     .padding(vertical = 10.dp, horizontal = 10.dp),
                                 horizontalAlignment = Alignment.End
                             ) {
                                 Text(
-                                    text = word.text,
+                                    text = word.translation,
                                     fontFamily = iranSans,
                                     fontSize = 16.sp,
                                     textAlign = TextAlign.End
@@ -174,6 +180,7 @@ fun WordListPage(
                             }
                         }
                     }
+
                 }
             } else {
                 // گرید کارت‌ها با همان فیلترها

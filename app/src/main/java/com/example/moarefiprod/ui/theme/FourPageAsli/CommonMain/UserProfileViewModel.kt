@@ -103,5 +103,10 @@ class UserProfileViewModel : ViewModel() {
             else -> null
         }
     }
+    fun setUserData(firstName: String, lastName: String, email: String) {
+        this.firstName.value = firstName
+        this.lastName.value = lastName
+        this.email.value = email
+    }
 
 }

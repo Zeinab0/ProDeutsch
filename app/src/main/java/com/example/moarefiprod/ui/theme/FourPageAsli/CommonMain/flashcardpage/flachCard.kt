@@ -194,44 +194,45 @@ fun flashCard(
                 }
 
                 // ستون عنوان/توضیح/تعداد
+                // ستون عنوان/توضیح/تعداد
                 Column(
                     modifier = Modifier
                         .padding(0.dp, 10.dp, 10.dp, 10.dp)
                         .fillMaxHeight()
                         .weight(1f),
                     horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.SpaceBetween // ✅ توضیحات بالا، تعداد کلمات پایین
                 ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = cards.title,
-                        fontFamily = iranSans,
-                        fontSize = 13.sp,
-                        maxLines = 2,
-                        minLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Right,
-                        style = TextStyle(textDirection = TextDirection.Rtl)
-                    )
+                    Column {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = cards.title,
+                            fontFamily = iranSans,
+                            fontSize = 13.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            textAlign = TextAlign.Right,
+                            style = TextStyle(textDirection = TextDirection.Rtl)
+                        )
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
 
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = cards.description,
-                        fontFamily = iranSans,
-                        fontSize = 9.sp,
-                        maxLines = 3,
-                        minLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        style = TextStyle(textDirection = TextDirection.Rtl)
-                    )
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = cards.description,
+                            fontFamily = iranSans,
+                            fontSize = 9.sp,
+                            maxLines = 3, // ✅ فقط محدودیت بالا، نه minLines
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black,
+                            style = TextStyle(textDirection = TextDirection.Rtl)
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
+                    // ✅ تعداد کلمات همیشه پایین کارت
                     Text(
                         modifier = Modifier.fillMaxWidth(),
                         text = buildAnnotatedString {
@@ -247,6 +248,7 @@ fun flashCard(
                         textAlign = TextAlign.Right
                     )
                 }
+
             }
         }
     }

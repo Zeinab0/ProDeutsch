@@ -9,7 +9,7 @@ plugins {
 
 
 android {
-    namespace = "com.example.moarefiprod"  // ✅ مقدار درست را اینجا تنظیم کنید
+    namespace = "com.example.moarefiprod"
     compileSdk = 35
 
     defaultConfig {
@@ -22,6 +22,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // 🔑 این بخش جدید است
+    signingConfigs {
+        create("release") {
+            storeFile = file("../release-key.jks")   // مسیر keystore (فرض: در ریشه پروژه)
+            storePassword = "<993633005z*>"      // پسورد keystore
+            keyAlias = "release"                    // alias که ساختی
+            keyPassword = "<993633005z*>"          // پسورد alias
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -29,8 +39,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release") // اتصال ریلیز به امضا
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -42,6 +54,7 @@ android {
         compose = true
     }
 }
+
 
 dependencies {
     implementation("com.google.accompanist:accompanist-pager:0.32.0")

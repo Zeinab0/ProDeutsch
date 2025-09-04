@@ -14,7 +14,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moarefiprod.R
@@ -71,6 +73,9 @@ fun SignUpScreen(
                         text = "در حال ثبت‌نام...",
                         fontFamily = iranSans,
                         fontSize = 13.sp,
+                        style = TextStyle(
+                            textDirection = TextDirection.Rtl
+                        ),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Right,
                         modifier = Modifier.fillMaxWidth()
                     )

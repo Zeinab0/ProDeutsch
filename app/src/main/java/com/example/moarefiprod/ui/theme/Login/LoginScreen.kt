@@ -1,6 +1,7 @@
 package com.example.moarefiprod.ui.theme.Login
 
 import ClickableRegisterTextL
+import UserProfileViewModel
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -34,7 +35,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 fun LoginScreen(
     navController: NavController,
     onNavigateToRegister: () -> Unit,
-    onNavigateToRecovery: () -> Unit
+    onNavigateToRecovery: () -> Unit,
+    userViewModel: UserProfileViewModel
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -189,21 +191,22 @@ fun LoginScreen(
                                                     val lastName = doc.getString("lastName") ?: ""
                                                     val email = doc.getString("email") ?: ""
 
-                                                    Log.d("Login", "کاربر پیدا شد: $firstName $lastName")
+                                                    // ✅ اینجا ViewModel رو پر کن
+                                                    userViewModel.setUserData(
+                                                        firstName = firstName,
+                                                        lastName = lastName,
+                                                        email = email
+                                                    )
 
-                                                    // ✅ می‌تونی اطلاعات رو به ViewModel بفرستی یا ذخیره کنی
-                                                    // userViewModel.setUserData(firstName, lastName, email)
+                                                    Log.d("Login", "کاربر پیدا شد: $firstName $lastName")
                                                 } else {
                                                     Log.e("Login", "کاربر در Firestore پیدا نشد")
                                                 }
                                             }
-                                            .addOnFailureListener {
-                                                Log.e("Login", "خطا در دریافت اطلاعات کاربر: ${it.message}")
-                                            }
                                     }
 
-                                    Toast.makeText(context, "با موفقیت وارد شدید! 🎉", Toast.LENGTH_SHORT).show()
 
+                                    Toast.makeText(context, "با موفقیت وارد شدید! 🎉", Toast.LENGTH_SHORT).show()
                                     navController.navigate("home") {
                                         popUpTo("login") { inclusive = true }
                                     }
