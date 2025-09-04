@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +33,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import kotlinx.coroutines.delay
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog // ⭐️ اضافه شده
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -47,6 +49,7 @@ fun SentenceBuilderPage(
 ) {
     val grammarViewModel = viewModel as? GrammerGameViewModel ?: return
     val sentenceState by grammarViewModel.sentenceData.collectAsState()
+    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState() // ⭐️ اضافه شده
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -57,8 +60,11 @@ fun SentenceBuilderPage(
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var timeInSeconds by remember { mutableStateOf(0) }
     val density = LocalDensity.current
+    var showFinalDialog by remember { mutableStateOf(false) } // ⭐️ اضافه شده
+    var gameTimeInSeconds by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
+        Log.d("GameTimer", "تایمر بازی جدید شروع شد. زمان فعلی: $gameTimeInSeconds")
         while (true) {
             delay(1000L)
             timeInSeconds++
@@ -209,7 +215,7 @@ fun SentenceBuilderPage(
                                         ClickableTextWordBox(
                                             word = word,
                                             isSelected = true,
-                                            enabled = !showResultBox, // ⬅ اینجا اضافه شد
+                                            enabled = !showResultBox,
                                             onClick = {
                                                 if (!showResultBox) {
                                                     selectedWords = selectedWords.toMutableList().apply {
@@ -266,7 +272,7 @@ fun SentenceBuilderPage(
                                     ClickableTextWordBox(
                                         word = word,
                                         isSelected = false,
-                                        enabled = !showResultBox, // ⬅ اینجا اضافه شد
+                                        enabled = !showResultBox,
                                         onClick = {
                                             if (!showResultBox) {
                                                 selectedWords = selectedWords.toMutableList().apply {
@@ -280,7 +286,7 @@ fun SentenceBuilderPage(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(80.dp)) // Space for the fixed button
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
             }
         }
@@ -315,8 +321,8 @@ fun SentenceBuilderPage(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4D869C),
                     contentColor = Color.White,
-                    disabledContainerColor = Color(0xFF4D869C), // همون رنگ اصلی
-                    disabledContentColor = Color.White          // همون رنگ متن
+                    disabledContainerColor = Color(0xFF4D869C),
+                    disabledContentColor = Color.White
                 ),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -327,6 +333,7 @@ fun SentenceBuilderPage(
         // Result Box
         if (showResultBox) {
             val userSentence = selectedWords.joinToString(" ")
+            val isLastGame = gameIndex + 1 >= totalGames // ⭐️ اینجا هم تغییر داده شد
 
             Result(
                 correct = if (isCorrect == true) 1 else 0,
@@ -342,11 +349,39 @@ fun SentenceBuilderPage(
                     selectedWords = mutableListOf()
                     showResultBox = false
                     isCorrect = null
-                    navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
-                        popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
+                    // ⭐️ تغییر: اگر آخرین بازی نیست، به بازی بعدی برو
+                    if (!isLastGame) {
+                        navController.navigate("GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}") {
+                            popUpTo("GameHost/$courseId/$lessonId/$contentId/$gameIndex") { inclusive = true }
+                        }
+                    } else {
+                        // ⭐️ تغییر: در غیر این صورت، دیالوگ نهایی را نمایش بده
+                        showFinalDialog = true
                     }
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        // ⭐️ اضافه شده: ResultDialog
+        if (showFinalDialog) {
+            val returnRouteForDialog = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "lesson_detail/$courseId/$lessonId"
+            } else {
+                "grammar_page"
+            }
+
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds,
+                returnRoute = returnRouteForDialog,
+                onDismiss = {
+                    showFinalDialog = false
+                    navController.navigate(returnRouteForDialog)
+                }
             )
         }
     }
@@ -444,6 +479,7 @@ fun Result(
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
                     textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl),
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentWidth(Alignment.End)
@@ -451,29 +487,29 @@ fun Result(
             } else {
 
                 if (userSentence != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.cross),
-                        contentDescription = null,
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = userSentence,
-                        fontFamily = iranSans,
-                        color = Color.Black,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Left,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.cross),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = userSentence,
+                            fontFamily = iranSans,
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Left,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
-            }
                 Spacer(modifier = Modifier.height(4.dp))
                 if (correctSentence != null) {
                     Row(

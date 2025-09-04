@@ -68,6 +68,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.Wo
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.MyFlashCardScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.flashcardpage.myflashcardMain.Review.updateWordStatusInFirestore
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GameHost
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.Movie
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieDetailScreen
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.movie.MovieScreen
@@ -640,14 +641,22 @@ class MainActivity : ComponentActivity() {
                         val contentId = backStackEntry.arguments?.getString("contentId") ?: ""
                         val gameIndex = backStackEntry.arguments?.getInt("gameIndex") ?: 0
 
+                        // ✅ گرفتن parentEntry برای share کردن ViewModel
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("GameHost/{courseId}/{lessonId}/{contentId}/{gameIndex}")
+                        }
+                        val viewModel: GrammerGameViewModel = viewModel(parentEntry)
+
                         GameHost(
                             navController = navController,
                             courseId = courseId,
                             lessonId = lessonId,
                             contentId = contentId,
-                            gameIndex = gameIndex
+                            gameIndex = gameIndex,
+                            viewModel = viewModel // ✅ به صورت share شده
                         )
                     }
+
                     composable(
                         route = "GameHostGrammar/{courseId}/{gameId}",
                         arguments = listOf(

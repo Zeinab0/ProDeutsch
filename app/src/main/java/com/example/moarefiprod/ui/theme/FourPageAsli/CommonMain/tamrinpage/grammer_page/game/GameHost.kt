@@ -11,15 +11,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.*
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.GrammarViewModel
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.BaseGameViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 
@@ -30,7 +27,8 @@ fun GameHost(
     lessonId: String = "",
     contentId: String = "",
     gameIndex: Int,
-    viewModel: GrammerGameViewModel = viewModel()
+    viewModel: GrammerGameViewModel
+    // viewModel: GrammerGameViewModel = viewModel()
 ) {
     val pathType = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
         GrammerGameViewModel.GamePathType.COURSE
@@ -38,7 +36,10 @@ fun GameHost(
         GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
     }
 
-
+    LaunchedEffect(Unit) {
+        viewModel.resetScoresIfNeeded()
+        viewModel.resetTotalTime() // 👈 این خط را اضافه کنید
+    }
 
     // فقط از viewModel استفاده می‌کنیم
     LaunchedEffect(courseId, lessonId, contentId) {
@@ -62,10 +63,6 @@ fun GameHost(
             Log.d("GameHost", "❌ No games loaded or DB connection failed.")
         }
     }
-
-
-
-
 
     val isLoading = remember { mutableStateOf(true) }
 
@@ -119,7 +116,6 @@ fun GameHost(
         )
         return
     }
-
 
     val currentGame = grammarGames[gameIndex]
 
@@ -255,8 +251,6 @@ fun GameHost(
                 }
             )
         }
-
-
 
         else -> {
             Log.e("GameHost", "Unknown game type: ${currentGame.type}")

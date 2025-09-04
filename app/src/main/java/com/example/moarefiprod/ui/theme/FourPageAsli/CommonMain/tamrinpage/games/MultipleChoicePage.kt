@@ -13,8 +13,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -22,10 +24,10 @@ import androidx.navigation.NavController
 import com.example.moarefiprod.R
 import com.example.moarefiprod.iranSans
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
-import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören.evenShadow
-import kotlinx.coroutines.delay
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun MultipleChoicePage(
@@ -43,10 +45,8 @@ fun MultipleChoicePage(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+    var gameTimeInSeconds by remember { mutableStateOf(0) }
 
-    val totalQuestions by grammarViewModel.totalQuestions.collectAsState()
-    val correctCount by grammarViewModel.correctAnswers.collectAsState()
-    val wrongCount by grammarViewModel.wrongAnswers.collectAsState()
     val mcqData by grammarViewModel.selectOption.collectAsState()
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var showResultBox by remember { mutableStateOf(false) }
@@ -58,6 +58,8 @@ fun MultipleChoicePage(
         GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
     }
 
+    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
+
     LaunchedEffect(gameIndex) {
         viewModel.initializeTotalQuestions(
             pathType = pathType,
@@ -65,6 +67,7 @@ fun MultipleChoicePage(
             lessonId = lessonId,
             contentId = contentId
         )
+        gameTimeInSeconds = 0 // ✅ ریست کردن تایمر در هر بازی جدید
 
         while (viewModel.totalQuestions.value == 0) {
             delay(100)
@@ -82,6 +85,13 @@ fun MultipleChoicePage(
             gameId = gameId,
             index = gameIndex
         )
+        Log.d("GameTimer", "تایمر بازی جدید شروع شد. زمان فعلی: $gameTimeInSeconds")
+        // ✅ شروع شمارش زمان برای این بازی
+        while (true) {
+            delay(1000L)
+            gameTimeInSeconds++
+            Log.d("MultipleChoicePage", "زمان بازی: $gameTimeInSeconds ثانیه")
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -93,7 +103,6 @@ fun MultipleChoicePage(
             "grammar_page"
         }
 
-        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -182,11 +191,10 @@ fun MultipleChoicePage(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(80.dp)) // Space for fixed button
+                Spacer(modifier = Modifier.height(80.dp))
             }
 
             if (showResultBox) {
-                val index = selectedIndex
                 val userWord = selectedIndex?.let { data.options.getOrNull(it) } ?: ""
                 val correctWord = data.options.getOrNull(data.correctAnswerIndex) ?: ""
                 ChoiceResultBox(
@@ -210,6 +218,9 @@ fun MultipleChoicePage(
                             showFinalResultDialog = true
                         }
                     },
+                    onFinish = {
+                        showFinalResultDialog = true
+                    },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 0.dp)
@@ -217,7 +228,6 @@ fun MultipleChoicePage(
             }
         }
 
-        // Fixed Confirm Button
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -235,6 +245,14 @@ fun MultipleChoicePage(
                         val isCorrect = mcqData?.correctAnswerIndex == selectedIndex
                         grammarViewModel.recordAnswer(isCorrect)
                         showResultBox = true
+
+                        // ✅ فراخوانی صحیح تابع ثبت زمان
+                        grammarViewModel.recordMemoryGameResult(
+                            correct = if (isCorrect) 1 else 0,
+                            wrong = if (!isCorrect) 1 else 0,
+                            timeInSeconds = gameTimeInSeconds
+                        )
+                        Log.d("MultipleChoicePage", "⏱ زمان این بازی: $gameTimeInSeconds ثانیه | 🧮 مجموع کل تا الان: ${grammarViewModel.totalTimeInSeconds.value} ثانیه")
                     }
                 },
                 shape = RoundedCornerShape(10.dp),
@@ -253,130 +271,23 @@ fun MultipleChoicePage(
         }
 
         if (showFinalResultDialog) {
-            val returnRoute = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
-                "darsDetails/$courseId/$lessonId"
+            val returnRouteForDialog = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "lesson_detail/$courseId/$lessonId"
             } else {
                 "grammar_page"
             }
-
-            Log.d(
-                "MultipleChoicePage",
-                "Displaying final result dialog. Total questions: $totalQuestions, Correct: $correctCount, Wrong: $wrongCount"
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-                    .clickable(enabled = true, onClick = {}),
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.White,
-                    modifier = Modifier
-                        .width(300.dp)
-                        .wrapContentHeight()
-                        .padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = ":نتیجه آزمون",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = iranSans,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.End),
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "تعداد کل سوالات: $totalQuestions",
-                            fontSize = 12.sp,
-                            fontFamily = iranSans,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            textAlign = TextAlign.Right,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.End)
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "تعداد جواب‌های درست: $correctCount",
-                            fontSize = 12.sp,
-                            fontFamily = iranSans,
-                            color = Color.Black,
-                            textAlign = TextAlign.Right,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.End)
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = "تعداد جواب‌های غلط: $wrongCount",
-                            fontSize = 12.sp,
-                            fontFamily = iranSans,
-                            color = Color.Black,
-                            textAlign = TextAlign.Right,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.End)
-                        )
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // برای صفحهٔ عادی: والد صفحه باید Box با fillMaxSize بده
-                        Box(
-                            modifier = Modifier.fillMaxSize(), // خیلی مهم
-                            contentAlignment = Alignment.BottomEnd
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(bottom = screenHeight * 0.19f, end = 30.dp)
-                                    .width(screenWidth * 0.20f)
-                                    .height(40.dp)
-                                    .zIndex(2f)
-                                // .background(Color(0x2200FF00)) // برای دیباگ
-                            ) {
-                                Button(
-                                    onClick = {
-                                        Log.d("MultipleChoicePage", "Final dialog confirmed. Navigating to $returnRoute")
-                                        showFinalResultDialog = false
-                                        navController.navigate(returnRoute)
-                                    },
-                                    enabled = !showResultBox, // مثل دکمه‌ی اول
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF4D869C),
-                                        contentColor = Color.White,
-                                        disabledContainerColor = Color(0xFF4D869C),
-                                        disabledContentColor = Color.White
-                                    ),
-                                    contentPadding = PaddingValues(0.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Text(
-                                        text = "تأیید",
-                                        fontFamily = iranSans,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-                    }
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds,
+                returnRoute = returnRouteForDialog,
+                onDismiss = {
+                    showFinalResultDialog = false
+                    navController.navigate(returnRouteForDialog)
                 }
-            }
+            )
         }
     }
 }
@@ -391,6 +302,7 @@ fun ChoiceResultBox(
     gameIndex: Int,
     totalGames: Int,
     onNext: () -> Unit,
+    onFinish: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -442,6 +354,7 @@ fun ChoiceResultBox(
                             fontSize = 13.sp,
                             color = Color.Black,
                             textAlign = TextAlign.Right,
+                            style = TextStyle(textDirection = TextDirection.Rtl),
                             modifier = Modifier
                                 .padding(start = 8.dp)
                         )
@@ -487,7 +400,13 @@ fun ChoiceResultBox(
                 .height(30.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color(0xFF4D869C))
-                .clickable { onNext() },
+                .clickable {
+                    if (isLastGame) {
+                        onFinish()
+                    } else {
+                        onNext()
+                    }
+                },
             contentAlignment = Alignment.Center
         ) {
             Row(

@@ -108,7 +108,7 @@ fun courspage(
                 // دوره‌های جدید (بعد از فیلتر)
                 items(filteredCourses, key = { it.id }) { course ->
                     Box {
-                        CourseCard(course = course, navController = navController)
+                        CourseCard(course = course, navController = navController, viewModel = viewModel)
                         if (course.isNew) {
                             NewLabel(
                                 modifier = Modifier

@@ -22,6 +22,15 @@ class GrammerGameViewModel : BaseGameViewModel() {
     private val _memoryCardPairs = MutableStateFlow<List<MemoryCardPair>>(emptyList())
     val memoryCardPairs: StateFlow<List<MemoryCardPair>> = _memoryCardPairs
 
+    private var isInitialized = false
+
+    fun resetScoresIfNeeded() {
+        if (!isInitialized) {
+            resetScores()
+            isInitialized = true
+        }
+    }
+
     private val _memoryGameTitle = MutableStateFlow("بازی حافظه")
     val memoryGameTitle: StateFlow<String> = _memoryGameTitle
 
@@ -658,6 +667,7 @@ class GrammerGameViewModel : BaseGameViewModel() {
                    // wordTranslations.mapValues { it.value.toString() },
                     questionText = questionText
                 )
+
             } catch (e: Exception) {
                 Log.e("ViewModel", "❌ Error loading ConnectWordsGame: ${e.message}")
                 _connectWordsGameState.value = null
@@ -668,9 +678,6 @@ class GrammerGameViewModel : BaseGameViewModel() {
     // بازی WordsGame
 
 }
-
-
-
 
 data class MemoryCardPair(val farsiWord: String, val germanWord: String)
 

@@ -54,6 +54,7 @@ fun tamrinpage(
     val allCourses by viewModel.allCourses.collectAsState()
     val isLoading  by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val myCourses by viewModel.myCourses.collectAsState()
 
     // لاگ کمکی (اختیاری)
     LaunchedEffect(allCourses) {
@@ -160,7 +161,7 @@ fun tamrinpage(
         ) {
             items(orderedCourses, key = { it.id }) { course ->
                 Box {
-                    CourseCard(course = course, navController = navController)
+                    CourseCard(course = course, navController = navController, viewModel = viewModel)
 
                     if (course.isNew) {
                         NewLabel(

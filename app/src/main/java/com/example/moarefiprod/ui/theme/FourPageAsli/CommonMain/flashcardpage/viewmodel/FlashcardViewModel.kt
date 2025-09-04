@@ -137,9 +137,6 @@ class FlashcardViewModel : ViewModel() {
             .addOnSuccessListener { onDone?.invoke() }
     }
 
-
-
-
     fun addCardToMyList(card: Cards, onDone: (() -> Unit)? = null) {
         val uid = auth.currentUser?.uid ?: return
         val data = mapOf(

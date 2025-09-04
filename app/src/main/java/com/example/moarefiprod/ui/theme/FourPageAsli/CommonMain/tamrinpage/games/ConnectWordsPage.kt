@@ -36,7 +36,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.höre
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioProgressVisualizerr
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog // ⭐️ اضافه شده
 
 @Composable
 fun ConnectWordsPage(
@@ -50,8 +50,11 @@ fun ConnectWordsPage(
     viewModel: GrammerGameViewModel,
     onGameFinished: (Boolean, String?) -> Unit
 ) {
-    val gameState = viewModel.connectWordsGameState.collectAsState().value
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
 
+    val gameState = viewModel.connectWordsGameState.collectAsState().value
     if (gameState == null) return
 
     val words = gameState.words
@@ -63,6 +66,7 @@ fun ConnectWordsPage(
     } else {
         GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
     }
+
     val audioMap = remember(words, audioUrls) {
         words.mapIndexed { index, word ->
             val start = index * 2
@@ -70,24 +74,32 @@ fun ConnectWordsPage(
             word to pair
         }.toMap()
     }
+
     LaunchedEffect(gameId) {
         viewModel.loadConnectWordsGame(pathType, courseId, lessonId, contentId, gameId)
     }
 
+    // زمان هر بازی
+    var gameTimeInSeconds by remember { mutableStateOf(0) }
+    var showResultBox by remember { mutableStateOf(false) }
+    var isTimerRunning by remember { mutableStateOf(true) }
+    val totalTimeInSeconds by viewModel.totalTimeInSeconds.collectAsState()
+
+    LaunchedEffect(gameId, isTimerRunning) {
+        gameTimeInSeconds = 0
+        while (isTimerRunning) {
+            delay(1000L)
+            gameTimeInSeconds++
+            Log.d("ConnectWordsPage", "⏱ زمان همین بازی: $gameTimeInSeconds ثانیه")
+        }
+    }
 
     val selectedAudios = remember { mutableStateMapOf<String, String>() }
     var playingUrl by remember { mutableStateOf<String?>(null) }
-    var showResultBox by remember { mutableStateOf(false) }
-    var isCorrect by remember { mutableStateOf(false) }
-    var resultStatus by remember { mutableStateOf<Map<String, Boolean>?>(null) }
     var resultList by remember { mutableStateOf<List<ConnectResult>>(emptyList()) }
-
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.dp
+    var showFinalDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         var showExitDialog by remember { mutableStateOf(false) }
 
         val returnRoute = if (pathType == GrammerGameViewModel.GamePathType.COURSE) {
@@ -104,17 +116,17 @@ fun ConnectWordsPage(
             onRequestExit = { showExitDialog = true },
             modifier = Modifier.fillMaxWidth()
         )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = screenHeight * 0.1f, bottom = 100.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            StepProgressBarWithExit(currentStep = 3 , totalSteps = 6)
             Spacer(modifier = Modifier.height(60.dp))
 
             Text(
-                text = gameState.questionText ?: "", // 👈 از Firestore خونده میشه
+                text = gameState.questionText ?: "",
                 fontFamily = iranSans,
                 fontSize = 14.sp,
                 color = Color.Black,
@@ -133,7 +145,7 @@ fun ConnectWordsPage(
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                audioMap.forEach { (word, audioList) -> // ← audioList به‌جای urls
+                audioMap.forEach { (word, audioList) ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -145,16 +157,26 @@ fun ConnectWordsPage(
 
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             audioList.forEach { audioUrl ->
+                                val userSelectedAudio = selectedAudios[word]
+                                val correctAudio = correctPairs[word]
+
                                 AudioBoxFromUrl(
                                     audioUrl = audioUrl,
                                     isPlayingNow = playingUrl == audioUrl,
-                                    isSelected = selectedAudios[word] == audioUrl,
-                                    result = if (showResultBox && selectedAudios[word] == audioUrl) {
-                                        resultStatus?.get(word)
+                                    isSelected = userSelectedAudio == audioUrl,
+                                    // فقط آیتم انتخاب‌شده را بعد از تایید رنگ‌آمیزی کن
+                                    result = if (showResultBox) {
+                                        when {
+                                            userSelectedAudio == null -> null
+                                            userSelectedAudio == correctAudio && audioUrl == correctAudio -> true
+                                            userSelectedAudio == audioUrl && audioUrl != correctAudio -> false
+                                            else -> null
+                                        }
                                     } else null,
+                                    locked = showResultBox, // ⬅️ بعد از تایید، کلا قفل
                                     onPlayClick = { playingUrl = audioUrl },
                                     onSelect = {
-                                        if (resultStatus == null) {
+                                        if (!showResultBox) { // ⬅️ فقط قبل از تایید اجازه انتخاب بده
                                             if (selectedAudios[word] == audioUrl)
                                                 selectedAudios.remove(word)
                                             else
@@ -169,17 +191,9 @@ fun ConnectWordsPage(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
-
         }
 
-        val allSelected = selectedAudios.keys.containsAll(words)
-
-        val userIsCorrect = selectedAudios == correctPairs
-        val selectedWordAndUrl: Map<String, String> = selectedAudios.toMap()
-        val newResultStatus = words.associateWith { word ->
-            selectedAudios[word] == correctPairs[word]
-        }
-
+        // دکمه تأیید (همیشه رنگ ثابت و فعال)
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -189,11 +203,11 @@ fun ConnectWordsPage(
         ) {
             Button(
                 onClick = {
-                    if (!showResultBox) { // ✅ جلوگیری از کلیک دوباره
+                    if (!showResultBox) {
                         showResultBox = true
-                        isCorrect = userIsCorrect
-                        resultStatus = newResultStatus
+                        isTimerRunning = false // توقف تایمر
 
+                        // لیست نتایج برای نمایش
                         resultList = words.map { word ->
                             val selectedAudio = selectedAudios[word] ?: ""
                             val correctAudio = correctPairs[word] ?: ""
@@ -201,8 +215,6 @@ fun ConnectWordsPage(
                             val correctSentence = gameState.audioTexts[correctAudio] ?: "---"
                             val isCorrect = selectedAudio == correctAudio
                             val translation = gameState.wordTranslations[word] ?: ""
-
-                            Log.d("TranslationCheck", "Translation for $word: $translation")
 
                             ConnectResult(
                                 word = word,
@@ -214,14 +226,30 @@ fun ConnectWordsPage(
                                 translation = translation
                             )
                         }
+
+                        // ثبت زمان همین بازی در totalTime
+                        val correctCount = resultList.count { it.isCorrect }
+                        val wrongCount = resultList.count { !it.isCorrect }
+                        viewModel.recordMemoryGameResult(
+                            correct = correctCount,
+                            wrong = wrongCount,
+                            timeInSeconds = gameTimeInSeconds
+                        )
+
+                        // نتیجه کلی
+                        viewModel.recordAnswer(correctCount > 0)
+
+                        Log.d("GameResult", "⏱ زمان این بازی: $gameTimeInSeconds ثانیه")
+                        Log.d("GameResult", "✅ زمان کل: ${viewModel.totalTimeInSeconds.value} ثانیه")
                     }
                 },
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4D869C), // ✅ رنگ ثابت
+                    containerColor = Color(0xFF4D869C),
                     contentColor = Color.White
                 ),
-                modifier = Modifier.fillMaxSize() // همون سایز Box
+                modifier = Modifier.fillMaxSize(),
+                enabled = true // همیشه فعال
             ) {
                 Text(
                     text = "تأیید",
@@ -240,11 +268,35 @@ fun ConnectWordsPage(
                 onNext = {
                     showResultBox = false
                     selectedAudios.clear()
-                    resultStatus = null
+                },
+                onFinish = {
+                    showFinalDialog = true
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 0.dp)
+            )
+        }
+
+        // دیالوگ پایانی
+        if (showFinalDialog) {
+            val returnRouteForDialog = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "lesson_detail/$courseId/$lessonId"
+            } else {
+                "grammar_page"
+            }
+
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds, // جمع کل همه بازی‌ها
+                returnRoute = returnRouteForDialog,
+                onDismiss = {
+                    showFinalDialog = false
+                    navController.navigate(returnRouteForDialog)
+                }
             )
         }
     }
@@ -256,6 +308,7 @@ fun AudioBoxFromUrl(
     isPlayingNow: Boolean,
     isSelected: Boolean,
     result: Boolean?,
+    locked: Boolean = false, // ⬅️ اضافه شد
     onPlayClick: () -> Unit,
     onSelect: () -> Unit
 ) {
@@ -266,16 +319,24 @@ fun AudioBoxFromUrl(
     var remainingPlays by remember { mutableStateOf(3) }
     val scope = rememberCoroutineScope()
 
-
+    // ساخت/آزادسازی MediaPlayer
     DisposableEffect(audioUrl) {
         mediaPlayer = MediaPlayer().apply {
             setDataSource(context, Uri.parse(audioUrl))
             prepareAsync()
         }
-
         onDispose {
             mediaPlayer?.release()
             mediaPlayer = null
+        }
+    }
+
+    // اگر قفل شد، پخش رو متوقف کن
+    LaunchedEffect(locked) {
+        if (locked) {
+            mediaPlayer?.pause()
+            isPlaying = false
+            // اگر می‌خوای نوار هم صفر بشه: progress = 0f
         }
     }
 
@@ -284,7 +345,6 @@ fun AudioBoxFromUrl(
         false -> Color(0xFFFF3B3B)
         null -> if (isSelected) Color(0xFF4D869C) else Color(0xFFEFEFEF)
     }
-
     val iconTint = if (result != null || isSelected) Color.White else Color(0xFF4D869C)
 
     Row(
@@ -293,26 +353,27 @@ fun AudioBoxFromUrl(
             .height(40.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(boxBgColor)
-            .clickable(enabled = result == null) { onSelect() }
+            .clickable(enabled = !locked && result == null) { onSelect() } // ⬅️ انتخاب قفل
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(
             onClick = {
-                if (remainingPlays > 0 && mediaPlayer != null) {
+                if (!locked && remainingPlays > 0 && mediaPlayer != null) {
                     onPlayClick()
                     scope.launch {
                         mediaPlayer?.let { player ->
                             if (!player.isPlaying) {
                                 player.start()
                                 isPlaying = true
-
                                 while (player.isPlaying) {
-                                    progress = player.currentPosition.toFloat() / player.duration.toFloat()
+                                    // آپدیت نرم progress
+                                    val dur = player.duration.takeIf { it > 0 } ?: 1
+                                    progress = player.currentPosition.toFloat() / dur.toFloat()
                                     delay(100L)
                                 }
-
-                                progress = 1f
+                                // پایان پخش
+                                progress = 0f           // ریست نرم
                                 remainingPlays--
                                 isPlaying = false
                             } else {
@@ -323,7 +384,7 @@ fun AudioBoxFromUrl(
                     }
                 }
             },
-            enabled = remainingPlays > 0 && result == null
+            enabled = !locked && remainingPlays > 0 && result == null // ⬅️ پخش قفل
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.volume),
@@ -332,20 +393,16 @@ fun AudioBoxFromUrl(
                 modifier = Modifier.size(25.dp)
             )
         }
-
         Spacer(modifier = Modifier.width(8.dp))
 
         AudioProgressVisualizerr(
             isPlaying = isPlaying,
-            isDisabled = remainingPlays == 0,
+            isDisabled = locked || remainingPlays == 0,
             progress = progress
         )
     }
 }
 
-
-
-// کامپوزابل برای نمایش یک کلمه
 @Composable
 fun WordBox(word: String, isSelected: Boolean, onClick: (String) -> Unit) {
     Box(
@@ -354,7 +411,6 @@ fun WordBox(word: String, isSelected: Boolean, onClick: (String) -> Unit) {
             .height(45.dp)
             .clip(RoundedCornerShape(10.dp))
             .evenShadow(radius = 25f, cornerRadius = 20f)
-            //.shadow(8.dp, RoundedCornerShape(20.dp))
             .background(Color(0xFFCDE8E5))
             .clickable { onClick(word) },
         contentAlignment = Alignment.Center
@@ -376,6 +432,7 @@ fun ConnectWordsResultBox(
     navController: NavController,
     returnRoute: String,
     onNext: () -> Unit,
+    onFinish: () -> Unit, // ⭐️ اضافه شده
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -397,7 +454,6 @@ fun ConnectWordsResultBox(
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // =================== جمله آلمانی + وضعیت چکمارک (سمت چپ)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
@@ -417,26 +473,23 @@ fun ConnectWordsResultBox(
                         )
                     }
 
-                    // ==================== ترجمه فارسی کلمه (سمت راست)
                     Text(
                         text = result.translation,
                         fontFamily = iranSans,
                         fontSize = 13.sp,
                         color = Color.DarkGray,
                         textAlign = TextAlign.Right,
+                        style = TextStyle(textDirection = TextDirection.Rtl),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
 
                 if (!result.isCorrect) {
-                    // جمله درست (در صورت غلط بودن)
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                       // Spacer(modifier = Modifier.width(2.dp)) // ایجاد فاصله از چپ
-
                         Icon(
                             painter = painterResource(id = R.drawable.tik),
                             contentDescription = null,
@@ -453,10 +506,9 @@ fun ConnectWordsResultBox(
                     }
                 }
 
-               Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(2.dp))
             }
 
-            // دکمه پایین سمت چپ
             Box(
                 modifier = Modifier
                     .align(Alignment.End)
@@ -467,9 +519,7 @@ fun ConnectWordsResultBox(
                     .background(Color(0xFF4D869C))
                     .clickable {
                         if (isLastGame) {
-                            navController.navigate(returnRoute) {
-                                popUpTo("home") { inclusive = false }
-                            }
+                            onFinish() // ⭐️ فراخوانی تابع جدید
                         } else {
                             onNext()
                         }

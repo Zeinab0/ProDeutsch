@@ -1,6 +1,7 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,16 +28,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.navigation.NavController
-import com.example.moarefiprod.R // اطمینان حاصل کنید که این Resource Id ها وجود دارند
+import com.example.moarefiprod.R
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ExitConfirmationDialog
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.hören_page.AudioProgressVisualizerr
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog // ⭐️ اضافه شده
 
 @Composable
 fun AudioRecognitionPage(
@@ -57,13 +61,23 @@ fun AudioRecognitionPage(
     }
 
     val gameState = viewModel.audioRecognitionGameState.collectAsState().value
+    var gameTimeInSeconds by remember { mutableStateOf(0) }
+
+    LaunchedEffect(gameId) {
+        gameTimeInSeconds = 0 // زمان بازی رو برای بازی جدید ریست کن
+        Log.d("GameTimer", "تایمر بازی جدید شروع شد. زمان فعلی: $gameTimeInSeconds")
+        while (true) {
+            delay(1000L)
+            gameTimeInSeconds++
+        }
+    }
 
     LaunchedEffect(gameId) {
         viewModel.loadAudioRecognitionGame(pathType, courseId, lessonId, contentId, gameId)
     }
 
+
     if (gameState == null) {
-//        Text("در حال بارگذاری...")
         return
     }
 
@@ -71,6 +85,9 @@ fun AudioRecognitionPage(
     var selectedAnswerIndex by remember { mutableStateOf(-1) }
     var showResultBox by remember { mutableStateOf(false) }
     val audioUrl by viewModel.audioUrl.collectAsState()
+    var showFinalDialog by remember { mutableStateOf(false) } // ⭐️ اضافه شده
+
+    val totalTimeInSeconds by viewModel.totalTimeInSeconds.collectAsState() // ⭐️ اضافه شده
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -78,7 +95,6 @@ fun AudioRecognitionPage(
 
 
     if (audioData == null) {
-//        Text("در حال بارگذاری...")
         return
     }
 
@@ -127,7 +143,7 @@ fun AudioRecognitionPage(
                 val mediaPlayer = remember { MediaPlayer() }
 
                 val audioUrl by viewModel.audioUrl.collectAsState()
-                var audioDuration by remember { mutableStateOf(10000) } // پیش‌فرض
+                var audioDuration by remember { mutableStateOf(10000) }
                 var progress by remember { mutableStateOf(0f) }
                 var isPlaying by remember { mutableStateOf(false) }
                 var remainingPlays by remember { mutableStateOf(2) }
@@ -143,33 +159,28 @@ fun AudioRecognitionPage(
                                 try {
                                     isPlaying = true
                                     mediaPlayer.reset()
-                                    mediaPlayer.setDataSource(audioUrl) // این حالا یه لینک واقعی از فایراستوره
+                                    mediaPlayer.setDataSource(audioUrl)
                                     mediaPlayer.setOnPreparedListener {
                                         audioDuration = it.duration
                                         it.start()
                                         isPlaying = true
-                                        println("✅ صدا پخش شد")
                                     }
                                     mediaPlayer.setOnCompletionListener {
-                                        println("✅ پخش تمام شد")
                                         isPlaying = false
                                         remainingPlays--
                                     }
                                     mediaPlayer.setOnErrorListener { _, what, extra ->
-                                        println("❌ خطا در پخش صدا: what=$what, extra=$extra")
                                         isPlaying = false
                                         true
                                     }
                                     mediaPlayer.prepareAsync()
                                 } catch (e: Exception) {
-                                    println("❌ خطای کلی در پخش: ${e.message}")
                                     isPlaying = false
                                 }
                             }
                         }
                 )
 
-                // 🎞️ بروزرسانی progress همزمان با پخش
                 LaunchedEffect(isPlaying) {
                     while (isPlaying) {
                         if (mediaPlayer.isPlaying && mediaPlayer.duration > 0) {
@@ -179,13 +190,11 @@ fun AudioRecognitionPage(
                     }
                     progress = 0f
                 }
-                // 📊 ویژوالایزر جدید
                 AudioProgressVisualizerr(
                     isPlaying = isPlaying,
                     isDisabled = remainingPlays == 0,
                     progress = progress
                 )
-
             }
             Spacer(modifier = Modifier.height(85.dp))
 
@@ -216,7 +225,6 @@ fun AudioRecognitionPage(
                             .clickable(enabled = !showResultBox) {
                                 selectedAnswerIndex = index
                             }
-
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -228,25 +236,22 @@ fun AudioRecognitionPage(
                     }
                 }
             }
-
-
             Spacer(modifier = Modifier.weight(1f))
         }
 
-        // باکس نتیجه در پایین صفحه
         if (showResultBox) {
             AudioResultBox(
                 isCorrect = selectedAnswerIndex == correctIndex,
                 correctSentence = options.getOrNull(correctIndex) ?: "",
                 userSentence = options.getOrNull(selectedAnswerIndex) ?: "",
-                translation = audioData?.translation ?: "", // اگه state داری مثل QuestionStoryGameState
+                translation = audioData?.translation ?: "",
                 navController = navController,
                 courseId = courseId,
                 lessonId = lessonId,
                 contentId = contentId,
                 gameIndex = gameIndex,
                 isLastGame = gameIndex == totalGames - 1,
-                returnRoute = returnRoute, // مثلا: "grammar_page" یا "darsDetails/$courseId/$lessonId"
+                returnRoute = returnRoute,
                 onNext = {
                     val currentRoute = "GameHost/$courseId/$lessonId/$contentId/$gameIndex"
                     val nextRoute = "GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}"
@@ -254,49 +259,76 @@ fun AudioRecognitionPage(
                         popUpTo(currentRoute) { inclusive = true }
                     }
                 },
+                onFinish = { // ⭐️ اضافه شده
+                    showFinalDialog = true
+                },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 0.dp)
             )
         }
 
-        // دکمه تایید
-       // if (!showResultBox && selectedAnswerIndex >= 0) {
-            Button(
-                onClick = {
-                    showResultBox = true
+        Button(
+            onClick = {
+                showResultBox = true
 
-                    viewModel.recordAnswer(selectedAnswerIndex == correctIndex)
-                    viewModel.recordMemoryGameResult(
-                        correct = if (selectedAnswerIndex == correctIndex) 1 else 0,
-                        wrong = if (selectedAnswerIndex != correctIndex) 1 else 0,
-                        timeInSeconds = viewModel.totalTimeInSeconds.value
-                    )
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 30.dp, bottom = 180.dp)
-                    .width(screenWidth * 0.20f)
-                    .height(40.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4D869C),
-                    contentColor = Color.White
+                Log.d("GameResult", "⏱ زمان این بازی: $gameTimeInSeconds ثانیه")
+                Log.d("GameResult", "🧮 زمان کل (قبل از ثبت): ${viewModel.totalTimeInSeconds.value} ثانیه")
+
+                viewModel.recordAnswer(selectedAnswerIndex == correctIndex)
+                viewModel.recordMemoryGameResult(
+                    correct = if (selectedAnswerIndex == correctIndex) 1 else 0,
+                    wrong = if (selectedAnswerIndex != correctIndex) 1 else 0,
+                    //timeInSeconds = totalTimeInSeconds
+                    timeInSeconds = gameTimeInSeconds
                 )
-            ) {
-                Text(
-                    text = "تایید",
-                    fontFamily = iranSans,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+                Log.d("GameResult", "✅ زمان کل (بعد از ثبت): ${viewModel.totalTimeInSeconds.value} ثانیه")
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 30.dp, bottom = 180.dp)
+                .width(screenWidth * 0.20f)
+                .height(40.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF4D869C),
+                contentColor = Color.White
+            )
+        ) {
+            Text(
+                text = "تایید",
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
+
+        if (showFinalDialog) {
+            val returnRouteForDialog = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "lesson_detail/$courseId/$lessonId"
+            } else {
+                "grammar_page"
             }
-       // }
+
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds,
+                returnRoute = returnRouteForDialog,
+                onDismiss = {
+                    showFinalDialog = false
+                    navController.navigate(returnRouteForDialog)
+                }
+            )
+        }
+
         if (showExitDialog) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)), // سایه پس‌زمینه
+                    .background(Color.Black.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 ExitConfirmationDialog(
@@ -330,6 +362,7 @@ fun AudioResultBox(
     isLastGame: Boolean,
     returnRoute: String,
     onNext: () -> Unit,
+    onFinish: () -> Unit, // ⭐️ اضافه شده
     modifier: Modifier = Modifier
 ) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -347,13 +380,11 @@ fun AudioResultBox(
                 .fillMaxWidth()
                 .offset(y = 8.dp)
         ) {
-            // 📘 ردیف بالا: ترجمه و جمله (user/correct)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // ✅ جمله کاربر یا جمله صحیح (بسته به درست بودن)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
@@ -378,19 +409,18 @@ fun AudioResultBox(
                     )
                 }
 
-                // ✅ ترجمه فارسی
                 Text(
                     text = translation,
                     fontFamily = iranSans,
                     fontSize = 13.sp,
                     color = Color.Black,
                     textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl),
                     modifier = Modifier
                         .padding(bottom = 4.dp)
                 )
             }
 
-            // ✅ اگر کاربر اشتباه کرده بود، جمله صحیح رو هم نشون بده
             if (isCorrect == false) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
@@ -419,7 +449,6 @@ fun AudioResultBox(
             Spacer(modifier = Modifier.height(10.dp))
         }
 
-        // ✅ دکمه "بریم بعدی / تمام" پایین باکس سمت راست
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -430,9 +459,7 @@ fun AudioResultBox(
                 .background(Color(0xFF4D869C))
                 .clickable {
                     if (isLastGame) {
-                        navController.navigate(returnRoute) {
-                            popUpTo("home") { inclusive = false }
-                        }
+                        onFinish() // ⭐️ فراخوانی تابع جدید
                     } else {
                         onNext()
                     }

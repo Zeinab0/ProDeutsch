@@ -1,5 +1,6 @@
 package com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -25,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import com.example.moarefiprod.R
@@ -51,6 +54,8 @@ fun TextPicPage(
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
     val textPicData by grammarViewModel.textPicData.collectAsState()
+    var gameTimeInSeconds by remember { mutableStateOf(0) }
+
     val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState()
 
     // ❗️ تغییر اصلی: به جای mutableStateOf(mutableListOf()) از mutableStateListOf استفاده می‌کنیم
@@ -67,6 +72,7 @@ fun TextPicPage(
     val isLastGame = gameIndex + 1 >= totalGames
 
     LaunchedEffect(Unit) {
+        Log.d("GameTimer", "تایمر بازی جدید شروع شد. زمان فعلی: $gameTimeInSeconds")
         while (true) {
             delay(1000L)
             timeInSeconds++
@@ -417,6 +423,7 @@ fun TextPicResultBox(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         textAlign = TextAlign.Right,
+                        style = TextStyle(textDirection = TextDirection.Rtl),
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentWidth(Alignment.End)

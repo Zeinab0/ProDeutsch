@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -33,7 +32,7 @@ import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.StepProgressBarWithExit
 import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.grammer_page.game.GrammerGameViewModel
 import kotlinx.coroutines.delay
-
+import com.example.moarefiprod.ui.theme.FourPageAsli.CommonMain.tamrinpage.games.commons.ResultDialog // ⭐️ اضافه شده
 
 @Composable
 fun QuestionStoryPage(
@@ -53,18 +52,23 @@ fun QuestionStoryPage(
     } else {
         GrammerGameViewModel.GamePathType.GRAMMAR_TOPIC
     }
+    var gameTimeInSeconds by remember { mutableStateOf(0) }
 
     LaunchedEffect(gameId) {
-        grammarViewModel.loadQuestionStoryGame(
-            pathType = pathType,
-            courseId = courseId,
-            lessonId = lessonId,
-            contentId = contentId,
-            gameId = gameId
-        )
+        // زمان را برای بازی جدید ریست کنید
+        gameTimeInSeconds = 0
+        Log.d("GameTimer", "تایمر بازی جدید شروع شد. زمان فعلی: $gameTimeInSeconds")
+        while (true) {
+            delay(1000L) // هر ثانیه
+            gameTimeInSeconds++
+        }
+    }
+    LaunchedEffect(gameId) {
+        grammarViewModel.loadQuestionStoryGame(pathType = pathType, courseId = courseId, lessonId = lessonId, contentId = contentId, gameId = gameId)
+       // viewModel.startTimer() // ⭐️ اضافه شد → تایمر فعال میشه
     }
 
-    val timeInSeconds = viewModel.totalTimeInSeconds.collectAsState().value
+    val totalTimeInSeconds by grammarViewModel.totalTimeInSeconds.collectAsState() // ⭐️ اضافه شده
     val questionStoryData = (viewModel as GrammerGameViewModel).questionStoryGameState.collectAsState().value
     val questionText = questionStoryData?.questionText ?: ""
     val correctAnswer = questionStoryData?.correctAnswer ?: ""
@@ -76,7 +80,7 @@ fun QuestionStoryPage(
     var userInput by remember { mutableStateOf("") }
     var showResultBox by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
-
+    var showFinalDialog by remember { mutableStateOf(false) } // ⭐️ اضافه شده
 
     Box(
         modifier = Modifier
@@ -109,7 +113,6 @@ fun QuestionStoryPage(
         ) {
             Spacer(modifier = Modifier.height(screenHeight * 0.07f))
 
-            // 📝 متن سوال
             Text(
                 text = buildAnnotatedString {
                     append("جمله‌ی زیر را به زمان گذشته ")
@@ -129,7 +132,6 @@ fun QuestionStoryPage(
 
             Spacer(modifier = Modifier.height(screenHeight * 0.012f))
 
-            // 📝 جمله مورد نظر
             Text(
                 text = questionText,
                 fontFamily = iranSans,
@@ -141,7 +143,6 @@ fun QuestionStoryPage(
 
             Spacer(modifier = Modifier.height(screenHeight * 0.07f))
 
-            // 📝 کادر ورودی متن
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,7 +153,6 @@ fun QuestionStoryPage(
                     .padding(16.dp),
                 contentAlignment = Alignment.TopStart
             ) {
-                // اینجا از BasicTextField استفاده می‌شود که خودش placeholder را نمایش می‌دهد.
                 BasicTextField(
                     value = userInput,
                     onValueChange = { userInput = it },
@@ -163,7 +163,7 @@ fun QuestionStoryPage(
                         textAlign = TextAlign.Start
                     ),
                     modifier = Modifier.fillMaxSize(),
-                    readOnly = showResultBox, // غیرفعال کردن TextField وقتی نتیجه نمایش داده می‌شود
+                    readOnly = showResultBox,
                     decorationBox = { innerTextField ->
                         Box(
                             modifier = Modifier.fillMaxSize()
@@ -174,7 +174,6 @@ fun QuestionStoryPage(
                                     fontFamily = iranSans,
                                     fontSize = 14.sp,
                                     color = Color(0xFF4D869C),
-                                    // تغییر: راست‌چین کردن placeholder
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Right,
                                     style = TextStyle(textDirection = TextDirection.Rtl),
@@ -187,45 +186,47 @@ fun QuestionStoryPage(
             }
         }
 
-        // --- دکمه تایید ---
-            Button(
-                onClick = {
-                    val normalizedUserInput = normalizeText(userInput)
-                    val normalizedCorrectAnswer = normalizeText(correctAnswer)
+        Button(
+            onClick = {
+                val normalizedUserInput = normalizeText(userInput)
+                val normalizedCorrectAnswer = normalizeText(correctAnswer)
 
-                    println("User Input Normalized: $normalizedUserInput")
-                    println("Correct Answer Normalized: $normalizedCorrectAnswer")
+                println("User Input Normalized: $normalizedUserInput")
+                println("Correct Answer Normalized: $normalizedCorrectAnswer")
 
-                    isCorrect = normalizedUserInput == normalizedCorrectAnswer
-                    showResultBox = true
+                isCorrect = normalizedUserInput == normalizedCorrectAnswer
+                showResultBox = true
+                Log.d("GameResult", "⏱ زمان این بازی: $gameTimeInSeconds ثانیه")
+                Log.d("GameResult", "🧮 زمان کل (قبل از ثبت): ${viewModel.totalTimeInSeconds.value} ثانیه")
 
-                    viewModel.recordAnswer(isCorrect == true)
-                    viewModel.recordMemoryGameResult(
-                        correct = if (isCorrect == true) 1 else 0,
-                        wrong = if (isCorrect == false) 1 else 0,
-                        timeInSeconds = timeInSeconds
-                    )
-                },
-                        modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 30.dp, bottom = 180.dp)
-                    .width(screenWidth * 0.20f)
-                    .height(40.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4D869C),
-                    contentColor = Color.White
+                viewModel.recordAnswer(isCorrect == true)
+                viewModel.recordMemoryGameResult(
+                    correct = if (isCorrect == true) 1 else 0,
+                    wrong = if (isCorrect == false) 1 else 0,
+                 //   timeInSeconds = totalTimeInSeconds // ⭐️ از totalTimeInSeconds استفاده می‌شود
+                    timeInSeconds = gameTimeInSeconds
                 )
-            ) {
-                Text(
-                    text = "تایید",
-                    fontFamily = iranSans,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
+                Log.d("GameResult", "✅ زمان کل (بعد از ثبت): ${viewModel.totalTimeInSeconds.value} ثانیه")
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 30.dp, bottom = 180.dp)
+                .width(screenWidth * 0.20f)
+                .height(40.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF4D869C),
+                contentColor = Color.White
+            )
+        ) {
+            Text(
+                text = "تایید",
+                fontFamily = iranSans,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
 
-        // 🖼️ باکس نتیجه در پایین صفحه
         if (showResultBox) {
             QuestionResultBox(
                 isCorrect = isCorrect,
@@ -238,7 +239,7 @@ fun QuestionStoryPage(
                 contentId = contentId,
                 gameIndex = gameIndex,
                 isLastGame = gameIndex == totalGames - 1,
-                returnRoute = returnRoute, // ✅ مسیر برگشت
+                returnRoute = returnRoute,
                 onNext = {
                     val currentRoute = "GameHost/$courseId/$lessonId/$contentId/$gameIndex"
                     val nextRoute = "GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}"
@@ -246,12 +247,34 @@ fun QuestionStoryPage(
                         popUpTo(currentRoute) { inclusive = true }
                     }
                 },
+                onFinish = { // ⭐️ اضافه شده
+                    showFinalDialog = true
+                },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 0.dp)
             )
+        }
 
-
+        // ⭐️ اضافه شده: ResultDialog
+        if (showFinalDialog) {
+            val returnRouteForDialog = if (lessonId.isNotEmpty() && contentId.isNotEmpty()) {
+                "lesson_detail/$courseId/$lessonId"
+            } else {
+                "grammar_page"
+            }
+            ResultDialog(
+                navController = navController,
+                courseId = courseId,
+                lessonId = lessonId,
+                contentId = contentId,
+                timeInSeconds = totalTimeInSeconds,
+                returnRoute = returnRouteForDialog,
+                onDismiss = {
+                    showFinalDialog = false
+                    navController.navigate(returnRouteForDialog)
+                }
+            )
         }
 
 
@@ -259,8 +282,8 @@ fun QuestionStoryPage(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)) // سایه کامل
-                    .zIndex(999f), // حتماً اضافه بشه
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .zIndex(999f),
                 contentAlignment = Alignment.Center
             ) {
                 ExitConfirmationDialog(
@@ -291,6 +314,7 @@ fun QuestionResultBox(
     isLastGame: Boolean,
     returnRoute: String,
     onNext: () -> Unit,
+    onFinish: () -> Unit, // ⭐️ اضافه شده
     modifier: Modifier = Modifier
 ) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -308,13 +332,11 @@ fun QuestionResultBox(
                 .fillMaxWidth()
                 .offset(y = 8.dp)
         ) {
-            // 📘 ردیف بالا: ترجمه و جمله (user/correct)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // ✅ جمله کاربر یا جمله صحیح (بسته به درست بودن)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
@@ -339,19 +361,18 @@ fun QuestionResultBox(
                     )
                 }
 
-                // ✅ ترجمه فارسی
                 Text(
                     text = translation,
                     fontFamily = iranSans,
                     fontSize = 13.sp,
                     color = Color.Black,
                     textAlign = TextAlign.Right,
+                    style = TextStyle(textDirection = TextDirection.Rtl),
                     modifier = Modifier
                         .padding(bottom = 4.dp)
                 )
             }
 
-            // ✅ اگر کاربر اشتباه کرده بود، جمله صحیح رو هم نشون بده
             if (isCorrect == false) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
@@ -380,7 +401,6 @@ fun QuestionResultBox(
             Spacer(modifier = Modifier.height(10.dp))
         }
 
-        // ✅ دکمه "بریم بعدی / تمام" پایین باکس سمت راست
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -391,9 +411,7 @@ fun QuestionResultBox(
                 .background(Color(0xFF4D869C))
                 .clickable {
                     if (isLastGame) {
-                        navController.navigate(returnRoute) {
-                            popUpTo("home") { inclusive = false }
-                        }
+                        onFinish() // ⭐️ فراخوانی تابع جدید
                     } else {
                         onNext()
                     }
@@ -433,57 +451,5 @@ fun normalizeText(input: String): String {
         .replace("ü", "u")
         .replace("ß", "ss")
         .replace(Regex("\\s+"), " ")
-        // این خط جدید است: حذف علائم نگارشی از انتهای رشته با Regex
-        .replace(Regex("[\\p{Punct}]*$"), "") // این الگو تمام علائم نگارشی در انتهای رشته را حذف می‌کند.
+        .replace(Regex("[\\p{Punct}]*$"), "")
 }
-
-            // این بخش تغییر کرده است.
-            // در هر دو حالت، یک Spacer با ارتفاع ثابت 10.dp قرار داده‌ایم.
-//            Spacer(modifier = Modifier.height(25.dp))
-//
-//            if (courseId.isNotBlank() && lessonId.isNotBlank() && contentId.isNotBlank()) {
-//                Box(
-//                    modifier = Modifier
-//                        .align(Alignment.End)
-//                        .width(98.dp)
-//                        .height(34.dp)
-//                        .clip(RoundedCornerShape(10.dp))
-//                        .background(Color(0xFF4D869C))
-//                        .clickable {
-//                            val currentRoute = "GameHost/$courseId/$lessonId/$contentId/$gameIndex"
-//                            val nextRoute = "GameHost/$courseId/$lessonId/$contentId/${gameIndex + 1}"
-//
-//                            navController.navigate(nextRoute) {
-//                                popUpTo(currentRoute) { inclusive = true }
-//                            }
-//                        },
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Row(
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.Center
-//                    ) {
-////                        Text(
-////                            text = "بریم بعدی",
-////                            fontFamily = iranSans,
-////                            color = Color.White,
-////                            fontSize = 14.sp
-////                        )
-////                        Spacer(modifier = Modifier.width(4.dp))
-////                        Icon(
-////                            painter = painterResource(id = R.drawable.nextbtn),
-////                            contentDescription = null,
-////                            tint = Color.White,
-////                            modifier = Modifier.size(16.dp)
-////                        )
-//                    }
-//                }
-//            } else {
-//                // اختیاری: نمایش پیام خطا یا غیرفعال کردن دکمه
-//                Log.e("Navigation", "❌ مسیر ناوبری ناقص است: courseId or lessonId or contentId is empty.")
-//            }
-//
-//        }
-//    }
-//}
-

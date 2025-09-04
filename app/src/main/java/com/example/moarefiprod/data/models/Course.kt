@@ -39,6 +39,9 @@ data class Course(
     @get:PropertyName("isPurchased")
     val isPurchased: Boolean = false,
 
+    @get:PropertyName("isInMyCourses")
+    val isInMyCourses: Boolean = false,
+
     @PropertyName("order") val order: Int = 0,
 
     val lessons: List<CourseLesson> = emptyList()

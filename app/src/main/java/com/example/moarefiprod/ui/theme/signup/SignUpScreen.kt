@@ -70,7 +70,7 @@ fun SignUpScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "در حال ثبت‌نام...",
+                        text = "...در حال ثبت‌نام",
                         fontFamily = iranSans,
                         fontSize = 13.sp,
                         style = TextStyle(
